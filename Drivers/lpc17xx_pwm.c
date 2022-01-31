@@ -1,21 +1,33 @@
-/***********************************************************************//**
- * @file		lpc17xx_pwm.c
- * @brief		Contains all functions support for PWM firmware library on LPC17xx
- * @version		2.0
- * @date		21. May. 2010
- * @author		NXP MCU SW Application Team
- **************************************************************************
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * products. This software is supplied "AS IS" without any warranties.
- * NXP Semiconductors assumes no responsibility or liability for the
- * use of the software, conveys no license or title under any patent,
- * copyright, or mask work right to the product. NXP Semiconductors
- * reserves the right to make changes in the software without
- * notification. NXP Semiconductors also make no representation or
- * warranty that such application will be suitable for the specified
- * use without further testing or modification.
- **********************************************************************/
+/**********************************************************************
+* $Id$		lpc17xx_pwm.c				2011-03-31
+*//**
+* @file		lpc17xx_pwm.c
+* @brief	Contains all functions support for PWM firmware library on LPC17xx
+* @version	2.1
+* @date		31. Mar. 2011
+* @author	NXP MCU SW Application Team
+*
+* Copyright(C) 2011, NXP Semiconductor
+* All rights reserved.
+*
+***********************************************************************
+* Software that is described herein is for illustrative purposes only
+* which provides customers with programming information regarding the
+* products. This software is supplied "AS IS" without any warranties.
+* NXP Semiconductors assumes no responsibility or liability for the
+* use of the software, conveys no license or title under any patent,
+* copyright, or mask work right to the product. NXP Semiconductors
+* reserves the right to make changes in the software without
+* notification. NXP Semiconductors also make no representation or
+* warranty that such application will be suitable for the specified
+* use without further testing or modification.
+* Permission to use, copy, modify, and distribute this software and its
+* documentation is hereby granted, under NXP Semiconductors'
+* relevant copyright in the software, without fee, provided that it
+* is used in conjunction with NXP Semiconductors microcontrollers.  This
+* copyright, permission, and disclaimer notice must appear in all copies of
+* this code.
+**********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
 /** @addtogroup PWM
@@ -48,7 +60,7 @@
 
 /*********************************************************************//**
  * @brief 		Check whether specified interrupt flag in PWM is set or not
- * @param[in]	PWMx: PWM peripheral, should be PWM1
+ * @param[in]	PWMx: PWM peripheral, should be LPC_PWM1
  * @param[in]	IntFlag: PWM interrupt flag, should be:
  * 				- PWM_INTSTAT_MR0: Interrupt flag for PWM match channel 0
  * 				- PWM_INTSTAT_MR1: Interrupt flag for PWM match channel 1
@@ -61,7 +73,7 @@
  * 				- PWM_INTSTAT_CAP1: Interrupt flag for capture input 1
  * @return 		New State of PWM interrupt flag (SET or RESET)
  **********************************************************************/
-IntStatus PWM_GetIntStatus(PWM_TypeDef *PWMx, uint32_t IntFlag)
+IntStatus PWM_GetIntStatus(LPC_PWM_TypeDef *PWMx, uint32_t IntFlag)
 {
 	CHECK_PARAM(PARAM_PWMx(PWMx));
 	CHECK_PARAM(PARAM_PWM_INTSTAT(IntFlag));
@@ -73,7 +85,7 @@ IntStatus PWM_GetIntStatus(PWM_TypeDef *PWMx, uint32_t IntFlag)
 
 /*********************************************************************//**
  * @brief 		Clear specified PWM Interrupt pending
- * @param[in]	PWMx: PWM peripheral, should be PWM1
+ * @param[in]	PWMx: PWM peripheral, should be LPC_PWM1
  * @param[in]	IntFlag: PWM interrupt flag, should be:
  * 				- PWM_INTSTAT_MR0: Interrupt flag for PWM match channel 0
  * 				- PWM_INTSTAT_MR1: Interrupt flag for PWM match channel 1
@@ -86,7 +98,7 @@ IntStatus PWM_GetIntStatus(PWM_TypeDef *PWMx, uint32_t IntFlag)
  * 				- PWM_INTSTAT_CAP1: Interrupt flag for capture input 1
  * @return 		None
  **********************************************************************/
-void PWM_ClearIntPending(PWM_TypeDef *PWMx, uint32_t IntFlag)
+void PWM_ClearIntPending(LPC_PWM_TypeDef *PWMx, uint32_t IntFlag)
 {
 	CHECK_PARAM(PARAM_PWMx(PWMx));
 	CHECK_PARAM(PARAM_PWM_INTSTAT(IntFlag));
@@ -137,7 +149,7 @@ void PWM_ConfigStructInit(uint8_t PWMTimerCounterMode, void *PWM_InitStruct)
 /*********************************************************************//**
  * @brief 		Initializes the PWMx peripheral corresponding to the specified
  *               parameters in the PWM_ConfigStruct.
- * @param[in]	PWMx PWM peripheral, should be PWM1
+ * @param[in]	PWMx PWM peripheral, should be LPC_PWM1
  * @param[in]	PWMTimerCounterMode Timer or Counter mode, should be:
  * 				- PWM_MODE_TIMER: Counter of PWM peripheral is in Timer mode
  * 				- PWM_MODE_COUNTER: Counter of PWM peripheral is in Counter mode
@@ -147,7 +159,7 @@ void PWM_ConfigStructInit(uint8_t PWMTimerCounterMode, void *PWM_InitStruct)
  * Note: PWM_ConfigStruct pointer will be assigned to corresponding structure
  * 		(PWM_TIMERCFG_Type or PWM_COUNTERCFG_Type) due to PWMTimerCounterMode.
  **********************************************************************/
-void PWM_Init(PWM_TypeDef *PWMx, uint32_t PWMTimerCounterMode, void *PWM_ConfigStruct)
+void PWM_Init(LPC_PWM_TypeDef *PWMx, uint32_t PWMTimerCounterMode, void *PWM_ConfigStruct)
 {
 	PWM_TIMERCFG_Type *pTimeCfg;
 	PWM_COUNTERCFG_Type *pCounterCfg;
@@ -205,10 +217,10 @@ void PWM_Init(PWM_TypeDef *PWMx, uint32_t PWMTimerCounterMode, void *PWM_ConfigS
 /*********************************************************************//**
  * @brief		De-initializes the PWM peripheral registers to their
 *                  default reset values.
- * @param[in]	PWMx	PWM peripheral selected, should be PWM1
+ * @param[in]	PWMx	PWM peripheral selected, should be LPC_PWM1
  * @return 		None
  **********************************************************************/
-void PWM_DeInit (PWM_TypeDef *PWMx)
+void PWM_DeInit (LPC_PWM_TypeDef *PWMx)
 {
 	CHECK_PARAM(PARAM_PWMx(PWMx));
 
@@ -221,13 +233,13 @@ void PWM_DeInit (PWM_TypeDef *PWMx)
 
 /*********************************************************************//**
  * @brief	 	Enable/Disable PWM peripheral
- * @param[in]	PWMx	PWM peripheral selected, should be PWM1
+ * @param[in]	PWMx	PWM peripheral selected, should be LPC_PWM1
  * @param[in]	NewState	New State of this function, should be:
  * 							- ENABLE: Enable PWM peripheral
  * 							- DISABLE: Disable PWM peripheral
  * @return 		None
  **********************************************************************/
-void PWM_Cmd(PWM_TypeDef *PWMx, FunctionalState NewState)
+void PWM_Cmd(LPC_PWM_TypeDef *PWMx, FunctionalState NewState)
 {
 	CHECK_PARAM(PARAM_PWMx(PWMx));
 	CHECK_PARAM(PARAM_FUNCTIONALSTATE(NewState));
@@ -245,13 +257,13 @@ void PWM_Cmd(PWM_TypeDef *PWMx, FunctionalState NewState)
 
 /*********************************************************************//**
  * @brief 		Enable/Disable Counter in PWM peripheral
- * @param[in]	PWMx	PWM peripheral selected, should be PWM1
+ * @param[in]	PWMx	PWM peripheral selected, should be LPC_PWM1
  * @param[in]	NewState New State of this function, should be:
  * 							- ENABLE: Enable Counter in PWM peripheral
  * 							- DISABLE: Disable Counter in PWM peripheral
  * @return 		None
  **********************************************************************/
-void PWM_CounterCmd(PWM_TypeDef *PWMx, FunctionalState NewState)
+void PWM_CounterCmd(LPC_PWM_TypeDef *PWMx, FunctionalState NewState)
 {
 	CHECK_PARAM(PARAM_PWMx(PWMx));
 	CHECK_PARAM(PARAM_FUNCTIONALSTATE(NewState));
@@ -268,10 +280,10 @@ void PWM_CounterCmd(PWM_TypeDef *PWMx, FunctionalState NewState)
 
 /*********************************************************************//**
  * @brief 		Reset Counter in PWM peripheral
- * @param[in]	PWMx	PWM peripheral selected, should be PWM1
+ * @param[in]	PWMx	PWM peripheral selected, should be LPC_PWM1
  * @return 		None
  **********************************************************************/
-void PWM_ResetCounter(PWM_TypeDef *PWMx)
+void PWM_ResetCounter(LPC_PWM_TypeDef *PWMx)
 {
 	CHECK_PARAM(PARAM_PWMx(PWMx));
 	PWMx->TCR |= PWM_TCR_COUNTER_RESET;
@@ -281,13 +293,13 @@ void PWM_ResetCounter(PWM_TypeDef *PWMx)
 
 /*********************************************************************//**
  * @brief 		Configures match for PWM peripheral
- * @param[in]	PWMx	PWM peripheral selected, should be PWM1
+ * @param[in]	PWMx	PWM peripheral selected, should be LPC_PWM1
  * @param[in]   PWM_MatchConfigStruct	Pointer to a PWM_MATCHCFG_Type structure
 *                    that contains the configuration information for the
 *                    specified PWM match function.
  * @return 		None
  **********************************************************************/
-void PWM_ConfigMatch(PWM_TypeDef *PWMx, PWM_MATCHCFG_Type *PWM_MatchConfigStruct)
+void PWM_ConfigMatch(LPC_PWM_TypeDef *PWMx, PWM_MATCHCFG_Type *PWM_MatchConfigStruct)
 {
 	CHECK_PARAM(PARAM_PWMx(PWMx));
 	CHECK_PARAM(PARAM_PWM1_MATCH_CHANNEL(PWM_MatchConfigStruct->MatchChannel));
@@ -332,13 +344,13 @@ void PWM_ConfigMatch(PWM_TypeDef *PWMx, PWM_MATCHCFG_Type *PWM_MatchConfigStruct
 
 /*********************************************************************//**
  * @brief 		Configures capture input for PWM peripheral
- * @param[in]	PWMx	PWM peripheral selected, should be PWM1
+ * @param[in]	PWMx	PWM peripheral selected, should be LPC_PWM1
  * @param[in]   PWM_CaptureConfigStruct	Pointer to a PWM_CAPTURECFG_Type structure
 *                    that contains the configuration information for the
 *                    specified PWM capture input function.
  * @return 		None
  **********************************************************************/
-void PWM_ConfigCapture(PWM_TypeDef *PWMx, PWM_CAPTURECFG_Type *PWM_CaptureConfigStruct)
+void PWM_ConfigCapture(LPC_PWM_TypeDef *PWMx, PWM_CAPTURECFG_Type *PWM_CaptureConfigStruct)
 {
 	CHECK_PARAM(PARAM_PWMx(PWMx));
 	CHECK_PARAM(PARAM_PWM1_CAPTURE_CHANNEL(PWM_CaptureConfigStruct->CaptureChannel));
@@ -380,12 +392,12 @@ void PWM_ConfigCapture(PWM_TypeDef *PWMx, PWM_CAPTURECFG_Type *PWM_CaptureConfig
 
 /*********************************************************************//**
  * @brief 		Read value of capture register PWM peripheral
- * @param[in]	PWMx	PWM peripheral selected, should be PWM1
+ * @param[in]	PWMx	PWM peripheral selected, should be LPC_PWM1
  * @param[in]	CaptureChannel: capture channel number, should be in
  * 				range 0 to 1
  * @return 		Value of capture register
  **********************************************************************/
-uint32_t PWM_GetCaptureValue(PWM_TypeDef *PWMx, uint8_t CaptureChannel)
+uint32_t PWM_GetCaptureValue(LPC_PWM_TypeDef *PWMx, uint8_t CaptureChannel)
 {
 	CHECK_PARAM(PARAM_PWMx(PWMx));
 	CHECK_PARAM(PARAM_PWM1_CAPTURE_CHANNEL(CaptureChannel));
@@ -406,7 +418,7 @@ uint32_t PWM_GetCaptureValue(PWM_TypeDef *PWMx, uint8_t CaptureChannel)
 
 /********************************************************************//**
  * @brief 		Update value for each PWM channel with update type option
- * @param[in]	PWMx	PWM peripheral selected, should be PWM1
+ * @param[in]	PWMx	PWM peripheral selected, should be LPC_PWM1
  * @param[in]	MatchChannel Match channel
  * @param[in]	MatchValue Match value
  * @param[in]	UpdateType Type of Update, should be:
@@ -416,7 +428,7 @@ uint32_t PWM_GetCaptureValue(PWM_TypeDef *PWMx, uint8_t CaptureChannel)
  * 					this channel on next reset by a PWM Match event.
  * @return		None
  *********************************************************************/
-void PWM_MatchUpdate(PWM_TypeDef *PWMx, uint8_t MatchChannel, \
+void PWM_MatchUpdate(LPC_PWM_TypeDef *PWMx, uint8_t MatchChannel, \
 					uint32_t MatchValue, uint8_t UpdateType)
 {
 	CHECK_PARAM(PARAM_PWMx(PWMx));
@@ -465,10 +477,53 @@ void PWM_MatchUpdate(PWM_TypeDef *PWMx, uint8_t MatchChannel, \
 	}
 }
 
+/********************************************************************//**
+ * @brief 		Update value for multi PWM channel with update type option
+ * 				at the same time
+ * @param[in]	PWMx	PWM peripheral selected, should be LPC_PWM1
+ * @param[in]	MatchStruct Structure that contents match value of 7 pwm channels
+ * @param[in]	UpdateType Type of Update, should be:
+ * 				- PWM_MATCH_UPDATE_NOW: The update value will be updated for
+ * 					this channel immediately
+ * 				- PWM_MATCH_UPDATE_NEXT_RST: The update value will be updated for
+ * 					this channel on next reset by a PWM Match event.
+ * @return		None
+ *********************************************************************/
+void PWM_MultiMatchUpdate(LPC_PWM_TypeDef *PWMx, PWM_Match_T *MatchStruct , uint8_t UpdateType)
+{
+	uint8_t LatchValue = 0;
+	uint8_t i;
 
+	CHECK_PARAM(PARAM_PWMx(PWMx));
+	CHECK_PARAM(PARAM_PWM_MATCH_UPDATE(UpdateType));
+
+	//Update match value
+	for(i=0;i<7;i++)
+	{
+		if(MatchStruct[i].Status == SET)
+		{
+			if(i<4)
+				*((volatile unsigned int *)(&(PWMx->MR0) + i)) = MatchStruct[i].Matchvalue;
+			else
+			{
+				*((volatile unsigned int *)(&(PWMx->MR4) + (i-4))) = MatchStruct[i].Matchvalue;
+			}
+			LatchValue |=(1<<i);
+		}
+	}
+	//set update for multi-channel at the same time
+	PWMx->LER = LatchValue;
+
+	// In case of update now
+	if (UpdateType == PWM_MATCH_UPDATE_NOW)
+	{
+		PWMx->TCR |= PWM_TCR_COUNTER_RESET;
+		PWMx->TCR &= (~PWM_TCR_COUNTER_RESET) & PWM_TCR_BITMASK;
+	}
+}
 /********************************************************************//**
  * @brief 		Configure Edge mode for each PWM channel
- * @param[in]	PWMx	PWM peripheral selected, should be PWM1
+ * @param[in]	PWMx	PWM peripheral selected, should be LPC_PWM1
  * @param[in]	PWMChannel PWM channel, should be in range from 2 to 6
  * @param[in]	ModeOption PWM mode option, should be:
  * 				- PWM_CHANNEL_SINGLE_EDGE: Single Edge mode
@@ -476,7 +531,7 @@ void PWM_MatchUpdate(PWM_TypeDef *PWMx, uint8_t MatchChannel, \
  * @return 		None
  * Note: PWM Channel 1 can not be selected for mode option
  *********************************************************************/
-void PWM_ChannelConfig(PWM_TypeDef *PWMx, uint8_t PWMChannel, uint8_t ModeOption)
+void PWM_ChannelConfig(LPC_PWM_TypeDef *PWMx, uint8_t PWMChannel, uint8_t ModeOption)
 {
 	CHECK_PARAM(PARAM_PWMx(PWMx));
 	CHECK_PARAM(PARAM_PWM1_EDGE_MODE_CHANNEL(PWMChannel));
@@ -498,14 +553,14 @@ void PWM_ChannelConfig(PWM_TypeDef *PWMx, uint8_t PWMChannel, uint8_t ModeOption
 
 /********************************************************************//**
  * @brief 		Enable/Disable PWM channel output
- * @param[in]	PWMx	PWM peripheral selected, should be PWM1
+ * @param[in]	PWMx	PWM peripheral selected, should be LPC_PWM1
  * @param[in]	PWMChannel PWM channel, should be in range from 1 to 6
  * @param[in]	NewState New State of this function, should be:
  * 				- ENABLE: Enable this PWM channel output
  * 				- DISABLE: Disable this PWM channel output
  * @return		None
  *********************************************************************/
-void PWM_ChannelCmd(PWM_TypeDef *PWMx, uint8_t PWMChannel, FunctionalState NewState)
+void PWM_ChannelCmd(LPC_PWM_TypeDef *PWMx, uint8_t PWMChannel, FunctionalState NewState)
 {
 	CHECK_PARAM(PARAM_PWMx(PWMx));
 	CHECK_PARAM(PARAM_PWM1_CHANNEL(PWMChannel));

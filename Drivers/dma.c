@@ -1,5 +1,6 @@
 
-#include "includes.h"
+#include "LPC17xx.h"
+#include "lpc_types.h"
 
 extern volatile PFV cb[MAX_IRQChannel];
 
@@ -250,7 +251,7 @@ INT32S DMAStartTransfer(INT32S ch,
     DMADrvDat.pDMA->DMAChan[ch].srcAddr = (INT32U) src;
     DMADrvDat.pDMA->DMAChan[ch].destAddr = (INT32U) dest;
     
-    // обнулим конфигурацию канала, для смены размера
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     DMADrvDat.pDMA->DMAChan[ch].configCh = 0;
     DMADrvDat.pDMA->DMAChan[ch].control = 0;
     

@@ -22,10 +22,16 @@
 * notification. NXP Semiconductors also make no representation or
 * warranty that such application will be suitable for the specified
 * use without further testing or modification.
+* Permission to use, copy, modify, and distribute this software and its
+* documentation is hereby granted, under NXP Semiconductors'
+* relevant copyright in the software, without fee, provided that it
+* is used in conjunction with NXP Semiconductors microcontrollers.  This
+* copyright, permission, and disclaimer notice must appear in all copies of
+* this code.
 **********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
-/** @defgroup RIT RIT
+/** @defgroup RIT RIT (Repetitive Interrupt Timer)
  * @ingroup LPC1700CMSIS_FwLib_Drivers
  * @{
  */
@@ -63,7 +69,7 @@ extern "C"
 #define RIT_CTRL_TEN	((uint32_t) _BIT(3))
 
 /** Macro to determine if it is valid RIT peripheral */
-#define PARAM_RITx(n)	(((uint32_t *)n)==((uint32_t *)RIT))
+#define PARAM_RITx(n)	(((uint32_t *)n)==((uint32_t *)LPC_RIT))
 /**
  * @}
  */
@@ -75,19 +81,19 @@ extern "C"
  * @{
  */
 /* RIT Init/DeInit functions */
-void RIT_Init(RIT_TypeDef *RITx);
-void RIT_DeInit(RIT_TypeDef *RITx);
+void RIT_Init(LPC_RIT_TypeDef *RITx);
+void RIT_DeInit(LPC_RIT_TypeDef *RITx);
 
 /* RIT config timer functions */
-void RIT_TimerConfig(RIT_TypeDef *RITx, uint32_t time_interval);
+void RIT_TimerConfig(LPC_RIT_TypeDef *RITx, uint32_t time_interval);
 
 /* Enable/Disable RIT functions */
-void RIT_TimerClearCmd(RIT_TypeDef *RITx, FunctionalState NewState);
-void RIT_Cmd(RIT_TypeDef *RITx, FunctionalState NewState);
-void RIT_TimerDebugCmd(RIT_TypeDef *RITx, FunctionalState NewState);
+void RIT_TimerClearCmd(LPC_RIT_TypeDef *RITx, FunctionalState NewState);
+void RIT_Cmd(LPC_RIT_TypeDef *RITx, FunctionalState NewState);
+void RIT_TimerDebugCmd(LPC_RIT_TypeDef *RITx, FunctionalState NewState);
 
 /* RIT Interrupt functions */
-IntStatus RIT_GetIntStatus(RIT_TypeDef *RITx);
+IntStatus RIT_GetIntStatus(LPC_RIT_TypeDef *RITx);
 
 /**
  * @}

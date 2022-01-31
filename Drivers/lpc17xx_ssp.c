@@ -21,6 +21,12 @@
 * notification. NXP Semiconductors also make no representation or
 * warranty that such application will be suitable for the specified
 * use without further testing or modification.
+* Permission to use, copy, modify, and distribute this software and its
+* documentation is hereby granted, under NXP Semiconductors'
+* relevant copyright in the software, without fee, provided that it
+* is used in conjunction with NXP Semiconductors microcontrollers.  This
+* copyright, permission, and disclaimer notice must appear in all copies of
+* this code.
 **********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
@@ -50,17 +56,17 @@
 /** @addtogroup SSP_Public_Functions
  * @{
  */
-//static void setSSPclock (SSP_TypeDef *SSPx, uint32_t target_clock);
+static void setSSPclock (LPC_SSP_TypeDef *SSPx, uint32_t target_clock);
 
 /*********************************************************************//**
  * @brief 		Setup clock rate for SSP device
  * @param[in] 	SSPx	SSP peripheral definition, should be:
- * 						- SSP0: SSP0 peripheral
- * 						- SSP1: SSP1 peripheral
+ * 						- LPC_SSP0: SSP0 peripheral
+ * 						- LPC_SSP1: SSP1 peripheral
  * @param[in]	target_clock : clock of SSP (Hz)
  * @return 		None
  ***********************************************************************/
-void setSSPclock (SSP_TypeDef *SSPx, uint32_t target_clock)
+static void setSSPclock (LPC_SSP_TypeDef *SSPx, uint32_t target_clock)
 {
     uint32_t prescale, cr0_div, cmp_clk, ssp_clk;
 
@@ -68,9 +74,9 @@ void setSSPclock (SSP_TypeDef *SSPx, uint32_t target_clock)
 
     /* The SSP clock is derived from the (main system oscillator / 2),
        so compute the best divider from that clock */
-    if (SSPx == SSP0){
+    if (SSPx == LPC_SSP0){
     	ssp_clk = CLKPWR_GetPCLK (CLKPWR_PCLKSEL_SSP0);
-    } else if (SSPx == SSP1) {
+    } else if (SSPx == LPC_SSP1) {
     	ssp_clk = CLKPWR_GetPCLK (CLKPWR_PCLKSEL_SSP1);
     } else {
     	return;
@@ -115,23 +121,23 @@ void setSSPclock (SSP_TypeDef *SSPx, uint32_t target_clock)
  * @brief		Initializes the SSPx peripheral according to the specified
 *               parameters in the SSP_ConfigStruct.
  * @param[in]	SSPx	SSP peripheral selected, should be:
- * 				 		- SSP0: SSP0 peripheral
- * 						- SSP1: SSP1 peripheral
+ * 				 		- LPC_SSP0: SSP0 peripheral
+ * 						- LPC_SSP1: SSP1 peripheral
  * @param[in]	SSP_ConfigStruct Pointer to a SSP_CFG_Type structure
 *                    that contains the configuration information for the
 *                    specified SSP peripheral.
  * @return 		None
  *********************************************************************/
-void SSP_Init(SSP_TypeDef *SSPx, SSP_CFG_Type *SSP_ConfigStruct)
+void SSP_Init(LPC_SSP_TypeDef *SSPx, SSP_CFG_Type *SSP_ConfigStruct)
 {
 	uint32_t tmp;
 
 	CHECK_PARAM(PARAM_SSPx(SSPx));
 
-	if(SSPx == SSP0) {
+	if(SSPx == LPC_SSP0) {
 		/* Set up clock and power for SSP0 module */
 		CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCSSP0, ENABLE);
-	} else if(SSPx == SSP1) {
+	} else if(SSPx == LPC_SSP1) {
 		/* Set up clock and power for SSP1 module */
 		CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCSSP1, ENABLE);
 	} else {
@@ -159,18 +165,18 @@ void SSP_Init(SSP_TypeDef *SSPx, SSP_CFG_Type *SSP_ConfigStruct)
  * @brief		De-initializes the SSPx peripheral registers to their
 *                  default reset values.
  * @param[in]	SSPx	SSP peripheral selected, should be:
- * 				 		- SSP0: SSP0 peripheral
- * 						- SSP1: SSP1 peripheral
+ * 				 		- LPC_SSP0: SSP0 peripheral
+ * 						- LPC_SSP1: SSP1 peripheral
  * @return 		None
  **********************************************************************/
-void SSP_DeInit(SSP_TypeDef* SSPx)
+void SSP_DeInit(LPC_SSP_TypeDef* SSPx)
 {
 	CHECK_PARAM(PARAM_SSPx(SSPx));
 
-	if (SSPx == SSP0){
+	if (SSPx == LPC_SSP0){
 		/* Set up clock and power for SSP0 module */
 		CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCSSP0, DISABLE);
-	} else if (SSPx == SSP1) {
+	} else if (SSPx == LPC_SSP1) {
 		/* Set up clock and power for SSP1 module */
 		CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCSSP1, DISABLE);
 	}
@@ -178,16 +184,16 @@ void SSP_DeInit(SSP_TypeDef* SSPx)
 
 /*****************************************************************************//**
 * @brief		Get data size bit selected
-* @param[in]	SSPx pointer to SSP_TypeDef structure, should be:
-* 				- SSP0: SSP0 peripheral
-* 				- SSP1: SSP1 peripheral
+* @param[in]	SSPx pointer to LPC_SSP_TypeDef structure, should be:
+* 				- LPC_SSP0: SSP0 peripheral
+* 				- LPC_SSP1: SSP1 peripheral
 * @return		Data size, could be:
 *				- SSP_DATABIT_4: 4 bit transfer
 *				- SSP_DATABIT_5: 5 bit transfer
 *				...
 *				- SSP_DATABIT_16: 16 bit transfer
 *******************************************************************************/
-uint8_t SSP_GetDataSize(SSP_TypeDef* SSPx)
+uint8_t SSP_GetDataSize(LPC_SSP_TypeDef* SSPx)
 {
 	CHECK_PARAM(PARAM_SSPx(SSPx));
 	return (SSPx->CR0 & (0xF));
@@ -219,12 +225,12 @@ void SSP_ConfigStructInit(SSP_CFG_Type *SSP_InitStruct)
 /*********************************************************************//**
  * @brief		Enable or disable SSP peripheral's operation
  * @param[in]	SSPx	SSP peripheral, should be:
- * 				- SSP0: SSP0 peripheral
- * 				- SSP1: SSP1 peripheral
+ * 				- LPC_SSP0: SSP0 peripheral
+ * 				- LPC_SSP1: SSP1 peripheral
  * @param[in]	NewState New State of SSPx peripheral's operation
  * @return 		none
  **********************************************************************/
-void SSP_Cmd(SSP_TypeDef* SSPx, FunctionalState NewState)
+void SSP_Cmd(LPC_SSP_TypeDef* SSPx, FunctionalState NewState)
 {
 	CHECK_PARAM(PARAM_SSPx(SSPx));
 	CHECK_PARAM(PARAM_FUNCTIONALSTATE(NewState));
@@ -242,14 +248,14 @@ void SSP_Cmd(SSP_TypeDef* SSPx, FunctionalState NewState)
 /*********************************************************************//**
  * @brief		Enable or disable Loop Back mode function in SSP peripheral
  * @param[in]	SSPx	SSP peripheral selected, should be:
- *  					- SSP0: SSP0 peripheral
- * 						- SSP1: SSP1 peripheral
+ *  					- LPC_SSP0: SSP0 peripheral
+ * 						- LPC_SSP1: SSP1 peripheral
  * @param[in]	NewState	New State of Loop Back mode, should be:
  * 							- ENABLE: Enable this function
  * 							- DISABLE: Disable this function
  * @return 		None
  **********************************************************************/
-void SSP_LoopBackCmd(SSP_TypeDef* SSPx, FunctionalState NewState)
+void SSP_LoopBackCmd(LPC_SSP_TypeDef* SSPx, FunctionalState NewState)
 {
 	CHECK_PARAM(PARAM_SSPx(SSPx));
 	CHECK_PARAM(PARAM_FUNCTIONALSTATE(NewState));
@@ -267,8 +273,8 @@ void SSP_LoopBackCmd(SSP_TypeDef* SSPx, FunctionalState NewState)
 /*********************************************************************//**
  * @brief		Enable or disable Slave Output function in SSP peripheral
  * @param[in]	SSPx	SSP peripheral selected, should be:
- * 						- SSP0: SSP0 peripheral
- * 						- SSP1: SSP1 peripheral
+ * 						- LPC_SSP0: SSP0 peripheral
+ * 						- LPC_SSP1: SSP1 peripheral
  * @param[in]	NewState	New State of Slave Output function, should be:
  * 							- ENABLE: Slave Output in normal operation
  * 							- DISABLE: Slave Output is disabled. This blocks
@@ -277,7 +283,7 @@ void SSP_LoopBackCmd(SSP_TypeDef* SSPx, FunctionalState NewState)
  * Note: 		This function is available when SSP peripheral in Slave mode
  * @return 		None
  **********************************************************************/
-void SSP_SlaveOutputCmd(SSP_TypeDef* SSPx, FunctionalState NewState)
+void SSP_SlaveOutputCmd(LPC_SSP_TypeDef* SSPx, FunctionalState NewState)
 {
 	CHECK_PARAM(PARAM_SSPx(SSPx));
 	CHECK_PARAM(PARAM_FUNCTIONALSTATE(NewState));
@@ -297,13 +303,13 @@ void SSP_SlaveOutputCmd(SSP_TypeDef* SSPx, FunctionalState NewState)
 /*********************************************************************//**
  * @brief		Transmit a single data through SSPx peripheral
  * @param[in]	SSPx	SSP peripheral selected, should be:
- * 						- SSP0: SSP0 peripheral
- * 						- SSP1: SSP1 peripheral
+ * 						- LPC_SSP0: SSP0 peripheral
+ * 						- LPC_SSP1: SSP1 peripheral
  * @param[in]	Data	Data to transmit (must be 16 or 8-bit long,
  * 						this depend on SSP data bit number configured)
  * @return 		none
  **********************************************************************/
-void SSP_SendData(SSP_TypeDef* SSPx, uint16_t Data)
+void SSP_SendData(LPC_SSP_TypeDef* SSPx, uint16_t Data)
 {
 	CHECK_PARAM(PARAM_SSPx(SSPx));
 
@@ -315,11 +321,11 @@ void SSP_SendData(SSP_TypeDef* SSPx, uint16_t Data)
 /*********************************************************************//**
  * @brief		Receive a single data from SSPx peripheral
  * @param[in]	SSPx	SSP peripheral selected, should be
- * 						- SSP0: SSP0 peripheral
- * 						- SSP1: SSP1 peripheral
+ * 						- LPC_SSP0: SSP0 peripheral
+ * 						- LPC_SSP1: SSP1 peripheral
  * @return 		Data received (16-bit long)
  **********************************************************************/
-uint16_t SSP_ReceiveData(SSP_TypeDef* SSPx)
+uint16_t SSP_ReceiveData(LPC_SSP_TypeDef* SSPx)
 {
 	CHECK_PARAM(PARAM_SSPx(SSPx));
 
@@ -329,8 +335,8 @@ uint16_t SSP_ReceiveData(SSP_TypeDef* SSPx)
 /*********************************************************************//**
  * @brief 		SSP Read write data function
  * @param[in]	SSPx 	Pointer to SSP peripheral, should be
- * 						- SSP0: SSP0 peripheral
- * 						- SSP1: SSP1 peripheral
+ * 						- LPC_SSP0: SSP0 peripheral
+ * 						- LPC_SSP1: SSP1 peripheral
  * @param[in]	dataCfg	Pointer to a SSP_DATA_SETUP_Type structure that
  * 						contains specified information about transmit
  * 						data configuration.
@@ -342,7 +348,7 @@ uint16_t SSP_ReceiveData(SSP_TypeDef* SSPx)
  * 				Return (-1) if error.
  * Note: This function can be used in both master and slave mode.
  ***********************************************************************/
-int32_t SSP_ReadWrite (SSP_TypeDef *SSPx, SSP_DATA_SETUP_Type *dataCfg, \
+int32_t SSP_ReadWrite (LPC_SSP_TypeDef *SSPx, SSP_DATA_SETUP_Type *dataCfg, \
 						SSP_TRANSFER_Type xfType)
 {
 	uint8_t *rdata8;
@@ -365,7 +371,7 @@ int32_t SSP_ReadWrite (SSP_TypeDef *SSPx, SSP_DATA_SETUP_Type *dataCfg, \
 
 	// Clear status
 	SSPx->ICR = SSP_ICR_BITMASK;
-	if(SSP_GetDataSize(SSPx)>8)
+	if(SSP_GetDataSize(SSPx)>SSP_DATABIT_8)
 		dataword = 1;
 	else dataword = 0;
 
@@ -378,8 +384,8 @@ int32_t SSP_ReadWrite (SSP_TypeDef *SSPx, SSP_DATA_SETUP_Type *dataCfg, \
 			rdata16 = (uint16_t *)dataCfg->rx_data;
 			wdata16 = (uint16_t *)dataCfg->tx_data;
 		}
-		while ((dataCfg->tx_cnt != dataCfg->length) || (dataCfg->rx_cnt != dataCfg->length)){
-			if ((SSPx->SR & SSP_SR_TNF) && (dataCfg->tx_cnt != dataCfg->length)){
+		while ((dataCfg->tx_cnt < dataCfg->length) || (dataCfg->rx_cnt < dataCfg->length)){
+			if ((SSPx->SR & SSP_SR_TNF) && (dataCfg->tx_cnt < dataCfg->length)){
 				// Write data to buffer
 				if(dataCfg->tx_data == NULL){
 					if (dataword == 0){
@@ -410,7 +416,7 @@ int32_t SSP_ReadWrite (SSP_TypeDef *SSPx, SSP_DATA_SETUP_Type *dataCfg, \
 			}
 
 			// Check for any data available in RX FIFO
-			while ((SSPx->SR & SSP_SR_RNE) && (dataCfg->rx_cnt != dataCfg->length)){
+			while ((SSPx->SR & SSP_SR_RNE) && (dataCfg->rx_cnt < dataCfg->length)){
 				// Read data from SSP data
 				tmp = SSP_ReceiveData(SSPx);
 
@@ -449,7 +455,7 @@ int32_t SSP_ReadWrite (SSP_TypeDef *SSPx, SSP_DATA_SETUP_Type *dataCfg, \
 	// Interrupt mode ----------------------------------------------------------------------
 	else if (xfType == SSP_TRANSFER_INTERRUPT){
 
-		while ((SSPx->SR & SSP_SR_TNF) && (dataCfg->tx_cnt != dataCfg->length)){
+		while ((SSPx->SR & SSP_SR_TNF) && (dataCfg->tx_cnt < dataCfg->length)){
 			// Write data to buffer
 			if(dataCfg->tx_data == NULL){
 				if (dataword == 0){
@@ -477,7 +483,7 @@ int32_t SSP_ReadWrite (SSP_TypeDef *SSPx, SSP_DATA_SETUP_Type *dataCfg, \
 			}
 
 			// Check for any data available in RX FIFO
-			while ((SSPx->SR & SSP_SR_RNE) && (dataCfg->rx_cnt != dataCfg->length)){
+			while ((SSPx->SR & SSP_SR_RNE) && (dataCfg->rx_cnt < dataCfg->length)){
 				// Read data from SSP data
 				tmp = SSP_ReceiveData(SSPx);
 
@@ -500,7 +506,7 @@ int32_t SSP_ReadWrite (SSP_TypeDef *SSPx, SSP_DATA_SETUP_Type *dataCfg, \
 		}
 
 		// If there more data to sent or receive
-		if ((dataCfg->rx_cnt != dataCfg->length) || (dataCfg->tx_cnt != dataCfg->length)){
+		if ((dataCfg->rx_cnt < dataCfg->length) || (dataCfg->tx_cnt < dataCfg->length)){
 			// Enable all interrupt
 			SSPx->IMSC = SSP_IMSC_BITMASK;
 		} else {
@@ -516,8 +522,8 @@ int32_t SSP_ReadWrite (SSP_TypeDef *SSPx, SSP_DATA_SETUP_Type *dataCfg, \
 /*********************************************************************//**
  * @brief		Checks whether the specified SSP status flag is set or not
  * @param[in]	SSPx	SSP peripheral selected, should be:
- * 		 				- SSP0: SSP0 peripheral
- * 						- SSP1: SSP1 peripheral
+ * 		 				- LPC_SSP0: SSP0 peripheral
+ * 						- LPC_SSP1: SSP1 peripheral
  * @param[in]	FlagType	Type of flag to check status, should be one
  * 							of following:
  *							- SSP_STAT_TXFIFO_EMPTY: TX FIFO is empty
@@ -527,7 +533,7 @@ int32_t SSP_ReadWrite (SSP_TypeDef *SSPx, SSP_DATA_SETUP_Type *dataCfg, \
  *							- SSP_STAT_BUSY: SSP peripheral is busy
  * @return		New State of specified SSP status flag
  **********************************************************************/
-FlagStatus SSP_GetStatus(SSP_TypeDef* SSPx, uint32_t FlagType)
+FlagStatus SSP_GetStatus(LPC_SSP_TypeDef* SSPx, uint32_t FlagType)
 {
 	CHECK_PARAM(PARAM_SSPx(SSPx));
 	CHECK_PARAM(PARAM_SSP_STAT(FlagType));
@@ -538,8 +544,8 @@ FlagStatus SSP_GetStatus(SSP_TypeDef* SSPx, uint32_t FlagType)
 /*********************************************************************//**
  * @brief		Enable or disable specified interrupt type in SSP peripheral
  * @param[in]	SSPx	SSP peripheral selected, should be:
- * 						- SSP0: SSP0 peripheral
- * 						- SSP1: SSP1 peripheral
+ * 						- LPC_SSP0: SSP0 peripheral
+ * 						- LPC_SSP1: SSP1 peripheral
  * @param[in]	IntType	Interrupt type in SSP peripheral, should be:
  * 				- SSP_INTCFG_ROR: Receive Overrun interrupt
  * 				- SSP_INTCFG_RT: Receive Time out interrupt
@@ -551,7 +557,7 @@ FlagStatus SSP_GetStatus(SSP_TypeDef* SSPx, uint32_t FlagType)
  * @return		None
  * Note: We can enable/disable multi-interrupt type by OR multi value
  **********************************************************************/
-void SSP_IntConfig(SSP_TypeDef *SSPx, uint32_t IntType, FunctionalState NewState)
+void SSP_IntConfig(LPC_SSP_TypeDef *SSPx, uint32_t IntType, FunctionalState NewState)
 {
 	CHECK_PARAM(PARAM_SSPx(SSPx));
 
@@ -569,8 +575,8 @@ void SSP_IntConfig(SSP_TypeDef *SSPx, uint32_t IntType, FunctionalState NewState
  * @brief	Check whether the specified Raw interrupt status flag is
  * 			set or not
  * @param[in]	SSPx	SSP peripheral selected, should be:
- * 						- SSP0: SSP0 peripheral
- * 						- SSP1: SSP1 peripheral
+ * 						- LPC_SSP0: SSP0 peripheral
+ * 						- LPC_SSP1: SSP1 peripheral
  * @param[in]	RawIntType	Raw Interrupt Type, should be:
  * 				- SSP_INTSTAT_RAW_ROR: Receive Overrun interrupt
  * 				- SSP_INTSTAT_RAW_RT: Receive Time out interrupt
@@ -580,7 +586,7 @@ void SSP_IntConfig(SSP_TypeDef *SSPx, uint32_t IntType, FunctionalState NewState
  * Note: Enabling/Disabling specified interrupt in SSP peripheral does not
  * 		effect to Raw Interrupt Status flag.
  **********************************************************************/
-IntStatus SSP_GetRawIntStatus(SSP_TypeDef *SSPx, uint32_t RawIntType)
+IntStatus SSP_GetRawIntStatus(LPC_SSP_TypeDef *SSPx, uint32_t RawIntType)
 {
 	CHECK_PARAM(PARAM_SSPx(SSPx));
 	CHECK_PARAM(PARAM_SSP_INTSTAT_RAW(RawIntType));
@@ -591,11 +597,11 @@ IntStatus SSP_GetRawIntStatus(SSP_TypeDef *SSPx, uint32_t RawIntType)
 /*********************************************************************//**
  * @brief		Get Raw Interrupt Status register
  * @param[in]	SSPx	SSP peripheral selected, should be:
- * 						- SSP0: SSP0 peripheral
- * 						- SSP1: SSP1 peripheral
+ * 						- LPC_SSP0: SSP0 peripheral
+ * 						- LPC_SSP1: SSP1 peripheral
  * @return		Raw Interrupt Status (RIS) register value
  **********************************************************************/
-uint32_t SSP_GetRawIntStatusReg(SSP_TypeDef *SSPx)
+uint32_t SSP_GetRawIntStatusReg(LPC_SSP_TypeDef *SSPx)
 {
 	CHECK_PARAM(PARAM_SSPx(SSPx));
 	return (SSPx->RIS);
@@ -605,8 +611,8 @@ uint32_t SSP_GetRawIntStatusReg(SSP_TypeDef *SSPx)
  * @brief	Check whether the specified interrupt status flag is
  * 			set or not
  * @param[in]	SSPx	SSP peripheral selected, should be:
- * 						- SSP0: SSP0 peripheral
- * 						- SSP1: SSP1 peripheral
+ * 						- LPC_SSP0: SSP0 peripheral
+ * 						- LPC_SSP1: SSP1 peripheral
  * @param[in]	IntType	Raw Interrupt Type, should be:
  * 				- SSP_INTSTAT_ROR: Receive Overrun interrupt
  * 				- SSP_INTSTAT_RT: Receive Time out interrupt
@@ -616,7 +622,7 @@ uint32_t SSP_GetRawIntStatusReg(SSP_TypeDef *SSPx)
  * Note: Enabling/Disabling specified interrupt in SSP peripheral effects
  * 			to Interrupt Status flag.
  **********************************************************************/
-IntStatus SSP_GetIntStatus (SSP_TypeDef *SSPx, uint32_t IntType)
+IntStatus SSP_GetIntStatus (LPC_SSP_TypeDef *SSPx, uint32_t IntType)
 {
 	CHECK_PARAM(PARAM_SSPx(SSPx));
 	CHECK_PARAM(PARAM_SSP_INTSTAT(IntType));
@@ -627,8 +633,8 @@ IntStatus SSP_GetIntStatus (SSP_TypeDef *SSPx, uint32_t IntType)
 /*********************************************************************//**
  * @brief				Clear specified interrupt pending in SSP peripheral
  * @param[in]	SSPx	SSP peripheral selected, should be:
- *  					- SSP0: SSP0 peripheral
- * 						- SSP1: SSP1 peripheral
+ *  					- LPC_SSP0: SSP0 peripheral
+ * 						- LPC_SSP1: SSP1 peripheral
  * @param[in]	IntType	Interrupt pending to clear, should be:
  * 						- SSP_INTCLR_ROR: clears the "frame was received when
  * 						RxFIFO was full" interrupt.
@@ -636,7 +642,7 @@ IntStatus SSP_GetIntStatus (SSP_TypeDef *SSPx, uint32_t IntType)
  * 						has not been read for a timeout period" interrupt.
  * @return		None
  **********************************************************************/
-void SSP_ClearIntPending(SSP_TypeDef *SSPx, uint32_t IntType)
+void SSP_ClearIntPending(LPC_SSP_TypeDef *SSPx, uint32_t IntType)
 {
 	CHECK_PARAM(PARAM_SSPx(SSPx));
 	CHECK_PARAM(PARAM_SSP_INTCLR(IntType));
@@ -647,8 +653,8 @@ void SSP_ClearIntPending(SSP_TypeDef *SSPx, uint32_t IntType)
 /*********************************************************************//**
  * @brief				Enable/Disable DMA function for SSP peripheral
  * @param[in]	SSPx	SSP peripheral selected, should be:
- *  					- SSP0: SSP0 peripheral
- * 						- SSP1: SSP1 peripheral
+ *  					- LPC_SSP0: SSP0 peripheral
+ * 						- LPC_SSP1: SSP1 peripheral
  * @param[in]	DMAMode	Type of DMA, should be:
  * 						- SSP_DMA_TX: DMA for the transmit FIFO
  * 						- SSP_DMA_RX: DMA for the Receive FIFO
@@ -658,7 +664,7 @@ void SSP_ClearIntPending(SSP_TypeDef *SSPx, uint32_t IntType)
  * 						- DISABLE: Disable this function
  * @return		None
  **********************************************************************/
-void SSP_DMACmd(SSP_TypeDef *SSPx, uint32_t DMAMode, FunctionalState NewState)
+void SSP_DMACmd(LPC_SSP_TypeDef *SSPx, uint32_t DMAMode, FunctionalState NewState)
 {
 	CHECK_PARAM(PARAM_SSPx(SSPx));
 	CHECK_PARAM(PARAM_SSP_DMA(DMAMode));

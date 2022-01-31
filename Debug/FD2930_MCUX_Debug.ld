@@ -6,7 +6,7 @@
  * Generated linker script file for LPC1768
  * Created from linkscript.ldt by FMCreateLinkLibraries
  * Using Freemarker v2.3.30
- * MCUXpresso IDE v11.5.0 [Build 7232] [2022-01-11] on Jan 31, 2022, 5:26:19 PM
+ * MCUXpresso IDE v11.5.0 [Build 7232] [2022-01-11] on Jan 31, 2022, 6:49:59 PM
  */
 
 INCLUDE "FD2930_MCUX_Debug_library.ld"

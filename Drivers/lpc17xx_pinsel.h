@@ -22,10 +22,16 @@
 * notification. NXP Semiconductors also make no representation or
 * warranty that such application will be suitable for the specified
 * use without further testing or modification.
+* Permission to use, copy, modify, and distribute this software and its
+* documentation is hereby granted, under NXP Semiconductors'
+* relevant copyright in the software, without fee, provided that it
+* is used in conjunction with NXP Semiconductors microcontrollers.  This
+* copyright, permission, and disclaimer notice must appear in all copies of
+* this code.
 **********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
-/** @defgroup PINSEL PINSEL
+/** @defgroup PINSEL PINSEL (Pin Selection)
  * @ingroup LPC1700CMSIS_FwLib_Drivers
  * @{
  */
@@ -34,7 +40,7 @@
 #define LPC17XX_PINSEL_H_
 
 /* Includes ------------------------------------------------------------------- */
-#include "lpc17xx.h"
+#include "LPC17xx.h"
 #include "lpc_types.h"
 
 #ifdef __cplusplus

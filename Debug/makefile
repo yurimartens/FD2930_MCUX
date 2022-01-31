@@ -10,8 +10,6 @@ RM := rm -rf
 -include sources.mk
 -include src/subdir.mk
 -include fat_sd/subdir.mk
--include Modbus/subdir.mk
--include LPCDrivers/subdir.mk
 -include Drivers/subdir.mk
 -include BSP/subdir.mk
 -include subdir.mk

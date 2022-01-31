@@ -10,6 +10,8 @@ VERSION:      1.10
 #ifndef _FLASHNVOL_
 #define _FLASHNVOL_
 
+#include <lpc_types.h>
+
 // Data Types
 #define UNSIGNED8 unsigned char
 #define UNSIGNED16 unsigned short
@@ -69,7 +71,7 @@ typedef struct _Sector
 // defines a sector record
 // members must be byte aligned
 // must be 48 bytes in size
-typedef __packed struct _Sector_Record
+typedef struct _Sector_Record
 {
   UNSIGNED8 Flags1;				             // flags indicate sector status
   UNSIGNED8 Reserved1[15];                                 // padding
@@ -77,17 +79,17 @@ typedef __packed struct _Sector_Record
   UNSIGNED8 Reserved2[15];                                 // padding
   UNSIGNED8 Flags3;				             // flags indicate sector status
   UNSIGNED8 Reserved3[15];                                 // padding
-} SECTOR_RECORD;
+} SECTOR_RECORD __attribute__((packed));
 
 // defines a variable record
 // members must be byte aligned
-typedef __packed struct _Variable_Record
+typedef struct _Variable_Record
 {
   UNSIGNED8 Flags;					         // flags indicate variable status
   UNSIGNED16 Id;					   // unique variable id
   UNSIGNED8 Data[MAX_VARIABLE_SIZE];				 // variable data
   UNSIGNED8 Checksum;						  // 2's complement checksum of id and data
-} VARIABLE_RECORD;
+} VARIABLE_RECORD __attribute__((packed));
 
 // defines an entry in the variable lookup table
 typedef struct _Lookup_Table_Entry
@@ -107,9 +109,9 @@ DOES:    Module variables
 // allocate memory for non-volatile memory so it isn't used by the linker
 // for something else
 #pragma location = SECTOR1_STARTADDR
-__no_init static UNSIGNED8 mSectorMemory1[SECTOR_SIZE];
+static UNSIGNED8 mSectorMemory1[SECTOR_SIZE];
 #pragma location = SECTOR2_STARTADDR
-__no_init static UNSIGNED8 mSectorMemory2[SECTOR_SIZE];
+static UNSIGNED8 mSectorMemory2[SECTOR_SIZE];
 
 // define sectors
 static SECTOR mSector1 = {mSectorMemory1, SECTOR1_NUM};
@@ -251,7 +253,7 @@ BOOL NVOL_SetVariableRecord
   );
 
 /**************************************************************************
-DOES:    выдает последовательные значения переменной
+DOES:    пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 **************************************************************************/
 BOOL NVOL_PrintDataTable 
 (

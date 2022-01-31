@@ -22,6 +22,12 @@
 * notification. NXP Semiconductors also make no representation or
 * warranty that such application will be suitable for the specified
 * use without further testing or modification.
+* Permission to use, copy, modify, and distribute this software and its
+* documentation is hereby granted, under NXP Semiconductors'
+* relevant copyright in the software, without fee, provided that it
+* is used in conjunction with NXP Semiconductors microcontrollers.  This
+* copyright, permission, and disclaimer notice must appear in all copies of
+* this code.
 **********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
@@ -47,7 +53,7 @@
 
 /* Private Functions ---------------------------------------------------------- */
 
-static GPIO_TypeDef *GPIO_GetPointer(uint8_t portNum);
+static LPC_GPIO_TypeDef *GPIO_GetPointer(uint8_t portNum);
 static GPIO_HalfWord_TypeDef *FIO_HalfWordGetPointer(uint8_t portNum);
 static GPIO_Byte_TypeDef *FIO_ByteGetPointer(uint8_t portNum);
 
@@ -56,25 +62,25 @@ static GPIO_Byte_TypeDef *FIO_ByteGetPointer(uint8_t portNum);
  * @param[in]	portNum		Port Number value, should be in range from 0 to 4.
  * @return		Pointer to GPIO peripheral
  **********************************************************************/
-static GPIO_TypeDef *GPIO_GetPointer(uint8_t portNum)
+static LPC_GPIO_TypeDef *GPIO_GetPointer(uint8_t portNum)
 {
-	GPIO_TypeDef *pGPIO = NULL;
+	LPC_GPIO_TypeDef *pGPIO = NULL;
 
 	switch (portNum) {
 	case 0:
-		pGPIO = GPIO0;
+		pGPIO = LPC_GPIO0;
 		break;
 	case 1:
-		pGPIO = GPIO1;
+		pGPIO = LPC_GPIO1;
 		break;
 	case 2:
-		pGPIO = GPIO2;
+		pGPIO = LPC_GPIO2;
 		break;
 	case 3:
-		pGPIO = GPIO3;
+		pGPIO = LPC_GPIO3;
 		break;
 	case 4:
-		pGPIO = GPIO4;
+		pGPIO = LPC_GPIO4;
 		break;
 	default:
 		break;
@@ -176,7 +182,7 @@ static GPIO_Byte_TypeDef *FIO_ByteGetPointer(uint8_t portNum)
  **********************************************************************/
 void GPIO_SetDir(uint8_t portNum, uint32_t bitValue, uint8_t dir)
 {
-	GPIO_TypeDef *pGPIO = GPIO_GetPointer(portNum);
+	LPC_GPIO_TypeDef *pGPIO = GPIO_GetPointer(portNum);
 
 	if (pGPIO != NULL) {
 		// Enable Output
@@ -207,7 +213,7 @@ void GPIO_SetDir(uint8_t portNum, uint32_t bitValue, uint8_t dir)
  **********************************************************************/
 void GPIO_SetValue(uint8_t portNum, uint32_t bitValue)
 {
-	GPIO_TypeDef *pGPIO = GPIO_GetPointer(portNum);
+	LPC_GPIO_TypeDef *pGPIO = GPIO_GetPointer(portNum);
 
 	if (pGPIO != NULL) {
 		pGPIO->FIOSET = bitValue;
@@ -230,7 +236,7 @@ void GPIO_SetValue(uint8_t portNum, uint32_t bitValue)
  **********************************************************************/
 void GPIO_ClearValue(uint8_t portNum, uint32_t bitValue)
 {
-	GPIO_TypeDef *pGPIO = GPIO_GetPointer(portNum);
+	LPC_GPIO_TypeDef *pGPIO = GPIO_GetPointer(portNum);
 
 	if (pGPIO != NULL) {
 		pGPIO->FIOCLR = bitValue;
@@ -247,7 +253,7 @@ void GPIO_ClearValue(uint8_t portNum, uint32_t bitValue)
  **********************************************************************/
 uint32_t GPIO_ReadValue(uint8_t portNum)
 {
-	GPIO_TypeDef *pGPIO = GPIO_GetPointer(portNum);
+	LPC_GPIO_TypeDef *pGPIO = GPIO_GetPointer(portNum);
 
 	if (pGPIO != NULL) {
 		return pGPIO->FIOPIN;
@@ -269,13 +275,13 @@ uint32_t GPIO_ReadValue(uint8_t portNum)
 void GPIO_IntCmd(uint8_t portNum, uint32_t bitValue, uint8_t edgeState)
 {
 	if((portNum == 0)&&(edgeState == 0))
-		GPIOINT->IO0IntEnR = bitValue;
+		LPC_GPIOINT->IO0IntEnR = bitValue;
 	else if ((portNum == 2)&&(edgeState == 0))
-		GPIOINT->IO2IntEnR = bitValue;
+		LPC_GPIOINT->IO2IntEnR = bitValue;
 	else if ((portNum == 0)&&(edgeState == 1))
-		GPIOINT->IO0IntEnF = bitValue;
+		LPC_GPIOINT->IO0IntEnF = bitValue;
 	else if ((portNum == 2)&&(edgeState == 1))
-		GPIOINT->IO2IntEnF = bitValue;
+		LPC_GPIOINT->IO2IntEnF = bitValue;
 	else
 		//Error
 		while(1);
@@ -297,13 +303,13 @@ void GPIO_IntCmd(uint8_t portNum, uint32_t bitValue, uint8_t edgeState)
 FunctionalState GPIO_GetIntStatus(uint8_t portNum, uint32_t pinNum, uint8_t edgeState)
 {
 	if((portNum == 0) && (edgeState == 0))//Rising Edge
-		return ((FunctionalState)(((GPIOINT->IO0IntStatR)>>pinNum)& 0x1));
+		return ((FunctionalState)(((LPC_GPIOINT->IO0IntStatR)>>pinNum)& 0x1));
 	else if ((portNum == 2) && (edgeState == 0))
-		return ((FunctionalState)(((GPIOINT->IO2IntStatR)>>pinNum)& 0x1));
+		return ((FunctionalState)(((LPC_GPIOINT->IO2IntStatR)>>pinNum)& 0x1));
 	else if ((portNum == 0) && (edgeState == 1))//Falling Edge
-		return ((FunctionalState)(((GPIOINT->IO0IntStatF)>>pinNum)& 0x1));
+		return ((FunctionalState)(((LPC_GPIOINT->IO0IntStatF)>>pinNum)& 0x1));
 	else if ((portNum == 2) && (edgeState == 1))
-		return ((FunctionalState)(((GPIOINT->IO2IntStatF)>>pinNum)& 0x1));
+		return ((FunctionalState)(((LPC_GPIOINT->IO2IntStatF)>>pinNum)& 0x1));
 	else
 		//Error
 		while(1);
@@ -318,9 +324,9 @@ FunctionalState GPIO_GetIntStatus(uint8_t portNum, uint32_t pinNum, uint8_t edge
 void GPIO_ClearInt(uint8_t portNum, uint32_t bitValue)
 {
 	if(portNum == 0)
-		GPIOINT->IO0IntClr = bitValue;
+		LPC_GPIOINT->IO0IntClr = bitValue;
 	else if (portNum == 2)
-		GPIOINT->IO2IntClr = bitValue;
+		LPC_GPIOINT->IO2IntClr = bitValue;
 	else
 		//Invalid portNum
 		while(1);
@@ -404,7 +410,7 @@ void FIO_ClearInt(uint8_t portNum, uint32_t bitValue)
  **********************************************************************/
 void FIO_SetMask(uint8_t portNum, uint32_t bitValue, uint8_t maskValue)
 {
-	GPIO_TypeDef *pFIO = GPIO_GetPointer(portNum);
+	LPC_GPIO_TypeDef *pFIO = GPIO_GetPointer(portNum);
 	if(pFIO != NULL) {
 		// Mask
 		if (maskValue){

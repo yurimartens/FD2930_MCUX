@@ -32,24 +32,24 @@
 #define	MMC_WP		0						/* Write protected (yes:true, no:false, default:false) */
 
 #if SSP_CH == 0
-#define	SSPxDR		SSP0->DR
-#define	SSPxSR		SSP0->SR
-#define	SSPxCR0		SSP0->CR0
-#define	SSPxCR1		SSP0->CR1
+#define	SSPxDR		LPC_SSP0->DR
+#define	SSPxSR		LPC_SSP0->SR
+#define	SSPxCR0		LPC_SSP0->CR0
+#define	SSPxCR1		LPC_SSP0->CR1
 
 #elif SSP_CH == 1
-#define	SSPxDR		SSP1->DR
-#define	SSPxSR		SSP1->SR
-#define	SSPxCR0		SSP1->CR0
-#define	SSPxCR1		SSP1->CR1
+#define	SSPxDR		LPC_SSP1->DR
+#define	SSPxSR		LPC_SSP1->SR
+#define	SSPxCR0		LPC_SSP1->CR0
+#define	SSPxCR1		LPC_SSP1->CR1
 #endif
 
 #define	CS_LOW()	GPIO_ClearValue(SSP_CS_PORT, (1 << SSP_CS_PIN))
 #define	CS_HIGH()	GPIO_SetValue(SSP_CS_PORT, (1 << SSP_CS_PIN))
 
 
-#define FCLK_FAST() setSSPclock(SSP0, SCLK_FAST)
-#define FCLK_SLOW() setSSPclock(SSP0, SCLK_SLOW)
+#define FCLK_FAST() setSSPclock(LPC_SSP0, SCLK_FAST)
+#define FCLK_SLOW() setSSPclock(LPC_SSP0, SCLK_SLOW)
 
 #define	_BV(bit) (1<<(bit))
 
@@ -271,18 +271,18 @@ static void power_on (void)	/* Enable SSP module and attach it to I/O pads */
 	PINSEL_ConfigPin(&PinCfg);
 
 	SSP_ConfigStructInit(&SSP_ConfigStruct);
-	SSP_Init(SSP0, &SSP_ConfigStruct);
+	SSP_Init(LPC_SSP0, &SSP_ConfigStruct);
 
 	CLKPWR_SetPCLKDiv(CLKPWR_PCLKSEL_SSP0, CLKPWR_PCLKSEL_CCLK_DIV_2);
 
-	SSP_Cmd(SSP0, ENABLE);
+	SSP_Cmd(LPC_SSP0, ENABLE);
 
 	/* wait for busy gone */
-	while( SSP0->SR & SSP_SR_BSY ) { ; }
+	while(LPC_SSP0->SR & SSP_SR_BSY ) { ; }
 
 	/* drain SPI RX FIFO */
-	while( SSP0->SR & SSP_SR_RNE ) {
-		volatile uint32_t dummy = SSP0->DR;
+	while (LPC_SSP0->SR & SSP_SR_RNE ) {
+		volatile uint32_t dummy = LPC_SSP0->DR;
 		(void)dummy;
 	}
 

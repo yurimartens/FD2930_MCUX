@@ -7,8 +7,8 @@ COPYRIGHT:    NXP Semiconductors, 2010. All rights reserved.
 VERSION:      1.10
 ***************************************************************************/ 
 
-//#include "flash_nvol.h"
-#include <includes.h>
+#include "flash_nvol.h"
+
 
 
 VARIABLE_RECORD *VarRecTable = (VARIABLE_RECORD *)(SECTOR1_STARTADDR + sizeof(SECTOR_RECORD));
@@ -643,7 +643,7 @@ BOOL NVOL_SetVariable
 
 
 /**************************************************************************
-DOES:    выдает последовательные значения переменной
+DOES:    пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 **************************************************************************/
 BOOL NVOL_PrintDataTable 
 (
@@ -668,9 +668,9 @@ UNSIGNED16 Size						   // size of variable in bytes
   if (VarRecTable->Flags != 0xFF)
   {
     // if variable record is valid then return its value
-    if (NVOL_IsVariableRecordValid(VarRecTable)) //нашли переменную посылаем ее значение
+    if (NVOL_IsVariableRecordValid(VarRecTable)) //пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     {
-      if(VarRecTable->Id == NVRAMLOGBUF)  //проверяем ID переменной
+      if(VarRecTable->Id == NVRAMLOGBUF)  //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ID пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
       {
         // copy data
         for (Byte = 0; Byte < Size; Byte++)
@@ -684,7 +684,7 @@ UNSIGNED16 Size						   // size of variable in bytes
     VarRecTable++;
     return TRUE;
   }
-  else  //больше нет значений
+  else  //пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
   {
     First = TRUE;
     return FALSE;

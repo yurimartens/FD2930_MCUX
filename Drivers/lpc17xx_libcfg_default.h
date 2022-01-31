@@ -21,10 +21,16 @@
 * notification. NXP Semiconductors also make no representation or
 * warranty that such application will be suitable for the specified
 * use without further testing or modification.
+* Permission to use, copy, modify, and distribute this software and its
+* documentation is hereby granted, under NXP Semiconductors'
+* relevant copyright in the software, without fee, provided that it
+* is used in conjunction with NXP Semiconductors microcontrollers.  This
+* copyright, permission, and disclaimer notice must appear in all copies of
+* this code.
 **********************************************************************/
 
 /* Library Configuration group ----------------------------------------------------------- */
-/** @defgroup LIBCFG_DEFAULT LIBCFG_DEFAULT
+/** @defgroup LIBCFG_DEFAULT LIBCFG_DEFAULT (Default Library Configuration)
  * @ingroup LPC1700CMSIS_FwLib_Drivers
  * @{
  */
@@ -45,7 +51,7 @@
 /* Un-comment the line below to compile the library in DEBUG mode, this will expanse
    the "CHECK_PARAM" macro in the FW library code */
 
-#define DEBUG
+//#define DEBUG
 
 
 /******************* PERIPHERAL FW LIBRARY CONFIGURATION DEFINITIONS ***********************/

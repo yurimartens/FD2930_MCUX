@@ -22,6 +22,12 @@
 * notification. NXP Semiconductors also make no representation or
 * warranty that such application will be suitable for the specified
 * use without further testing or modification.
+* Permission to use, copy, modify, and distribute this software and its
+* documentation is hereby granted, under NXP Semiconductors'
+* relevant copyright in the software, without fee, provided that it
+* is used in conjunction with NXP Semiconductors microcontrollers.  This
+* copyright, permission, and disclaimer notice must appear in all copies of
+* this code.
 **********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
@@ -95,7 +101,7 @@ static void set_PinFunc ( uint8_t portnum, uint8_t pinnum, uint8_t funcnum)
 {
 	uint32_t pinnum_t = pinnum;
 	uint32_t pinselreg_idx = 2 * portnum;
-	uint32_t *pPinCon = (uint32_t *)&PINCON->PINSEL0;
+	uint32_t *pPinCon = (uint32_t *)&LPC_PINCON->PINSEL0;
 
 	if (pinnum_t >= 16) {
 		pinnum_t -= 16;
@@ -160,7 +166,7 @@ void set_ResistorMode ( uint8_t portnum, uint8_t pinnum, uint8_t modenum)
 {
 	uint32_t pinnum_t = pinnum;
 	uint32_t pinmodereg_idx = 2 * portnum;
-	uint32_t *pPinCon = (uint32_t *)&PINCON->PINMODE0;
+	uint32_t *pPinCon = (uint32_t *)&LPC_PINCON->PINMODE0;
 
 	if (pinnum_t >= 16) {
 		pinnum_t -= 16;
@@ -224,7 +230,7 @@ void set_ResistorMode ( uint8_t portnum, uint8_t pinnum, uint8_t modenum)
  **********************************************************************/
 void set_OpenDrainMode( uint8_t portnum, uint8_t pinnum, uint8_t modenum)
 {
-	uint32_t *pPinCon = (uint32_t *)&PINCON->PINMODE_OD0;
+	uint32_t *pPinCon = (uint32_t *)&LPC_PINCON->PINMODE_OD0;
 
 	if (modenum == PINSEL_PINMODE_OPENDRAIN){
 		*(uint32_t *)(pPinCon + portnum) |= (0x01UL << pinnum);
@@ -251,9 +257,9 @@ void set_OpenDrainMode( uint8_t portnum, uint8_t pinnum, uint8_t modenum)
 void PINSEL_ConfigTraceFunc(FunctionalState NewState)
 {
 	if (NewState == ENABLE) {
-		PINCON->PINSEL10 |= (0x01UL << 3);
+		LPC_PINCON->PINSEL10 |= (0x01UL << 3);
 	} else if (NewState == DISABLE) {
-		PINCON->PINSEL10 &= ~(0x01UL << 3);
+		LPC_PINCON->PINSEL10 &= ~(0x01UL << 3);
 	}
 }
 
@@ -281,7 +287,7 @@ void PINSEL_SetI2C0Pins(uint8_t i2cPinMode, FunctionalState filterSlewRateEnable
 	if (filterSlewRateEnable == DISABLE){
 		regVal = PINSEL_I2CPADCFG_SCLI2C0 | PINSEL_I2CPADCFG_SDAI2C0;
 	}
-	PINCON->I2CPADCFG = regVal;
+	LPC_PINCON->I2CPADCFG = regVal;
 }
 
 

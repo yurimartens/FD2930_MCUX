@@ -22,10 +22,16 @@
 * notification. NXP Semiconductors also make no representation or
 * warranty that such application will be suitable for the specified
 * use without further testing or modification.
+* Permission to use, copy, modify, and distribute this software and its
+* documentation is hereby granted, under NXP Semiconductors'
+* relevant copyright in the software, without fee, provided that it
+* is used in conjunction with NXP Semiconductors microcontrollers.  This
+* copyright, permission, and disclaimer notice must appear in all copies of
+* this code.
 **********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
-/** @defgroup UART UART
+/** @defgroup UART UART (Universal Asynchronous Receiver/Transmitter)
  * @ingroup LPC1700CMSIS_FwLib_Drivers
  * @{
  */
@@ -309,12 +315,12 @@ extern "C"
 #define PARAM_UART_RS485_DIRCTRL_PIN(x)	((x==UART1_RS485_DIRCTRL_RTS) || (x==UART1_RS485_DIRCTRL_DTR))
 
 /* Macro to determine if it is valid UART port number */
-#define PARAM_UARTx(x)	((((uint32_t *)x)==((uint32_t *)UART0)) \
-|| (((uint32_t *)x)==((uint32_t *)UART1)) \
-|| (((uint32_t *)x)==((uint32_t *)UART2)) \
-|| (((uint32_t *)x)==((uint32_t *)UART3)))
-#define PARAM_UART_IrDA(x) (((uint32_t *)x)==((uint32_t *)UART3))
-#define PARAM_UART1_MODEM(x) (((uint32_t *)x)==((uint32_t *)UART1))
+#define PARAM_UARTx(x)	((((uint32_t *)x)==((uint32_t *)LPC_UART0)) \
+|| (((uint32_t *)x)==((uint32_t *)LPC_UART1)) \
+|| (((uint32_t *)x)==((uint32_t *)LPC_UART2)) \
+|| (((uint32_t *)x)==((uint32_t *)LPC_UART3)))
+#define PARAM_UART_IrDA(x) (((uint32_t *)x)==((uint32_t *)LPC_UART3))
+#define PARAM_UART1_MODEM(x) (((uint32_t *)x)==((uint32_t *)LPC_UART1))
 
 /** Macro to check the input value for UART1_RS485_CFG_MATCHADDRVALUE parameter */
 #define PARAM_UART1_RS485_CFG_MATCHADDRVALUE(x) ((x<0xFF))
@@ -581,56 +587,56 @@ typedef struct {
  * @{
  */
 /* UART Init/DeInit functions --------------------------------------------------*/
-void UART_Init(UART_TypeDef *UARTx, UART_CFG_Type *UART_ConfigStruct);
-void UART_DeInit(UART_TypeDef* UARTx);
+void UART_Init(LPC_UART_TypeDef *UARTx, UART_CFG_Type *UART_ConfigStruct);
+void UART_DeInit(LPC_UART_TypeDef* UARTx);
 void UART_ConfigStructInit(UART_CFG_Type *UART_InitStruct);
 
 /* UART Send/Receive functions -------------------------------------------------*/
-void UART_SendByte(UART_TypeDef* UARTx, uint8_t Data);
-uint8_t UART_ReceiveByte(UART_TypeDef* UARTx);
-uint32_t UART_Send(UART_TypeDef *UARTx, uint8_t *txbuf,
+void UART_SendByte(LPC_UART_TypeDef* UARTx, uint8_t Data);
+uint8_t UART_ReceiveByte(LPC_UART_TypeDef* UARTx);
+uint32_t UART_Send(LPC_UART_TypeDef *UARTx, uint8_t *txbuf,
 		uint32_t buflen, TRANSFER_BLOCK_Type flag);
-uint32_t UART_Receive(UART_TypeDef *UARTx, uint8_t *rxbuf, \
+uint32_t UART_Receive(LPC_UART_TypeDef *UARTx, uint8_t *rxbuf, \
 		uint32_t buflen, TRANSFER_BLOCK_Type flag);
 
 /* UART FIFO functions ----------------------------------------------------------*/
-void UART_FIFOConfig(UART_TypeDef *UARTx, UART_FIFO_CFG_Type *FIFOCfg);
+void UART_FIFOConfig(LPC_UART_TypeDef *UARTx, UART_FIFO_CFG_Type *FIFOCfg);
 void UART_FIFOConfigStructInit(UART_FIFO_CFG_Type *UART_FIFOInitStruct);
 
 /* UART get information functions -----------------------------------------------*/
-uint32_t UART_GetIntId(UART_TypeDef* UARTx);
-uint8_t UART_GetLineStatus(UART_TypeDef* UARTx);
+uint32_t UART_GetIntId(LPC_UART_TypeDef* UARTx);
+uint8_t UART_GetLineStatus(LPC_UART_TypeDef* UARTx);
 
 /* UART operate functions -------------------------------------------------------*/
-void UART_IntConfig(UART_TypeDef *UARTx, UART_INT_Type UARTIntCfg, \
+void UART_IntConfig(LPC_UART_TypeDef *UARTx, UART_INT_Type UARTIntCfg, \
 				FunctionalState NewState);
-void UART_TxCmd(UART_TypeDef *UARTx, FunctionalState NewState);
-FlagStatus UART_CheckBusy(UART_TypeDef *UARTx);
-void UART_ForceBreak(UART_TypeDef* UARTx);
+void UART_TxCmd(LPC_UART_TypeDef *UARTx, FunctionalState NewState);
+FlagStatus UART_CheckBusy(LPC_UART_TypeDef *UARTx);
+void UART_ForceBreak(LPC_UART_TypeDef* UARTx);
 
 /* UART Auto-baud functions -----------------------------------------------------*/
-void UART_ABClearIntPending(UART_TypeDef *UARTx, UART_ABEO_Type ABIntType);
-void UART_ABCmd(UART_TypeDef *UARTx, UART_AB_CFG_Type *ABConfigStruct, \
+void UART_ABClearIntPending(LPC_UART_TypeDef *UARTx, UART_ABEO_Type ABIntType);
+void UART_ABCmd(LPC_UART_TypeDef *UARTx, UART_AB_CFG_Type *ABConfigStruct, \
 				FunctionalState NewState);
 
 /* UART1 FullModem functions ----------------------------------------------------*/
-void UART_FullModemForcePinState(UART1_TypeDef *UARTx, UART_MODEM_PIN_Type Pin, \
+void UART_FullModemForcePinState(LPC_UART1_TypeDef *UARTx, UART_MODEM_PIN_Type Pin, \
 							UART1_SignalState NewState);
-void UART_FullModemConfigMode(UART1_TypeDef *UARTx, UART_MODEM_MODE_Type Mode, \
+void UART_FullModemConfigMode(LPC_UART1_TypeDef *UARTx, UART_MODEM_MODE_Type Mode, \
 							FunctionalState NewState);
-uint8_t UART_FullModemGetStatus(UART1_TypeDef *UARTx);
+uint8_t UART_FullModemGetStatus(LPC_UART1_TypeDef *UARTx);
 
 /* UART RS485 functions ----------------------------------------------------------*/
-void UART_RS485Config(UART1_TypeDef *UARTx, \
+void UART_RS485Config(LPC_UART1_TypeDef *UARTx, \
 		UART1_RS485_CTRLCFG_Type *RS485ConfigStruct);
-void UART_RS485ReceiverCmd(UART1_TypeDef *UARTx, FunctionalState NewState);
-void UART_RS485SendSlvAddr(UART1_TypeDef *UARTx, uint8_t SlvAddr);
-uint32_t UART_RS485SendData(UART1_TypeDef *UARTx, uint8_t *pData, uint32_t size);
+void UART_RS485ReceiverCmd(LPC_UART1_TypeDef *UARTx, FunctionalState NewState);
+void UART_RS485SendSlvAddr(LPC_UART1_TypeDef *UARTx, uint8_t SlvAddr);
+uint32_t UART_RS485SendData(LPC_UART1_TypeDef *UARTx, uint8_t *pData, uint32_t size);
 
 /* UART IrDA functions-------------------------------------------------------------*/
-void UART_IrDAInvtInputCmd(UART_TypeDef* UARTx, FunctionalState NewState);
-void UART_IrDACmd(UART_TypeDef* UARTx, FunctionalState NewState);
-void UART_IrDAPulseDivConfig(UART_TypeDef *UARTx, UART_IrDA_PULSE_Type PulseDiv);
+void UART_IrDAInvtInputCmd(LPC_UART_TypeDef* UARTx, FunctionalState NewState);
+void UART_IrDACmd(LPC_UART_TypeDef* UARTx, FunctionalState NewState);
+void UART_IrDAPulseDivConfig(LPC_UART_TypeDef *UARTx, UART_IrDA_PULSE_Type PulseDiv);
 /**
  * @}
  */

@@ -1,10 +1,9 @@
 /**********************************************************************
-* $Id$		lpc17xx_nvic.h				2010-05-21
+* $Id$		lpc17xx_libcfg_default.c				2010-05-21
 *//**
-* @file		lpc17xx_nvic.h
-* @brief	Contains all macro definitions and function prototypes
-* 			support for Nesting Vectored Interrupt firmware library
-* 			on LPC17xx
+* @file		lpc17xx_libcfg_default.c
+* @brief	Library configuration source file (default), used to build
+* 			library without examples
 * @version	2.0
 * @date		21. May. 2010
 * @author	NXP MCU SW Application Team
@@ -31,43 +30,44 @@
 * this code.
 **********************************************************************/
 
-/* Peripheral group ----------------------------------------------------------- */
-/** @defgroup NVIC NVIC (Nested Vectored Interrupt Controller)
- * @ingroup LPC1700CMSIS_FwLib_Drivers
+/* Library group ----------------------------------------------------------- */
+/** @addtogroup LIBCFG_DEFAULT
  * @{
  */
-
-#ifndef LPC17XX_NVIC_H_
-#define LPC17XX_NVIC_H_
 
 /* Includes ------------------------------------------------------------------- */
-#include "LPC17xx.h"
-#include "lpc_types.h"
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
+#include "lpc17xx_libcfg_default.h"
 
 /* Public Functions ----------------------------------------------------------- */
-/** @defgroup NVIC_Public_Functions NVIC Public Functions
+/** @addtogroup LIBCFG_DEFAULT_Public_Functions
  * @{
  */
 
-void NVIC_DeInit(void);
-void NVIC_SCBDeInit(void);
-void NVIC_SetVTOR(uint32_t offset);
+#ifndef __BUILD_WITH_EXAMPLE__
+
+#ifdef  DEBUG
+/*******************************************************************************
+* @brief		Reports the name of the source file and the source line number
+* 				where the CHECK_PARAM error has occurred.
+* @param[in]	file Pointer to the source file name
+* @param[in]    line assert_param error line source number
+* @return		None
+*******************************************************************************/
+void check_failed(uint8_t *file, uint32_t line)
+{
+	/* User can add his own implementation to report the file name and line number,
+	 ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+
+	/* Infinite loop */
+	while(1);
+}
+#endif /* DEBUG */
+
+#endif /* __BUILD_WITH_EXAMPLE__ */
 
 /**
  * @}
  */
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* LPC17XX_NVIC_H_ */
 
 /**
  * @}

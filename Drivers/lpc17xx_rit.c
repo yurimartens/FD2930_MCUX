@@ -21,6 +21,12 @@
 * notification. NXP Semiconductors also make no representation or
 * warranty that such application will be suitable for the specified
 * use without further testing or modification.
+* Permission to use, copy, modify, and distribute this software and its
+* documentation is hereby granted, under NXP Semiconductors'
+* relevant copyright in the software, without fee, provided that it
+* is used in conjunction with NXP Semiconductors microcontrollers.  This
+* copyright, permission, and disclaimer notice must appear in all copies of
+* this code.
 **********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
@@ -56,7 +62,7 @@
  * @param[in]	RITx is RIT peripheral selected, should be: LPC_RIT
  * @return 		None
  *******************************************************************************/
-void RIT_Init(RIT_TypeDef *RITx)
+void RIT_Init(LPC_RIT_TypeDef *RITx)
 {
 	CHECK_PARAM(PARAM_RITx(RITx));
 	CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCRIT, ENABLE);
@@ -75,7 +81,7 @@ void RIT_Init(RIT_TypeDef *RITx)
  * @param[in]	RITx is RIT peripheral selected, should be: LPC_RIT
  * @return 		None
  *******************************************************************************/
-void RIT_DeInit(RIT_TypeDef *RITx)
+void RIT_DeInit(LPC_RIT_TypeDef *RITx)
 {
 	CHECK_PARAM(PARAM_RITx(RITx));
 
@@ -94,7 +100,7 @@ void RIT_DeInit(RIT_TypeDef *RITx)
  * @param[in]	time_interval: timer interval value (ms)
  * @return 		None
  *******************************************************************************/
-void RIT_TimerConfig(RIT_TypeDef *RITx, uint32_t time_interval)
+void RIT_TimerConfig(LPC_RIT_TypeDef *RITx, uint32_t time_interval)
 {
 	uint32_t clock_rate, cmp_value;
 	CHECK_PARAM(PARAM_RITx(RITx));
@@ -125,7 +131,7 @@ void RIT_TimerConfig(RIT_TypeDef *RITx, uint32_t time_interval)
  * 					-DISABLE: Disable Timer
  * @return 		None
  *******************************************************************************/
-void RIT_Cmd(RIT_TypeDef *RITx, FunctionalState NewState)
+void RIT_Cmd(LPC_RIT_TypeDef *RITx, FunctionalState NewState)
 {
 	CHECK_PARAM(PARAM_RITx(RITx));
 	CHECK_PARAM(PARAM_FUNCTIONALSTATE(NewState));
@@ -149,7 +155,7 @@ void RIT_Cmd(RIT_TypeDef *RITx, FunctionalState NewState)
  * 					-DISABLE: Hardware break has no effect on the timer operation
  * @return 		None
  *******************************************************************************/
-void RIT_TimerDebugCmd(RIT_TypeDef *RITx, FunctionalState NewState)
+void RIT_TimerDebugCmd(LPC_RIT_TypeDef *RITx, FunctionalState NewState)
 {
 	CHECK_PARAM(PARAM_RITx(RITx));
 	CHECK_PARAM(PARAM_FUNCTIONALSTATE(NewState));
@@ -169,9 +175,9 @@ void RIT_TimerDebugCmd(RIT_TypeDef *RITx, FunctionalState NewState)
  * @param[in]	RITx is RIT peripheral selected, should be: LPC_RIT
  * @return 		Current interrupt status, could be: SET/RESET
  *******************************************************************************/
-IntStatus RIT_GetIntStatus(RIT_TypeDef *RITx)
+IntStatus RIT_GetIntStatus(LPC_RIT_TypeDef *RITx)
 {
-	uint8_t result;
+	IntStatus result;
 	CHECK_PARAM(PARAM_RITx(RITx));
 	if((RITx->RICTRL&RIT_CTRL_INTEN)==1)	result= SET;
 	else return RESET;

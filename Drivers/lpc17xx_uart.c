@@ -4,8 +4,8 @@
 * @file		lpc17xx_uart.c
 * @brief	Contains all functions support for UART firmware library
 * 			on LPC17xx
-* @version	3.1
-* @date		06. June. 2011
+* @version	3.2
+* @date		25. July. 2011
 * @author	NXP MCU SW Application Team
 *
 * Copyright(C) 2011, NXP Semiconductor
@@ -22,6 +22,12 @@
 * notification. NXP Semiconductors also make no representation or
 * warranty that such application will be suitable for the specified
 * use without further testing or modification.
+* Permission to use, copy, modify, and distribute this software and its
+* documentation is hereby granted, under NXP Semiconductors'
+* relevant copyright in the software, without fee, provided that it
+* is used in conjunction with NXP Semiconductors microcontrollers.  This
+* copyright, permission, and disclaimer notice must appear in all copies of
+* this code.
 **********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
@@ -48,22 +54,22 @@
 
 /* Private Functions ---------------------------------------------------------- */
 
-static Status uart_set_divisors(UART_TypeDef *UARTx, uint32_t baudrate);
+static Status uart_set_divisors(LPC_UART_TypeDef *UARTx, uint32_t baudrate);
 
 
 /*********************************************************************//**
  * @brief		Determines best dividers to get a target clock rate
  * @param[in]	UARTx	Pointer to selected UART peripheral, should be:
- * 				- UART0: UART0 peripheral
- * 				- UART1: UART1 peripheral
- * 				- UART2: UART2 peripheral
- * 				- UART3: UART3 peripheral
+ * 				- LPC_UART0: UART0 peripheral
+ * 				- LPC_UART1: UART1 peripheral
+ * 				- LPC_UART2: UART2 peripheral
+ * 				- LPC_UART3: UART3 peripheral
  * @param[in]	baudrate Desired UART baud rate.
  * @return 		Error status, could be:
  * 				- SUCCESS
  * 				- ERROR
  **********************************************************************/
-static Status uart_set_divisors(UART_TypeDef *UARTx, uint32_t baudrate)
+static Status uart_set_divisors(LPC_UART_TypeDef *UARTx, uint32_t baudrate)
 {
 	Status errorStatus = ERROR;
 
@@ -74,25 +80,24 @@ static Status uart_set_divisors(UART_TypeDef *UARTx, uint32_t baudrate)
 	uint32_t recalcbaud;
 
 	/* get UART block clock */
-	if (UARTx == UART0)
+	if (UARTx == (LPC_UART_TypeDef *)LPC_UART0)
 	{
 		uClk = CLKPWR_GetPCLK (CLKPWR_PCLKSEL_UART0);
 	}
-	else if (UARTx == (UART_TypeDef *)UART1)
+	else if (UARTx == (LPC_UART_TypeDef *)LPC_UART1)
 	{
 		uClk = CLKPWR_GetPCLK (CLKPWR_PCLKSEL_UART1);
 	}
-	else if (UARTx == UART2)
+	else if (UARTx == LPC_UART2)
 	{
 		uClk = CLKPWR_GetPCLK (CLKPWR_PCLKSEL_UART2);
 	}
-	else if (UARTx == UART3)
+	else if (UARTx == LPC_UART3)
 	{
 		uClk = CLKPWR_GetPCLK (CLKPWR_PCLKSEL_UART3);
 	}
 
 
-	uClk = uClk >> 4; /* div by 16 */
 	/* In the Uart IP block, baud rate is calculated using FDR and DLL-DLM registers
 	* The formula is :
 	* BaudRate= uClk * (mulFracDiv/(mulFracDiv+dividerAddFracDiv) / (16 * (DLL)
@@ -147,14 +152,14 @@ static Status uart_set_divisors(UART_TypeDef *UARTx, uint32_t baudrate)
 
 	if (best_error < UART_ACCEPTED_BAUDRATE_ERROR)
 		{
-			if (((UART1_TypeDef *)UARTx) == UART1)
+			if (((LPC_UART1_TypeDef *)UARTx) == LPC_UART1)
 			{
-				((UART1_TypeDef *)UARTx)->LCR |= UART_LCR_DLAB_EN;
-				((UART1_TypeDef *)UARTx)->/*DLIER.*/DLM = UART_LOAD_DLM(best_divisor);
-				((UART1_TypeDef *)UARTx)->/*RBTHDLR.*/DLL = UART_LOAD_DLL(best_divisor);
+				((LPC_UART1_TypeDef *)UARTx)->LCR |= UART_LCR_DLAB_EN;
+				((LPC_UART1_TypeDef *)UARTx)->/*DLIER.*/DLM = UART_LOAD_DLM(best_divisor);
+				((LPC_UART1_TypeDef *)UARTx)->/*RBTHDLR.*/DLL = UART_LOAD_DLL(best_divisor);
 				/* Then reset DLAB bit */
-				((UART1_TypeDef *)UARTx)->LCR &= (~UART_LCR_DLAB_EN) & UART_LCR_BITMASK;
-				((UART1_TypeDef *)UARTx)->FDR = (UART_FDR_MULVAL(bestm) \
+				((LPC_UART1_TypeDef *)UARTx)->LCR &= (~UART_LCR_DLAB_EN) & UART_LCR_BITMASK;
+				((LPC_UART1_TypeDef *)UARTx)->FDR = (UART_FDR_MULVAL(bestm) \
 						| UART_FDR_DIVADDVAL(bestd)) & UART_FDR_BITMASK;
 			}
 			else
@@ -185,16 +190,16 @@ static Status uart_set_divisors(UART_TypeDef *UARTx, uint32_t baudrate)
  * @brief		Initializes the UARTx peripheral according to the specified
  *               parameters in the UART_ConfigStruct.
  * @param[in]	UARTx	UART peripheral selected, should be:
- *   			- UART0: UART0 peripheral
- * 				- UART1: UART1 peripheral
- * 				- UART2: UART2 peripheral
- * 				- UART3: UART3 peripheral
+ *   			- LPC_UART0: UART0 peripheral
+ * 				- LPC_UART1: UART1 peripheral
+ * 				- LPC_UART2: UART2 peripheral
+ * 				- LPC_UART3: UART3 peripheral
  * @param[in]	UART_ConfigStruct Pointer to a UART_CFG_Type structure
 *                    that contains the configuration information for the
 *                    specified UART peripheral.
  * @return 		None
  *********************************************************************/
-void UART_Init(UART_TypeDef *UARTx, UART_CFG_Type *UART_ConfigStruct)
+void UART_Init(LPC_UART_TypeDef *UARTx, UART_CFG_Type *UART_ConfigStruct)
 {
 	uint32_t tmp;
 
@@ -205,7 +210,7 @@ void UART_Init(UART_TypeDef *UARTx, UART_CFG_Type *UART_ConfigStruct)
 	CHECK_PARAM(PARAM_UART_PARITY(UART_ConfigStruct->Parity));
 
 #ifdef _UART0
-	if(UARTx == UART0)
+	if(UARTx == (LPC_UART_TypeDef *)LPC_UART0)
 	{
 		/* Set up clock and power for UART module */
 		CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCUART0, ENABLE);
@@ -213,7 +218,7 @@ void UART_Init(UART_TypeDef *UARTx, UART_CFG_Type *UART_ConfigStruct)
 #endif
 
 #ifdef _UART1
-	if(((UART1_TypeDef *)UARTx) == UART1)
+	if(((LPC_UART1_TypeDef *)UARTx) == LPC_UART1)
 	{
 		/* Set up clock and power for UART module */
 		CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCUART1, ENABLE);
@@ -221,7 +226,7 @@ void UART_Init(UART_TypeDef *UARTx, UART_CFG_Type *UART_ConfigStruct)
 #endif
 
 #ifdef _UART2
-	if(UARTx == UART2)
+	if(UARTx == LPC_UART2)
 	{
 		/* Set up clock and power for UART module */
 		CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCUART2, ENABLE);
@@ -229,50 +234,50 @@ void UART_Init(UART_TypeDef *UARTx, UART_CFG_Type *UART_ConfigStruct)
 #endif
 
 #ifdef _UART3
-	if(UARTx == UART3)
+	if(UARTx == LPC_UART3)
 	{
 		/* Set up clock and power for UART module */
 		CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCUART3, ENABLE);
 	}
 #endif
 
-	if (((UART1_TypeDef *)UARTx) == UART1)
+	if (((LPC_UART1_TypeDef *)UARTx) == LPC_UART1)
 	{
 		/* FIFOs are empty */
-		((UART1_TypeDef *)UARTx)->/*IIFCR.*/FCR = ( UART_FCR_FIFO_EN \
+		((LPC_UART1_TypeDef *)UARTx)->/*IIFCR.*/FCR = ( UART_FCR_FIFO_EN \
 				| UART_FCR_RX_RS | UART_FCR_TX_RS);
 		// Disable FIFO
-		((UART1_TypeDef *)UARTx)->/*IIFCR.*/FCR = 0;
+		((LPC_UART1_TypeDef *)UARTx)->/*IIFCR.*/FCR = 0;
 
 		// Dummy reading
-		while (((UART1_TypeDef *)UARTx)->LSR & UART_LSR_RDR)
+		while (((LPC_UART1_TypeDef *)UARTx)->LSR & UART_LSR_RDR)
 		{
-			tmp = ((UART1_TypeDef *)UARTx)->/*RBTHDLR.*/RBR;
+			tmp = ((LPC_UART1_TypeDef *)UARTx)->/*RBTHDLR.*/RBR;
 		}
 
-		((UART1_TypeDef *)UARTx)->TER = UART_TER_TXEN;
+		((LPC_UART1_TypeDef *)UARTx)->TER = UART_TER_TXEN;
 		// Wait for current transmit complete
-		while (!(((UART1_TypeDef *)UARTx)->LSR & UART_LSR_THRE));
+		while (!(((LPC_UART1_TypeDef *)UARTx)->LSR & UART_LSR_THRE));
 		// Disable Tx
-		((UART1_TypeDef *)UARTx)->TER = 0;
+		((LPC_UART1_TypeDef *)UARTx)->TER = 0;
 
 		// Disable interrupt
-		((UART1_TypeDef *)UARTx)->/*DLIER.*/IER = 0;
+		((LPC_UART1_TypeDef *)UARTx)->/*DLIER.*/IER = 0;
 		// Set LCR to default state
-		((UART1_TypeDef *)UARTx)->LCR = 0;
+		((LPC_UART1_TypeDef *)UARTx)->LCR = 0;
 		// Set ACR to default state
-		((UART1_TypeDef *)UARTx)->ACR = 0;
+		((LPC_UART1_TypeDef *)UARTx)->ACR = 0;
 		// Set Modem Control to default state
-		((UART1_TypeDef *)UARTx)->MCR = 0;
+		((LPC_UART1_TypeDef *)UARTx)->MCR = 0;
 		// Set RS485 control to default state
-		((UART1_TypeDef *)UARTx)->RS485CTRL = 0;
+		((LPC_UART1_TypeDef *)UARTx)->RS485CTRL = 0;
 		// Set RS485 delay timer to default state
-		((UART1_TypeDef *)UARTx)->RS485DLY = 0;
+		((LPC_UART1_TypeDef *)UARTx)->RS485DLY = 0;
 		// Set RS485 addr match to default state
-		((UART1_TypeDef *)UARTx)->ADRMATCH = 0;
+		((LPC_UART1_TypeDef *)UARTx)->ADRMATCH = 0;
 		//Dummy Reading to Clear Status
-		tmp = ((UART1_TypeDef *)UARTx)->MSR;
-		tmp = ((UART1_TypeDef *)UARTx)->LSR;
+		tmp = ((LPC_UART1_TypeDef *)UARTx)->MSR;
+		tmp = ((LPC_UART1_TypeDef *)UARTx)->LSR;
 	}
 	else
 	{
@@ -303,7 +308,7 @@ void UART_Init(UART_TypeDef *UARTx, UART_CFG_Type *UART_ConfigStruct)
 		tmp = UARTx->LSR;
 	}
 
-	if (UARTx == UART3)
+	if (UARTx == LPC_UART3)
 	{
 		// Set IrDA to default state
 		UARTx->ICR = 0;
@@ -313,9 +318,9 @@ void UART_Init(UART_TypeDef *UARTx, UART_CFG_Type *UART_ConfigStruct)
 
 	uart_set_divisors(UARTx, (UART_ConfigStruct->Baud_rate));
 
-	if (((UART1_TypeDef *)UARTx) == UART1)
+	if (((LPC_UART1_TypeDef *)UARTx) == LPC_UART1)
 	{
-		tmp = (((UART1_TypeDef *)UARTx)->LCR & (UART_LCR_DLAB_EN | UART_LCR_BREAK_EN)) \
+		tmp = (((LPC_UART1_TypeDef *)UARTx)->LCR & (UART_LCR_DLAB_EN | UART_LCR_BREAK_EN)) \
 				& UART_LCR_BITMASK;
 	}
 	else
@@ -380,9 +385,9 @@ void UART_Init(UART_TypeDef *UARTx, UART_CFG_Type *UART_ConfigStruct)
 
 
 	// Write back to LCR, configure FIFO and Disable Tx
-	if (((UART1_TypeDef *)UARTx) ==  UART1)
+	if (((LPC_UART1_TypeDef *)UARTx) ==  LPC_UART1)
 	{
-		((UART1_TypeDef *)UARTx)->LCR = (uint8_t)(tmp & UART_LCR_BITMASK);
+		((LPC_UART1_TypeDef *)UARTx)->LCR = (uint8_t)(tmp & UART_LCR_BITMASK);
 	}
 	else
 	{
@@ -394,13 +399,13 @@ void UART_Init(UART_TypeDef *UARTx, UART_CFG_Type *UART_ConfigStruct)
  * @brief		De-initializes the UARTx peripheral registers to their
  *                  default reset values.
  * @param[in]	UARTx	UART peripheral selected, should be:
- *   			- UART0: UART0 peripheral
- * 				- UART1: UART1 peripheral
- * 				- UART2: UART2 peripheral
- * 				- UART3: UART3 peripheral
+ *   			- LPC_UART0: UART0 peripheral
+ * 				- LPC_UART1: UART1 peripheral
+ * 				- LPC_UART2: UART2 peripheral
+ * 				- LPC_UART3: UART3 peripheral
  * @return 		None
  **********************************************************************/
-void UART_DeInit(UART_TypeDef* UARTx)
+void UART_DeInit(LPC_UART_TypeDef* UARTx)
 {
 	// For debug mode
 	CHECK_PARAM(PARAM_UARTx(UARTx));
@@ -408,7 +413,7 @@ void UART_DeInit(UART_TypeDef* UARTx)
 	UART_TxCmd(UARTx, DISABLE);
 
 #ifdef _UART0
-	if (UARTx == UART0)
+	if (UARTx == (LPC_UART_TypeDef *)LPC_UART0)
 	{
 		/* Set up clock and power for UART module */
 		CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCUART0, DISABLE);
@@ -416,7 +421,7 @@ void UART_DeInit(UART_TypeDef* UARTx)
 #endif
 
 #ifdef _UART1
-	if (((UART1_TypeDef *)UARTx) == UART1)
+	if (((LPC_UART1_TypeDef *)UARTx) == LPC_UART1)
 	{
 		/* Set up clock and power for UART module */
 		CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCUART1, DISABLE);
@@ -424,7 +429,7 @@ void UART_DeInit(UART_TypeDef* UARTx)
 #endif
 
 #ifdef _UART2
-	if (UARTx == UART2)
+	if (UARTx == LPC_UART2)
 	{
 		/* Set up clock and power for UART module */
 		CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCUART2, DISABLE);
@@ -432,7 +437,7 @@ void UART_DeInit(UART_TypeDef* UARTx)
 #endif
 
 #ifdef _UART3
-	if (UARTx == UART3)
+	if (UARTx == LPC_UART3)
 	{
 		/* Set up clock and power for UART module */
 		CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCUART3, DISABLE);
@@ -462,20 +467,20 @@ void UART_ConfigStructInit(UART_CFG_Type *UART_InitStruct)
 /*********************************************************************//**
  * @brief		Transmit a single data through UART peripheral
  * @param[in]	UARTx	UART peripheral selected, should be:
- *   			- UART0: UART0 peripheral
- * 				- UART1: UART1 peripheral
- * 				- UART2: UART2 peripheral
- * 				- UART3: UART3 peripheral
+ *   			- LPC_UART0: UART0 peripheral
+ * 				- LPC_UART1: UART1 peripheral
+ * 				- LPC_UART2: UART2 peripheral
+ * 				- LPC_UART3: UART3 peripheral
  * @param[in]	Data	Data to transmit (must be 8-bit long)
  * @return 		None
  **********************************************************************/
-void UART_SendByte(UART_TypeDef* UARTx, uint8_t Data)
+void UART_SendByte(LPC_UART_TypeDef* UARTx, uint8_t Data)
 {
 	CHECK_PARAM(PARAM_UARTx(UARTx));
 
-	if (((UART1_TypeDef *)UARTx) == UART1)
+	if (((LPC_UART1_TypeDef *)UARTx) == LPC_UART1)
 	{
-		((UART1_TypeDef *)UARTx)->/*RBTHDLR.*/THR = Data & UART_THR_MASKBIT;
+		((LPC_UART1_TypeDef *)UARTx)->/*RBTHDLR.*/THR = Data & UART_THR_MASKBIT;
 	}
 	else
 	{
@@ -488,19 +493,19 @@ void UART_SendByte(UART_TypeDef* UARTx, uint8_t Data)
 /*********************************************************************//**
  * @brief		Receive a single data from UART peripheral
  * @param[in]	UARTx	UART peripheral selected, should be:
- *  			- UART0: UART0 peripheral
- * 				- UART1: UART1 peripheral
- * 				- UART2: UART2 peripheral
- * 				- UART3: UART3 peripheral
+ *  			- LPC_UART0: UART0 peripheral
+ * 				- LPC_UART1: UART1 peripheral
+ * 				- LPC_UART2: UART2 peripheral
+ * 				- LPC_UART3: UART3 peripheral
  * @return 		Data received
  **********************************************************************/
-uint8_t UART_ReceiveByte(UART_TypeDef* UARTx)
+uint8_t UART_ReceiveByte(LPC_UART_TypeDef* UARTx)
 {
 	CHECK_PARAM(PARAM_UARTx(UARTx));
 
-	if (((UART1_TypeDef *)UARTx) == UART1)
+	if (((LPC_UART1_TypeDef *)UARTx) == LPC_UART1)
 	{
-		return (((UART1_TypeDef *)UARTx)->/*RBTHDLR.*/RBR & UART_RBR_MASKBIT);
+		return (((LPC_UART1_TypeDef *)UARTx)->/*RBTHDLR.*/RBR & UART_RBR_MASKBIT);
 	}
 	else
 	{
@@ -511,10 +516,10 @@ uint8_t UART_ReceiveByte(UART_TypeDef* UARTx)
 /*********************************************************************//**
  * @brief		Send a block of data via UART peripheral
  * @param[in]	UARTx	Selected UART peripheral used to send data, should be:
- *   			- UART0: UART0 peripheral
- * 				- UART1: UART1 peripheral
- * 				- UART2: UART2 peripheral
- * 				- UART3: UART3 peripheral
+ *   			- LPC_UART0: UART0 peripheral
+ * 				- LPC_UART1: UART1 peripheral
+ * 				- LPC_UART2: UART2 peripheral
+ * 				- LPC_UART3: UART3 peripheral
  * @param[in]	txbuf 	Pointer to Transmit buffer
  * @param[in]	buflen 	Length of Transmit buffer
  * @param[in] 	flag 	Flag used in  UART transfer, should be
@@ -524,7 +529,7 @@ uint8_t UART_ReceiveByte(UART_TypeDef* UARTx)
  * Note: when using UART in BLOCKING mode, a time-out condition is used
  * via defined symbol UART_BLOCKING_TIMEOUT.
  **********************************************************************/
-uint32_t UART_Send(UART_TypeDef *UARTx, uint8_t *txbuf,
+uint32_t UART_Send(LPC_UART_TypeDef *UARTx, uint8_t *txbuf,
 		uint32_t buflen, TRANSFER_BLOCK_Type flag)
 {
 	uint32_t bToSend, bSent, timeOut, fifo_cnt;
@@ -576,10 +581,10 @@ uint32_t UART_Send(UART_TypeDef *UARTx, uint8_t *txbuf,
  * @brief		Receive a block of data via UART peripheral
  * @param[in]	UARTx	Selected UART peripheral used to send data,
  * 				should be:
- *   			- UART0: UART0 peripheral
- * 				- UART1: UART1 peripheral
- * 				- UART2: UART2 peripheral
- * 				- UART3: UART3 peripheral
+ *   			- LPC_UART0: UART0 peripheral
+ * 				- LPC_UART1: UART1 peripheral
+ * 				- LPC_UART2: UART2 peripheral
+ * 				- LPC_UART3: UART3 peripheral
  * @param[out]	rxbuf 	Pointer to Received buffer
  * @param[in]	buflen 	Length of Received buffer
  * @param[in] 	flag 	Flag mode, should be NONE_BLOCKING or BLOCKING
@@ -589,7 +594,7 @@ uint32_t UART_Send(UART_TypeDef *UARTx, uint8_t *txbuf,
  * Note: when using UART in BLOCKING mode, a time-out condition is used
  * via defined symbol UART_BLOCKING_TIMEOUT.
  **********************************************************************/
-uint32_t UART_Receive(UART_TypeDef *UARTx, uint8_t *rxbuf, \
+uint32_t UART_Receive(LPC_UART_TypeDef *UARTx, uint8_t *rxbuf, \
 		uint32_t buflen, TRANSFER_BLOCK_Type flag)
 {
 	uint32_t bToRecv, bRecv, timeOut;
@@ -634,19 +639,19 @@ uint32_t UART_Receive(UART_TypeDef *UARTx, uint8_t *rxbuf, \
  * @brief		Force BREAK character on UART line, output pin UARTx TXD is
 				forced to logic 0.
  * @param[in]	UARTx	UART peripheral selected, should be:
- *  			- UART0: UART0 peripheral
- * 				- UART1: UART1 peripheral
- * 				- UART2: UART2 peripheral
- * 				- UART3: UART3 peripheral
+ *  			- LPC_UART0: UART0 peripheral
+ * 				- LPC_UART1: UART1 peripheral
+ * 				- LPC_UART2: UART2 peripheral
+ * 				- LPC_UART3: UART3 peripheral
  * @return 		None
  **********************************************************************/
-void UART_ForceBreak(UART_TypeDef* UARTx)
+void UART_ForceBreak(LPC_UART_TypeDef* UARTx)
 {
 	CHECK_PARAM(PARAM_UARTx(UARTx));
 
-	if (((UART1_TypeDef *)UARTx) == UART1)
+	if (((LPC_UART1_TypeDef *)UARTx) == LPC_UART1)
 	{
-		((UART1_TypeDef *)UARTx)->LCR |= UART_LCR_BREAK_EN;
+		((LPC_UART1_TypeDef *)UARTx)->LCR |= UART_LCR_BREAK_EN;
 	}
 	else
 	{
@@ -658,10 +663,10 @@ void UART_ForceBreak(UART_TypeDef* UARTx)
 /********************************************************************//**
  * @brief 		Enable or disable specified UART interrupt.
  * @param[in]	UARTx	UART peripheral selected, should be
- *  			- UART0: UART0 peripheral
- * 				- UART1: UART1 peripheral
- * 				- UART2: UART2 peripheral
- * 				- UART3: UART3 peripheral
+ *  			- LPC_UART0: UART0 peripheral
+ * 				- LPC_UART1: UART1 peripheral
+ * 				- LPC_UART2: UART2 peripheral
+ * 				- LPC_UART3: UART3 peripheral
  * @param[in]	UARTIntCfg	Specifies the interrupt flag,
  * 				should be one of the following:
 				- UART_INTCFG_RBR 	:  RBR Interrupt enable
@@ -677,7 +682,7 @@ void UART_ForceBreak(UART_TypeDef* UARTx)
 * 				- DISALBE: Disable this UART interrupt type.
  * @return 		None
  *********************************************************************/
-void UART_IntConfig(UART_TypeDef *UARTx, UART_INT_Type UARTIntCfg, FunctionalState NewState)
+void UART_IntConfig(LPC_UART_TypeDef *UARTx, UART_INT_Type UARTIntCfg, FunctionalState NewState)
 {
 	uint32_t tmp;
 
@@ -708,7 +713,7 @@ void UART_IntConfig(UART_TypeDef *UARTx, UART_INT_Type UARTIntCfg, FunctionalSta
 			break;
 	}
 
-	if ((UART1_TypeDef *) UARTx == UART1)
+	if ((LPC_UART1_TypeDef *) UARTx == LPC_UART1)
 	{
 		CHECK_PARAM((PARAM_UART_INTCFG(UARTIntCfg)) || (PARAM_UART1_INTCFG(UARTIntCfg)));
 	}
@@ -719,9 +724,9 @@ void UART_IntConfig(UART_TypeDef *UARTx, UART_INT_Type UARTIntCfg, FunctionalSta
 
 	if (NewState == ENABLE)
 	{
-		if ((UART1_TypeDef *) UARTx == UART1)
+		if ((LPC_UART1_TypeDef *) UARTx == LPC_UART1)
 		{
-			((UART1_TypeDef *)UARTx)->/*DLIER.*/IER |= tmp;
+			((LPC_UART1_TypeDef *)UARTx)->/*DLIER.*/IER |= tmp;
 		}
 		else
 		{
@@ -730,9 +735,9 @@ void UART_IntConfig(UART_TypeDef *UARTx, UART_INT_Type UARTIntCfg, FunctionalSta
 	}
 	else
 	{
-		if ((UART1_TypeDef *) UARTx == UART1)
+		if ((LPC_UART1_TypeDef *) UARTx == LPC_UART1)
 		{
-			((UART1_TypeDef *)UARTx)->/*DLIER.*/IER &= (~tmp) & UART1_IER_BITMASK;
+			((LPC_UART1_TypeDef *)UARTx)->/*DLIER.*/IER &= (~tmp) & UART1_IER_BITMASK;
 		}
 		else
 		{
@@ -745,10 +750,10 @@ void UART_IntConfig(UART_TypeDef *UARTx, UART_INT_Type UARTIntCfg, FunctionalSta
 /********************************************************************//**
  * @brief 		Get current value of Line Status register in UART peripheral.
  * @param[in]	UARTx	UART peripheral selected, should be:
- *  			- UART0: UART0 peripheral
- * 				- UART1: UART1 peripheral
- * 				- UART2: UART2 peripheral
- * 				- UART3: UART3 peripheral
+ *  			- LPC_UART0: UART0 peripheral
+ * 				- LPC_UART1: UART1 peripheral
+ * 				- LPC_UART2: UART2 peripheral
+ * 				- LPC_UART3: UART3 peripheral
  * @return		Current value of Line Status register in UART peripheral.
  * Note:	The return value of this function must be ANDed with each member in
  * 			UART_LS_Type enumeration to determine current flag status
@@ -758,13 +763,13 @@ void UART_IntConfig(UART_TypeDef *UARTx, UART_INT_Type UARTIntCfg, FunctionalSta
  * 			read Line status register in one time only, then the return value
  * 			used to check all flags.
  *********************************************************************/
-uint8_t UART_GetLineStatus(UART_TypeDef* UARTx)
+uint8_t UART_GetLineStatus(LPC_UART_TypeDef* UARTx)
 {
 	CHECK_PARAM(PARAM_UARTx(UARTx));
 
-	if (((UART1_TypeDef *)UARTx) == UART1)
+	if (((LPC_UART1_TypeDef *)UARTx) == LPC_UART1)
 	{
-		return ((((UART1_TypeDef *)UART1)->LSR) & UART_LSR_BITMASK);
+		return ((((LPC_UART1_TypeDef *)LPC_UART1)->LSR) & UART_LSR_BITMASK);
 	}
 	else
 	{
@@ -775,13 +780,13 @@ uint8_t UART_GetLineStatus(UART_TypeDef* UARTx)
 /********************************************************************//**
  * @brief 		Get Interrupt Identification value
  * @param[in]	UARTx	UART peripheral selected, should be:
- *  			- UART0: UART0 peripheral
- * 				- UART1: UART1 peripheral
- * 				- UART2: UART2 peripheral
- * 				- UART3: UART3 peripheral
+ *  			- LPC_UART0: UART0 peripheral
+ * 				- LPC_UART1: UART1 peripheral
+ * 				- LPC_UART2: UART2 peripheral
+ * 				- LPC_UART3: UART3 peripheral
  * @return		Current value of UART UIIR register in UART peripheral.
  *********************************************************************/
-uint32_t UART_GetIntId(UART_TypeDef* UARTx)
+uint32_t UART_GetIntId(LPC_UART_TypeDef* UARTx)
 {
 	CHECK_PARAM(PARAM_UARTx(UARTx));
 	return (UARTx->IIR & 0x03CF);
@@ -790,13 +795,13 @@ uint32_t UART_GetIntId(UART_TypeDef* UARTx)
 /*********************************************************************//**
  * @brief		Check whether if UART is busy or not
  * @param[in]	UARTx	UART peripheral selected, should be:
- *  			- UART0: UART0 peripheral
- * 				- UART1: UART1 peripheral
- * 				- UART2: UART2 peripheral
- * 				- UART3: UART3 peripheral
+ *  			- LPC_UART0: UART0 peripheral
+ * 				- LPC_UART1: UART1 peripheral
+ * 				- LPC_UART2: UART2 peripheral
+ * 				- LPC_UART3: UART3 peripheral
  * @return		RESET if UART is not busy, otherwise return SET.
  **********************************************************************/
-FlagStatus UART_CheckBusy(UART_TypeDef *UARTx)
+FlagStatus UART_CheckBusy(LPC_UART_TypeDef *UARTx)
 {
 	if (UARTx->LSR & UART_LSR_TEMT){
 		return RESET;
@@ -809,15 +814,15 @@ FlagStatus UART_CheckBusy(UART_TypeDef *UARTx)
 /*********************************************************************//**
  * @brief		Configure FIFO function on selected UART peripheral
  * @param[in]	UARTx	UART peripheral selected, should be:
- *  			- UART0: UART0 peripheral
- * 				- UART1: UART1 peripheral
- * 				- UART2: UART2 peripheral
- * 				- UART3: UART3 peripheral
+ *  			- LPC_UART0: UART0 peripheral
+ * 				- LPC_UART1: UART1 peripheral
+ * 				- LPC_UART2: UART2 peripheral
+ * 				- LPC_UART3: UART3 peripheral
  * @param[in]	FIFOCfg	Pointer to a UART_FIFO_CFG_Type Structure that
  * 						contains specified information about FIFO configuration
  * @return 		none
  **********************************************************************/
-void UART_FIFOConfig(UART_TypeDef *UARTx, UART_FIFO_CFG_Type *FIFOCfg)
+void UART_FIFOConfig(LPC_UART_TypeDef *UARTx, UART_FIFO_CFG_Type *FIFOCfg)
 {
 	uint8_t tmp = 0;
 
@@ -859,9 +864,9 @@ void UART_FIFOConfig(UART_TypeDef *UARTx, UART_FIFO_CFG_Type *FIFOCfg)
 
 
 	//write to FIFO control register
-	if (((UART1_TypeDef *)UARTx) == UART1)
+	if (((LPC_UART1_TypeDef *)UARTx) == LPC_UART1)
 	{
-		((UART1_TypeDef *)UARTx)->/*IIFCR.*/FCR = tmp & UART_FCR_BITMASK;
+		((LPC_UART1_TypeDef *)UARTx)->/*IIFCR.*/FCR = tmp & UART_FCR_BITMASK;
 	}
 	else
 	{
@@ -893,10 +898,10 @@ void UART_FIFOConfigStructInit(UART_FIFO_CFG_Type *UART_FIFOInitStruct)
 /*********************************************************************//**
  * @brief		Start/Stop Auto Baudrate activity
  * @param[in]	UARTx	UART peripheral selected, should be
- *   			- UART0: UART0 peripheral
- * 				- UART1: UART1 peripheral
- * 				- UART2: UART2 peripheral
- * 				- UART3: UART3 peripheral
+ *   			- LPC_UART0: UART0 peripheral
+ * 				- LPC_UART1: UART1 peripheral
+ * 				- LPC_UART2: UART2 peripheral
+ * 				- LPC_UART3: UART3 peripheral
  * @param[in]	ABConfigStruct	A pointer to UART_AB_CFG_Type structure that
  * 								contains specified information about UART
  * 								auto baudrate configuration
@@ -907,7 +912,7 @@ void UART_FIFOConfigStructInit(UART_FIFO_CFG_Type *UART_FIFOInitStruct)
  * 				completed.
  * @return 		none
  **********************************************************************/
-void UART_ABCmd(UART_TypeDef *UARTx, UART_AB_CFG_Type *ABConfigStruct, \
+void UART_ABCmd(LPC_UART_TypeDef *UARTx, UART_AB_CFG_Type *ABConfigStruct, \
 				FunctionalState NewState)
 {
 	uint32_t tmp;
@@ -925,22 +930,22 @@ void UART_ABCmd(UART_TypeDef *UARTx, UART_AB_CFG_Type *ABConfigStruct, \
 		}
 	}
 
-	if (((UART1_TypeDef *)UARTx) == UART1)
+	if (((LPC_UART1_TypeDef *)UARTx) == LPC_UART1)
 	{
 		if (NewState == ENABLE)
 		{
 			// Clear DLL and DLM value
-			((UART1_TypeDef *)UARTx)->LCR |= UART_LCR_DLAB_EN;
-			((UART1_TypeDef *)UARTx)->DLL = 0;
-			((UART1_TypeDef *)UARTx)->DLM = 0;
-			((UART1_TypeDef *)UARTx)->LCR &= ~UART_LCR_DLAB_EN;
+			((LPC_UART1_TypeDef *)UARTx)->LCR |= UART_LCR_DLAB_EN;
+			((LPC_UART1_TypeDef *)UARTx)->DLL = 0;
+			((LPC_UART1_TypeDef *)UARTx)->DLM = 0;
+			((LPC_UART1_TypeDef *)UARTx)->LCR &= ~UART_LCR_DLAB_EN;
 			// FDR value must be reset to default value
-			((UART1_TypeDef *)UARTx)->FDR = 0x10;
-			((UART1_TypeDef *)UARTx)->ACR = UART_ACR_START | tmp;
+			((LPC_UART1_TypeDef *)UARTx)->FDR = 0x10;
+			((LPC_UART1_TypeDef *)UARTx)->ACR = UART_ACR_START | tmp;
 		}
 		else
 		{
-			((UART1_TypeDef *)UARTx)->ACR = 0;
+			((LPC_UART1_TypeDef *)UARTx)->ACR = 0;
 		}
 	}
 	else
@@ -966,19 +971,19 @@ void UART_ABCmd(UART_TypeDef *UARTx, UART_AB_CFG_Type *ABConfigStruct, \
 /*********************************************************************//**
  * @brief		Clear Autobaud Interrupt Pending
  * @param[in]	UARTx	UART peripheral selected, should be
- *   			- UART0: UART0 peripheral
- * 				- UART1: UART1 peripheral
- * 				- UART2: UART2 peripheral
- * 				- UART3: UART3 peripheral
+ *   			- LPC_UART0: UART0 peripheral
+ * 				- LPC_UART1: UART1 peripheral
+ * 				- LPC_UART2: UART2 peripheral
+ * 				- LPC_UART3: UART3 peripheral
  * @param[in]	ABIntType	type of auto-baud interrupt, should be:
  * 				- UART_AUTOBAUD_INTSTAT_ABEO: End of Auto-baud interrupt
  * 				- UART_AUTOBAUD_INTSTAT_ABTO: Auto-baud time out interrupt
  * @return 		none
  **********************************************************************/
-void UART_ABClearIntPending(UART_TypeDef *UARTx, UART_ABEO_Type ABIntType)
+void UART_ABClearIntPending(LPC_UART_TypeDef *UARTx, UART_ABEO_Type ABIntType)
 {
 	CHECK_PARAM(PARAM_UARTx(UARTx));
-	if (((UART1_TypeDef *)UARTx) == UART1)
+	if (((LPC_UART1_TypeDef *)UARTx) == LPC_UART1)
 	{
 		UARTx->ACR |= ABIntType;
 	}
@@ -989,25 +994,25 @@ void UART_ABClearIntPending(UART_TypeDef *UARTx, UART_ABEO_Type ABIntType)
 /*********************************************************************//**
  * @brief		Enable/Disable transmission on UART TxD pin
  * @param[in]	UARTx	UART peripheral selected, should be:
- *   			- UART0: UART0 peripheral
- * 				- UART1: UART1 peripheral
- * 				- UART2: UART2 peripheral
- * 				- UART3: UART3 peripheral
+ *   			- LPC_UART0: UART0 peripheral
+ * 				- LPC_UART1: UART1 peripheral
+ * 				- LPC_UART2: UART2 peripheral
+ * 				- LPC_UART3: UART3 peripheral
  * @param[in]	NewState New State of Tx transmission function, should be:
  * 				- ENABLE: Enable this function
 				- DISABLE: Disable this function
  * @return none
  **********************************************************************/
-void UART_TxCmd(UART_TypeDef *UARTx, FunctionalState NewState)
+void UART_TxCmd(LPC_UART_TypeDef *UARTx, FunctionalState NewState)
 {
 	CHECK_PARAM(PARAM_UARTx(UARTx));
 	CHECK_PARAM(PARAM_FUNCTIONALSTATE(NewState));
 
 	if (NewState == ENABLE)
 	{
-		if (((UART1_TypeDef *)UARTx) == UART1)
+		if (((LPC_UART1_TypeDef *)UARTx) == LPC_UART1)
 		{
-			((UART1_TypeDef *)UARTx)->TER |= UART_TER_TXEN;
+			((LPC_UART1_TypeDef *)UARTx)->TER |= UART_TER_TXEN;
 		}
 		else
 		{
@@ -1016,9 +1021,9 @@ void UART_TxCmd(UART_TypeDef *UARTx, FunctionalState NewState)
 	}
 	else
 	{
-		if (((UART1_TypeDef *)UARTx) == UART1)
+		if (((LPC_UART1_TypeDef *)UARTx) == LPC_UART1)
 		{
-			((UART1_TypeDef *)UARTx)->TER &= (~UART_TER_TXEN) & UART_TER_BITMASK;
+			((LPC_UART1_TypeDef *)UARTx)->TER &= (~UART_TER_TXEN) & UART_TER_BITMASK;
 		}
 		else
 		{
@@ -1034,13 +1039,13 @@ void UART_TxCmd(UART_TypeDef *UARTx, FunctionalState NewState)
 /*********************************************************************//**
  * @brief		Enable or disable inverting serial input function of IrDA
  * 				on UART peripheral.
- * @param[in]	UARTx UART peripheral selected, should be UART3 (only)
+ * @param[in]	UARTx UART peripheral selected, should be LPC_UART3 (only)
  * @param[in]	NewState New state of inverting serial input, should be:
  * 				- ENABLE: Enable this function.
  * 				- DISABLE: Disable this function.
  * @return none
  **********************************************************************/
-void UART_IrDAInvtInputCmd(UART_TypeDef* UARTx, FunctionalState NewState)
+void UART_IrDAInvtInputCmd(LPC_UART_TypeDef* UARTx, FunctionalState NewState)
 {
 	CHECK_PARAM(PARAM_UART_IrDA(UARTx));
 	CHECK_PARAM(PARAM_FUNCTIONALSTATE(NewState));
@@ -1058,13 +1063,13 @@ void UART_IrDAInvtInputCmd(UART_TypeDef* UARTx, FunctionalState NewState)
 
 /*********************************************************************//**
  * @brief		Enable or disable IrDA function on UART peripheral.
- * @param[in]	UARTx UART peripheral selected, should be UART3 (only)
+ * @param[in]	UARTx UART peripheral selected, should be LPC_UART3 (only)
  * @param[in]	NewState New state of IrDA function, should be:
  * 				- ENABLE: Enable this function.
  * 				- DISABLE: Disable this function.
  * @return none
  **********************************************************************/
-void UART_IrDACmd(UART_TypeDef* UARTx, FunctionalState NewState)
+void UART_IrDACmd(LPC_UART_TypeDef* UARTx, FunctionalState NewState)
 {
 	CHECK_PARAM(PARAM_UART_IrDA(UARTx));
 	CHECK_PARAM(PARAM_FUNCTIONALSTATE(NewState));
@@ -1082,7 +1087,7 @@ void UART_IrDACmd(UART_TypeDef* UARTx, FunctionalState NewState)
 
 /*********************************************************************//**
  * @brief		Configure Pulse divider for IrDA function on UART peripheral.
- * @param[in]	UARTx UART peripheral selected, should be UART3 (only)
+ * @param[in]	UARTx UART peripheral selected, should be LPC_UART3 (only)
  * @param[in]	PulseDiv Pulse Divider value from Peripheral clock,
  * 				should be one of the following:
 				- UART_IrDA_PULSEDIV2 	: Pulse width = 2 * Tpclk
@@ -1096,7 +1101,7 @@ void UART_IrDACmd(UART_TypeDef* UARTx, FunctionalState NewState)
 
  * @return none
  **********************************************************************/
-void UART_IrDAPulseDivConfig(UART_TypeDef *UARTx, UART_IrDA_PULSE_Type PulseDiv)
+void UART_IrDAPulseDivConfig(LPC_UART_TypeDef *UARTx, UART_IrDA_PULSE_Type PulseDiv)
 {
 	uint32_t tmp, tmp1;
 	CHECK_PARAM(PARAM_UART_IrDA(UARTx));
@@ -1117,7 +1122,7 @@ void UART_IrDAPulseDivConfig(UART_TypeDef *UARTx, UART_IrDA_PULSE_Type PulseDiv)
 
 /*********************************************************************//**
  * @brief		Force pin DTR/RTS corresponding to given state (Full modem mode)
- * @param[in]	UARTx	UART1 (only)
+ * @param[in]	UARTx	LPC_UART1 (only)
  * @param[in]	Pin	Pin that NewState will be applied to, should be:
  * 				- UART1_MODEM_PIN_DTR: DTR pin.
  * 				- UART1_MODEM_PIN_RTS: RTS pin.
@@ -1126,7 +1131,7 @@ void UART_IrDAPulseDivConfig(UART_TypeDef *UARTx, UART_IrDA_PULSE_Type PulseDiv)
 				- ACTIVE: Force the pin to active signal.
  * @return none
  **********************************************************************/
-void UART_FullModemForcePinState(UART1_TypeDef *UARTx, UART_MODEM_PIN_Type Pin, \
+void UART_FullModemForcePinState(LPC_UART1_TypeDef *UARTx, UART_MODEM_PIN_Type Pin, \
 							UART1_SignalState NewState)
 {
 	uint8_t tmp = 0;
@@ -1156,7 +1161,7 @@ void UART_FullModemForcePinState(UART1_TypeDef *UARTx, UART_MODEM_PIN_Type Pin, 
 
 /*********************************************************************//**
  * @brief		Configure Full Modem mode for UART peripheral
- * @param[in]	UARTx	UART1 (only)
+ * @param[in]	UARTx	LPC_UART1 (only)
  * @param[in]	Mode Full Modem mode, should be:
  * 				- UART1_MODEM_MODE_LOOPBACK: Loop back mode.
  * 				- UART1_MODEM_MODE_AUTO_RTS: Auto-RTS mode.
@@ -1166,7 +1171,7 @@ void UART_FullModemForcePinState(UART1_TypeDef *UARTx, UART_MODEM_PIN_Type Pin, 
 				- DISABLE: Disable this mode.
  * @return none
  **********************************************************************/
-void UART_FullModemConfigMode(UART1_TypeDef *UARTx, UART_MODEM_MODE_Type Mode, \
+void UART_FullModemConfigMode(LPC_UART1_TypeDef *UARTx, UART_MODEM_MODE_Type Mode, \
 							FunctionalState NewState)
 {
 	uint8_t tmp;
@@ -1202,7 +1207,7 @@ void UART_FullModemConfigMode(UART1_TypeDef *UARTx, UART_MODEM_MODE_Type Mode, \
 
 /*********************************************************************//**
  * @brief		Get current status of modem status register
- * @param[in]	UARTx	UART1 (only)
+ * @param[in]	UARTx	LPC_UART1 (only)
  * @return 		Current value of modem status register
  * Note:	The return value of this function must be ANDed with each member
  * 			UART_MODEM_STAT_type enumeration to determine current flag status
@@ -1212,7 +1217,7 @@ void UART_FullModemConfigMode(UART1_TypeDef *UARTx, UART_MODEM_MODE_Type Mode, \
  * 			read modem status register in one time only, then the return value
  * 			used to check all flags.
  **********************************************************************/
-uint8_t UART_FullModemGetStatus(UART1_TypeDef *UARTx)
+uint8_t UART_FullModemGetStatus(LPC_UART1_TypeDef *UARTx)
 {
 	CHECK_PARAM(PARAM_UART1_MODEM(UARTx));
 	return ((UARTx->MSR) & UART1_MSR_BITMASK);
@@ -1224,13 +1229,13 @@ uint8_t UART_FullModemGetStatus(UART1_TypeDef *UARTx)
 /*********************************************************************//**
  * @brief		Configure UART peripheral in RS485 mode according to the specified
 *               parameters in the RS485ConfigStruct.
- * @param[in]	UARTx	UART1 (only)
+ * @param[in]	UARTx	LPC_UART1 (only)
  * @param[in]	RS485ConfigStruct Pointer to a UART1_RS485_CTRLCFG_Type structure
 *                    that contains the configuration information for specified UART
 *                    in RS485 mode.
  * @return		None
  **********************************************************************/
-void UART_RS485Config(UART1_TypeDef *UARTx, UART1_RS485_CTRLCFG_Type *RS485ConfigStruct)
+void UART_RS485Config(LPC_UART1_TypeDef *UARTx, UART1_RS485_CTRLCFG_Type *RS485ConfigStruct)
 {
 	uint32_t tmp;
 
@@ -1296,13 +1301,13 @@ void UART_RS485Config(UART1_TypeDef *UARTx, UART1_RS485_CTRLCFG_Type *RS485Confi
 
 /*********************************************************************//**
  * @brief		Enable/Disable receiver in RS485 module in UART1
- * @param[in]	UARTx	UART1 (only)
+ * @param[in]	UARTx	LPC_UART1 (only)
  * @param[in]	NewState	New State of command, should be:
  * 							- ENABLE: Enable this function.
  * 							- DISABLE: Disable this function.
  * @return		None
  **********************************************************************/
-void UART_RS485ReceiverCmd(UART1_TypeDef *UARTx, FunctionalState NewState)
+void UART_RS485ReceiverCmd(LPC_UART1_TypeDef *UARTx, FunctionalState NewState)
 {
 	if (NewState == ENABLE){
 		UARTx->RS485CTRL &= ~UART1_RS485CTRL_RX_DIS;
@@ -1313,13 +1318,13 @@ void UART_RS485ReceiverCmd(UART1_TypeDef *UARTx, FunctionalState NewState)
 
 /*********************************************************************//**
  * @brief		Send data on RS485 bus with specified parity stick value (9-bit mode).
- * @param[in]	UARTx	UART1 (only)
+ * @param[in]	UARTx	LPC_UART1 (only)
  * @param[in]	pDatFrm 	Pointer to data frame.
  * @param[in]	size		Size of data.
  * @param[in]	ParityStick	Parity Stick value, should be 0 or 1.
  * @return		None
  **********************************************************************/
-uint32_t UART_RS485Send(UART1_TypeDef *UARTx, uint8_t *pDatFrm, \
+uint32_t UART_RS485Send(LPC_UART1_TypeDef *UARTx, uint8_t *pDatFrm, \
 					uint32_t size, uint8_t ParityStick)
 {
 	uint8_t tmp, save;
@@ -1329,11 +1334,11 @@ uint32_t UART_RS485Send(UART1_TypeDef *UARTx, uint8_t *pDatFrm, \
 		save = tmp = UARTx->LCR & UART_LCR_BITMASK;
 		tmp &= ~(UART_LCR_PARITY_EVEN);
 		UARTx->LCR = tmp;
-		cnt = UART_Send((UART_TypeDef *)UARTx, pDatFrm, size, BLOCKING);
+		cnt = UART_Send((LPC_UART_TypeDef *)UARTx, pDatFrm, size, BLOCKING);
 		while (!(UARTx->LSR & UART_LSR_TEMT));
 		UARTx->LCR = save;
 	} else {
-		cnt = UART_Send((UART_TypeDef *)UARTx, pDatFrm, size, BLOCKING);
+		cnt = UART_Send((LPC_UART_TypeDef *)UARTx, pDatFrm, size, BLOCKING);
 		while (!(UARTx->LSR & UART_LSR_TEMT));
 	}
 	return cnt;
@@ -1341,23 +1346,23 @@ uint32_t UART_RS485Send(UART1_TypeDef *UARTx, uint8_t *pDatFrm, \
 
 /*********************************************************************//**
  * @brief		Send Slave address frames on RS485 bus.
- * @param[in]	UARTx	UART1 (only)
+ * @param[in]	UARTx	LPC_UART1 (only)
  * @param[in]	SlvAddr Slave Address.
  * @return		None
  **********************************************************************/
-void UART_RS485SendSlvAddr(UART1_TypeDef *UARTx, uint8_t SlvAddr)
+void UART_RS485SendSlvAddr(LPC_UART1_TypeDef *UARTx, uint8_t SlvAddr)
 {
 	UART_RS485Send(UARTx, &SlvAddr, 1, 1);
 }
 
 /*********************************************************************//**
  * @brief		Send Data frames on RS485 bus.
- * @param[in]	UARTx	UART1 (only)
+ * @param[in]	UARTx	LPC_UART1 (only)
  * @param[in]	pData Pointer to data to be sent.
  * @param[in]	size Size of data frame to be sent.
  * @return		None
  **********************************************************************/
-uint32_t UART_RS485SendData(UART1_TypeDef *UARTx, uint8_t *pData, uint32_t size)
+uint32_t UART_RS485SendData(LPC_UART1_TypeDef *UARTx, uint8_t *pData, uint32_t size)
 {
 	return (UART_RS485Send(UARTx, pData, size, 0));
 }

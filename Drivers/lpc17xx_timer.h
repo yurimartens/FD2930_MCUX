@@ -1,24 +1,37 @@
-/***********************************************************************//**
- * @file		lpc17xx_timer.h
- * @brief		Contains all functions support for Timer firmware library on LPC17xx
- * @version		2.0
- * @date		21. May. 2010
- * @author		NXP MCU SW Application Team
- **************************************************************************
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * products. This software is supplied "AS IS" without any warranties.
- * NXP Semiconductors assumes no responsibility or liability for the
- * use of the software, conveys no license or title under any patent,
- * copyright, or mask work right to the product. NXP Semiconductors
- * reserves the right to make changes in the software without
- * notification. NXP Semiconductors also make no representation or
- * warranty that such application will be suitable for the specified
- * use without further testing or modification.
- **********************************************************************/
+/**********************************************************************
+* $Id$		lpc17xx_timer.h				2010-05-21
+*//**
+* @file		lpc17xx_timer.h
+* @brief	Contains all macro definitions and function prototypes
+* 			support for Timer firmware library on LPC17xx
+* @version	2.0
+* @date		21. May. 2010
+* @author	NXP MCU SW Application Team
+*
+* Copyright(C) 2010, NXP Semiconductor
+* All rights reserved.
+*
+***********************************************************************
+* Software that is described herein is for illustrative purposes only
+* which provides customers with programming information regarding the
+* products. This software is supplied "AS IS" without any warranties.
+* NXP Semiconductors assumes no responsibility or liability for the
+* use of the software, conveys no license or title under any patent,
+* copyright, or mask work right to the product. NXP Semiconductors
+* reserves the right to make changes in the software without
+* notification. NXP Semiconductors also make no representation or
+* warranty that such application will be suitable for the specified
+* use without further testing or modification.
+* Permission to use, copy, modify, and distribute this software and its
+* documentation is hereby granted, under NXP Semiconductors'
+* relevant copyright in the software, without fee, provided that it
+* is used in conjunction with NXP Semiconductors microcontrollers.  This
+* copyright, permission, and disclaimer notice must appear in all copies of
+* this code.
+**********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
-/** @defgroup TIM TIM
+/** @defgroup TIM TIM (Timer)
  * @ingroup LPC1700CMSIS_FwLib_Drivers
  * @{
  */
@@ -130,8 +143,8 @@ extern "C"
 
 /* ---------------- CHECK PARAMETER DEFINITIONS ---------------------------- */
 /** Macro to determine if it is valid TIMER peripheral */
-#define PARAM_TIMx(n)	((((uint32_t *)n)==((uint32_t *)TIM0)) || (((uint32_t *)n)==((uint32_t *)TIM1)) \
-|| (((uint32_t *)n)==((uint32_t *)TIM2)) || (((uint32_t *)n)==((uint32_t *)TIM3)))
+#define PARAM_TIMx(n)	((((uint32_t *)n)==((uint32_t *)LPC_TIM0)) || (((uint32_t *)n)==((uint32_t *)LPC_TIM1)) \
+|| (((uint32_t *)n)==((uint32_t *)LPC_TIM2)) || (((uint32_t *)n)==((uint32_t *)LPC_TIM3)))
 
 /* Macro check interrupt type */
 #define PARAM_TIM_INT_TYPE(TYPE)	((TYPE ==TIM_MR0_INT)||(TYPE ==TIM_MR1_INT)\
@@ -177,7 +190,7 @@ typedef enum
 	TIM_MR2_INT =2, /*!< interrupt for Match channel 2*/
 	TIM_MR3_INT =3, /*!< interrupt for Match channel 3*/
 	TIM_CR0_INT =4, /*!< interrupt for Capture channel 0*/
-	TIM_CR1_INT =5, /*!< interrupt for Capture channel 1*/
+	TIM_CR1_INT =5 /*!< interrupt for Capture channel 1*/
 }TIM_INT_TYPE;
 
 /** @brief Timer/counter operating mode */
@@ -299,25 +312,25 @@ typedef struct {
  * @{
  */
 /* Init/DeInit TIM functions -----------*/
-void TIM_Init(TIM_TypeDef *TIMx, TIM_MODE_OPT TimerCounterMode, void *TIM_ConfigStruct);
-void TIM_DeInit(TIM_TypeDef *TIMx);
+void TIM_Init(LPC_TIM_TypeDef *TIMx, TIM_MODE_OPT TimerCounterMode, void *TIM_ConfigStruct);
+void TIM_DeInit(LPC_TIM_TypeDef *TIMx);
 
 /* TIM interrupt functions -------------*/
-void TIM_ClearIntPending(TIM_TypeDef *TIMx, TIM_INT_TYPE IntFlag);
-void TIM_ClearIntCapturePending(TIM_TypeDef *TIMx, TIM_INT_TYPE IntFlag);
-FlagStatus TIM_GetIntStatus(TIM_TypeDef *TIMx, TIM_INT_TYPE IntFlag);
-FlagStatus TIM_GetIntCaptureStatus(TIM_TypeDef *TIMx, TIM_INT_TYPE IntFlag);
+void TIM_ClearIntPending(LPC_TIM_TypeDef *TIMx, TIM_INT_TYPE IntFlag);
+void TIM_ClearIntCapturePending(LPC_TIM_TypeDef *TIMx, TIM_INT_TYPE IntFlag);
+FlagStatus TIM_GetIntStatus(LPC_TIM_TypeDef *TIMx, TIM_INT_TYPE IntFlag);
+FlagStatus TIM_GetIntCaptureStatus(LPC_TIM_TypeDef *TIMx, TIM_INT_TYPE IntFlag);
 
 /* TIM configuration functions --------*/
 void TIM_ConfigStructInit(TIM_MODE_OPT TimerCounterMode, void *TIM_ConfigStruct);
-void TIM_ConfigMatch(TIM_TypeDef *TIMx, TIM_MATCHCFG_Type *TIM_MatchConfigStruct);
-void TIM_UpdateMatchValue(TIM_TypeDef *TIMx,uint8_t MatchChannel, uint32_t MatchValue);
-void TIM_SetMatchExt(TIM_TypeDef *TIMx,TIM_EXTMATCH_OPT ext_match );
-void TIM_ConfigCapture(TIM_TypeDef *TIMx, TIM_CAPTURECFG_Type *TIM_CaptureConfigStruct);
-void TIM_Cmd(TIM_TypeDef *TIMx, FunctionalState NewState);
+void TIM_ConfigMatch(LPC_TIM_TypeDef *TIMx, TIM_MATCHCFG_Type *TIM_MatchConfigStruct);
+void TIM_UpdateMatchValue(LPC_TIM_TypeDef *TIMx,uint8_t MatchChannel, uint32_t MatchValue);
+void TIM_SetMatchExt(LPC_TIM_TypeDef *TIMx,TIM_EXTMATCH_OPT ext_match );
+void TIM_ConfigCapture(LPC_TIM_TypeDef *TIMx, TIM_CAPTURECFG_Type *TIM_CaptureConfigStruct);
+void TIM_Cmd(LPC_TIM_TypeDef *TIMx, FunctionalState NewState);
 
-uint32_t TIM_GetCaptureValue(TIM_TypeDef *TIMx, TIM_COUNTER_INPUT_OPT CaptureChannel);
-void TIM_ResetCounter(TIM_TypeDef *TIMx);
+uint32_t TIM_GetCaptureValue(LPC_TIM_TypeDef *TIMx, TIM_COUNTER_INPUT_OPT CaptureChannel);
+void TIM_ResetCounter(LPC_TIM_TypeDef *TIMx);
 
 /**
  * @}

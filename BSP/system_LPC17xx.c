@@ -424,39 +424,39 @@ uint32_t SystemCoreClock = __CORE_CLK;/*!< System Clock Frequency (Core Clock)*/
 void SystemCoreClockUpdate (void)            /* Get Core Clock Frequency      */
 {
   /* Determine clock frequency according to clock register values             */
-  if (((SC->PLL0STAT >> 24) & 3) == 3) { /* If PLL0 enabled and connected */
-    switch (SC->CLKSRCSEL & 0x03) {
+  if (((LPC_SC->PLL0STAT >> 24) & 3) == 3) { /* If PLL0 enabled and connected */
+    switch (LPC_SC->CLKSRCSEL & 0x03) {
       case 0:                                /* Int. RC oscillator => PLL0    */
       case 3:                                /* Reserved, default to Int. RC  */
         SystemCoreClock = (IRC_OSC * 
-                          ((2ULL * ((SC->PLL0STAT & 0x7FFF) + 1)))  /
-                          (((SC->PLL0STAT >> 16) & 0xFF) + 1)       /
-                          ((SC->CCLKCFG & 0xFF)+ 1));
+                          ((2ULL * ((LPC_SC->PLL0STAT & 0x7FFF) + 1)))  /
+                          (((LPC_SC->PLL0STAT >> 16) & 0xFF) + 1)       /
+                          ((LPC_SC->CCLKCFG & 0xFF)+ 1));
         break;
       case 1:                                /* Main oscillator => PLL0       */
         SystemCoreClock = (OSC_CLK * 
-                          ((2ULL * ((SC->PLL0STAT & 0x7FFF) + 1)))  /
-                          (((SC->PLL0STAT >> 16) & 0xFF) + 1)       /
-                          ((SC->CCLKCFG & 0xFF)+ 1));
+                          ((2ULL * ((LPC_SC->PLL0STAT & 0x7FFF) + 1)))  /
+                          (((LPC_SC->PLL0STAT >> 16) & 0xFF) + 1)       /
+                          ((LPC_SC->CCLKCFG & 0xFF)+ 1));
         break;
       case 2:                                /* RTC oscillator => PLL0        */
         SystemCoreClock = (RTC_CLK * 
-                          ((2ULL * ((SC->PLL0STAT & 0x7FFF) + 1)))  /
-                          (((SC->PLL0STAT >> 16) & 0xFF) + 1)       /
-                          ((SC->CCLKCFG & 0xFF)+ 1));
+                          ((2ULL * ((LPC_SC->PLL0STAT & 0x7FFF) + 1)))  /
+                          (((LPC_SC->PLL0STAT >> 16) & 0xFF) + 1)       /
+                          ((LPC_SC->CCLKCFG & 0xFF)+ 1));
         break;
     }
   } else {
-    switch (SC->CLKSRCSEL & 0x03) {
+    switch (LPC_SC->CLKSRCSEL & 0x03) {
       case 0:                                /* Int. RC oscillator => PLL0    */
       case 3:                                /* Reserved, default to Int. RC  */
-        SystemCoreClock = IRC_OSC / ((SC->CCLKCFG & 0xFF)+ 1);
+        SystemCoreClock = IRC_OSC / ((LPC_SC->CCLKCFG & 0xFF)+ 1);
         break;
       case 1:                                /* Main oscillator => PLL0       */
-        SystemCoreClock = OSC_CLK / ((SC->CCLKCFG & 0xFF)+ 1);
+        SystemCoreClock = OSC_CLK / ((LPC_SC->CCLKCFG & 0xFF)+ 1);
         break;
       case 2:                                /* RTC oscillator => PLL0        */
-        SystemCoreClock = RTC_CLK / ((SC->CCLKCFG & 0xFF)+ 1);
+        SystemCoreClock = RTC_CLK / ((LPC_SC->CCLKCFG & 0xFF)+ 1);
         break;
     }
   }
@@ -475,58 +475,58 @@ void SystemCoreClockUpdate (void)            /* Get Core Clock Frequency      */
 void SystemInit (void)
 {
 #if (CLOCK_SETUP)                       /* Clock Setup                        */
-  SC->SCS       = SCS_Val;
+  LPC_SC->SCS       = SCS_Val;
   if (SCS_Val & (1 << 5)) {             /* If Main Oscillator is enabled      */
-    while ((SC->SCS & (1<<6)) == 0);/* Wait for Oscillator to be ready    */
+    while ((LPC_SC->SCS & (1<<6)) == 0);/* Wait for Oscillator to be ready    */
   }
 
-  SC->CCLKCFG   = CCLKCFG_Val;      /* Setup Clock Divider                */
+  LPC_SC->CCLKCFG   = CCLKCFG_Val;      /* Setup Clock Divider                */
 
-  SC->PCLKSEL0  = PCLKSEL0_Val;     /* Peripheral Clock Selection         */
-  SC->PCLKSEL1  = PCLKSEL1_Val;
+  LPC_SC->PCLKSEL0  = PCLKSEL0_Val;     /* Peripheral Clock Selection         */
+  LPC_SC->PCLKSEL1  = PCLKSEL1_Val;
 
-  SC->CLKSRCSEL = CLKSRCSEL_Val;    /* Select Clock Source for PLL0       */
+  LPC_SC->CLKSRCSEL = CLKSRCSEL_Val;    /* Select Clock Source for PLL0       */
 
 #if (PLL0_SETUP)
-  SC->PLL0CFG   = PLL0CFG_Val;      /* configure PLL0                     */
-  SC->PLL0FEED  = 0xAA;
-  SC->PLL0FEED  = 0x55;
+  LPC_SC->PLL0CFG   = PLL0CFG_Val;      /* configure PLL0                     */
+  LPC_SC->PLL0FEED  = 0xAA;
+  LPC_SC->PLL0FEED  = 0x55;
 
-  SC->PLL0CON   = 0x01;             /* PLL0 Enable                        */
-  SC->PLL0FEED  = 0xAA;
-  SC->PLL0FEED  = 0x55;
-  while (!(SC->PLL0STAT & (1<<26)));/* Wait for PLOCK0                    */
+  LPC_SC->PLL0CON   = 0x01;             /* PLL0 Enable                        */
+  LPC_SC->PLL0FEED  = 0xAA;
+  LPC_SC->PLL0FEED  = 0x55;
+  while (!(LPC_SC->PLL0STAT & (1<<26)));/* Wait for PLOCK0                    */
 
-  SC->PLL0CON   = 0x03;             /* PLL0 Enable & Connect              */
-  SC->PLL0FEED  = 0xAA;
-  SC->PLL0FEED  = 0x55;
-  while (!(SC->PLL0STAT & ((1<<25) | (1<<24))));/* Wait for PLLC0_STAT & PLLE0_STAT */
+  LPC_SC->PLL0CON   = 0x03;             /* PLL0 Enable & Connect              */
+  LPC_SC->PLL0FEED  = 0xAA;
+  LPC_SC->PLL0FEED  = 0x55;
+  while (!(LPC_SC->PLL0STAT & ((1<<25) | (1<<24))));/* Wait for PLLC0_STAT & PLLE0_STAT */
 #endif
 
 #if (PLL1_SETUP)
-  SC->PLL1CFG   = PLL1CFG_Val;
-  SC->PLL1FEED  = 0xAA;
-  SC->PLL1FEED  = 0x55;
+  LPC_SC->PLL1CFG   = PLL1CFG_Val;
+  LPC_SC->PLL1FEED  = 0xAA;
+  LPC_SC->PLL1FEED  = 0x55;
 
-  SC->PLL1CON   = 0x01;             /* PLL1 Enable                        */
-  SC->PLL1FEED  = 0xAA;
-  SC->PLL1FEED  = 0x55;
-  while (!(SC->PLL1STAT & (1<<10)));/* Wait for PLOCK1                    */
+  LPC_SC->PLL1CON   = 0x01;             /* PLL1 Enable                        */
+  LPC_SC->PLL1FEED  = 0xAA;
+  LPC_SC->PLL1FEED  = 0x55;
+  while (!(LPC_SC->PLL1STAT & (1<<10)));/* Wait for PLOCK1                    */
 
-  SC->PLL1CON   = 0x03;             /* PLL1 Enable & Connect              */
-  SC->PLL1FEED  = 0xAA;
-  SC->PLL1FEED  = 0x55;
-  while (!(SC->PLL1STAT & ((1<< 9) | (1<< 8))));/* Wait for PLLC1_STAT & PLLE1_STAT */
+  LPC_SC->PLL1CON   = 0x03;             /* PLL1 Enable & Connect              */
+  LPC_SC->PLL1FEED  = 0xAA;
+  LPC_SC->PLL1FEED  = 0x55;
+  while (!(LPC_SC->PLL1STAT & ((1<< 9) | (1<< 8))));/* Wait for PLLC1_STAT & PLLE1_STAT */
 #else
-  SC->USBCLKCFG = USBCLKCFG_Val;    /* Setup USB Clock Divider            */
+  LPC_SC->USBCLKCFG = USBCLKCFG_Val;    /* Setup USB Clock Divider            */
 #endif
 
-  SC->PCONP     = PCONP_Val;        /* Power Control for Peripherals      */
+  LPC_SC->PCONP     = PCONP_Val;        /* Power Control for Peripherals      */
 
-  SC->CLKOUTCFG = CLKOUTCFG_Val;    /* Clock Output Configuration         */
+  LPC_SC->CLKOUTCFG = CLKOUTCFG_Val;    /* Clock Output Configuration         */
 #endif
 
 #if (FLASH_SETUP == 1)                  /* Flash Accelerator Setup            */
-  SC->FLASHCFG  = (SC->FLASHCFG & ~0x0000F000) | FLASHCFG_Val;
+  LPC_SC->FLASHCFG  = (LPC_SC->FLASHCFG & ~0x0000F000) | FLASHCFG_Val;
 #endif
 }

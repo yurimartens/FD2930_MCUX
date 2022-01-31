@@ -1,21 +1,33 @@
-/***********************************************************************//**
- * @file		lpc17xx_spi.c
- * @brief		Contains all functions support for SPI firmware library on LPC17xx
- * @version		2.0
- * @date		21. May. 2010
- * @author		NXP MCU SW Application Team
- **************************************************************************
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * products. This software is supplied "AS IS" without any warranties.
- * NXP Semiconductors assumes no responsibility or liability for the
- * use of the software, conveys no license or title under any patent,
- * copyright, or mask work right to the product. NXP Semiconductors
- * reserves the right to make changes in the software without
- * notification. NXP Semiconductors also make no representation or
- * warranty that such application will be suitable for the specified
- * use without further testing or modification.
- **********************************************************************/
+/**********************************************************************
+* $Id$		lpc17xx_spi.c				2010-05-21
+*//**
+* @file		lpc17xx_spi.c
+* @brief	Contains all functions support for SPI firmware library on LPC17xx
+* @version	2.0
+* @date		21. May. 2010
+* @author	NXP MCU SW Application Team
+*
+* Copyright(C) 2010, NXP Semiconductor
+* All rights reserved.
+*
+***********************************************************************
+* Software that is described herein is for illustrative purposes only
+* which provides customers with programming information regarding the
+* products. This software is supplied "AS IS" without any warranties.
+* NXP Semiconductors assumes no responsibility or liability for the
+* use of the software, conveys no license or title under any patent,
+* copyright, or mask work right to the product. NXP Semiconductors
+* reserves the right to make changes in the software without
+* notification. NXP Semiconductors also make no representation or
+* warranty that such application will be suitable for the specified
+* use without further testing or modification.
+* Permission to use, copy, modify, and distribute this software and its
+* documentation is hereby granted, under NXP Semiconductors'
+* relevant copyright in the software, without fee, provided that it
+* is used in conjunction with NXP Semiconductors microcontrollers.  This
+* copyright, permission, and disclaimer notice must appear in all copies of
+* this code.
+**********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
 /** @addtogroup SPI
@@ -46,18 +58,18 @@
 
 /*********************************************************************//**
  * @brief 		Setup clock rate for SPI device
- * @param[in] 	SPIx	SPI peripheral definition, should be SPI
+ * @param[in] 	SPIx	SPI peripheral definition, should be LPC_SPI
  * @param[in]	target_clock : clock of SPI (Hz)
  * @return 		None
  ***********************************************************************/
-void SPI_SetClock (SPI_TypeDef *SPIx, uint32_t target_clock)
+void SPI_SetClock (LPC_SPI_TypeDef *SPIx, uint32_t target_clock)
 {
 	uint32_t spi_pclk;
 	uint32_t prescale, temp;
 
 	CHECK_PARAM(PARAM_SPIx(SPIx));
 
-	if (SPIx == SPI){
+	if (SPIx == LPC_SPI){
 		spi_pclk =  CLKPWR_GetPCLK (CLKPWR_PCLKSEL_SPI);
 	} else {
 		return;
@@ -84,14 +96,14 @@ void SPI_SetClock (SPI_TypeDef *SPIx, uint32_t target_clock)
 /*********************************************************************//**
  * @brief		De-initializes the SPIx peripheral registers to their
 *                  default reset values.
- * @param[in]	SPIx	SPI peripheral selected, should be SPI
+ * @param[in]	SPIx	SPI peripheral selected, should be LPC_SPI
  * @return 		None
  **********************************************************************/
-void SPI_DeInit(SPI_TypeDef *SPIx)
+void SPI_DeInit(LPC_SPI_TypeDef *SPIx)
 {
 	CHECK_PARAM(PARAM_SPIx(SPIx));
 
-	if (SPIx == SPI){
+	if (SPIx == LPC_SPI){
 		/* Set up clock and power for SPI module */
 		CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCSPI, DISABLE);
 	}
@@ -99,10 +111,10 @@ void SPI_DeInit(SPI_TypeDef *SPIx)
 
 /*********************************************************************//**
  * @brief		Get data bit size per transfer
- * @param[in]	SPIx	SPI peripheral selected, should be SPI
+ * @param[in]	SPIx	SPI peripheral selected, should be LPC_SPI
  * @return 		number of bit per transfer, could be 8-16
  **********************************************************************/
-uint8_t SPI_GetDataSize (SPI_TypeDef *SPIx)
+uint8_t SPI_GetDataSize (LPC_SPI_TypeDef *SPIx)
 {
 	CHECK_PARAM(PARAM_SPIx(SPIx));
 	return ((SPIx->SPCR)>>8 & 0xF);
@@ -111,19 +123,19 @@ uint8_t SPI_GetDataSize (SPI_TypeDef *SPIx)
 /********************************************************************//**
  * @brief		Initializes the SPIx peripheral according to the specified
 *               parameters in the UART_ConfigStruct.
- * @param[in]	SPIx	SPI peripheral selected, should be SPI
+ * @param[in]	SPIx	SPI peripheral selected, should be LPC_SPI
  * @param[in]	SPI_ConfigStruct Pointer to a SPI_CFG_Type structure
 *                    that contains the configuration information for the
 *                    specified SPI peripheral.
  * @return 		None
  *********************************************************************/
-void SPI_Init(SPI_TypeDef *SPIx, SPI_CFG_Type *SPI_ConfigStruct)
+void SPI_Init(LPC_SPI_TypeDef *SPIx, SPI_CFG_Type *SPI_ConfigStruct)
 {
 	uint32_t tmp;
 
 	CHECK_PARAM(PARAM_SPIx(SPIx));
 
-	if(SPIx == SPI){
+	if(SPIx == LPC_SPI){
 		/* Set up clock and power for UART module */
 		CLKPWR_ConfigPPWR (CLKPWR_PCONP_PCSPI, ENABLE);
 	} else {
@@ -172,12 +184,12 @@ void SPI_ConfigStructInit(SPI_CFG_Type *SPI_InitStruct)
 
 /*********************************************************************//**
  * @brief		Transmit a single data through SPIx peripheral
- * @param[in]	SPIx	SPI peripheral selected, should be SPI
+ * @param[in]	SPIx	SPI peripheral selected, should be LPC_SPI
  * @param[in]	Data	Data to transmit (must be 16 or 8-bit long,
  * 						this depend on SPI data bit number configured)
  * @return 		none
  **********************************************************************/
-void SPI_SendData(SPI_TypeDef* SPIx, uint16_t Data)
+void SPI_SendData(LPC_SPI_TypeDef* SPIx, uint16_t Data)
 {
 	CHECK_PARAM(PARAM_SPIx(SPIx));
 
@@ -188,10 +200,10 @@ void SPI_SendData(SPI_TypeDef* SPIx, uint16_t Data)
 
 /*********************************************************************//**
  * @brief		Receive a single data from SPIx peripheral
- * @param[in]	SPIx	SPI peripheral selected, should be SPI
+ * @param[in]	SPIx	SPI peripheral selected, should be LPC_SPI
  * @return 		Data received (16-bit long)
  **********************************************************************/
-uint16_t SPI_ReceiveData(SPI_TypeDef* SPIx)
+uint16_t SPI_ReceiveData(LPC_SPI_TypeDef* SPIx)
 {
 	CHECK_PARAM(PARAM_SPIx(SPIx));
 
@@ -200,7 +212,7 @@ uint16_t SPI_ReceiveData(SPI_TypeDef* SPIx)
 
 /*********************************************************************//**
  * @brief 		SPI 	Read write data function
- * @param[in]	SPIx 	Pointer to SPI peripheral, should be SPI
+ * @param[in]	SPIx 	Pointer to SPI peripheral, should be LPC_SPI
  * @param[in]	dataCfg	Pointer to a SPI_DATA_SETUP_Type structure that
  * 						contains specified information about transmit
  * 						data configuration.
@@ -212,7 +224,7 @@ uint16_t SPI_ReceiveData(SPI_TypeDef* SPIx)
  * 				Return (-1) if error.
  * Note: This function can be used in both master and slave mode.
  ***********************************************************************/
-int32_t SPI_ReadWrite (SPI_TypeDef *SPIx, SPI_DATA_SETUP_Type *dataCfg, \
+int32_t SPI_ReadWrite (LPC_SPI_TypeDef *SPIx, SPI_DATA_SETUP_Type *dataCfg, \
 						SPI_TRANSFER_Type xfType)
 {
 	uint8_t *rdata8;
@@ -330,14 +342,14 @@ int32_t SPI_ReadWrite (SPI_TypeDef *SPIx, SPI_DATA_SETUP_Type *dataCfg, \
 
 /********************************************************************//**
  * @brief 		Enable or disable SPIx interrupt.
- * @param[in]	SPIx	SPI peripheral selected, should be SPI
+ * @param[in]	SPIx	SPI peripheral selected, should be LPC_SPI
  * @param[in]	NewState New state of specified UART interrupt type,
  * 				should be:
  * 				- ENALBE: Enable this SPI interrupt.
 * 				- DISALBE: Disable this SPI interrupt.
  * @return 		None
  *********************************************************************/
-void SPI_IntCmd(SPI_TypeDef *SPIx, FunctionalState NewState)
+void SPI_IntCmd(LPC_SPI_TypeDef *SPIx, FunctionalState NewState)
 {
 	CHECK_PARAM(PARAM_SPIx(SPIx));
 	CHECK_PARAM(PARAM_FUNCTIONALSTATE(NewState));
@@ -355,10 +367,10 @@ void SPI_IntCmd(SPI_TypeDef *SPIx, FunctionalState NewState)
 
 /********************************************************************//**
  * @brief 		Checks whether the SPI interrupt flag is set or not.
- * @param[in]	SPIx	SPI peripheral selected, should be SPI
+ * @param[in]	SPIx	SPI peripheral selected, should be LPC_SPI
  * @return 		The new state of SPI Interrupt Flag (SET or RESET)
  *********************************************************************/
-IntStatus SPI_GetIntStatus (SPI_TypeDef *SPIx)
+IntStatus SPI_GetIntStatus (LPC_SPI_TypeDef *SPIx)
 {
 	CHECK_PARAM(PARAM_SPIx(SPIx));
 
@@ -367,10 +379,10 @@ IntStatus SPI_GetIntStatus (SPI_TypeDef *SPIx)
 
 /********************************************************************//**
  * @brief 		Clear SPI interrupt flag.
- * @param[in]	SPIx	SPI peripheral selected, should be SPI
+ * @param[in]	SPIx	SPI peripheral selected, should be LPC_SPI
  * @return 		None
  *********************************************************************/
-void SPI_ClearIntPending(SPI_TypeDef *SPIx)
+void SPI_ClearIntPending(LPC_SPI_TypeDef *SPIx)
 {
 	CHECK_PARAM(PARAM_SPIx(SPIx));
 
@@ -379,7 +391,7 @@ void SPI_ClearIntPending(SPI_TypeDef *SPIx)
 
 /********************************************************************//**
  * @brief 		Get current value of SPI Status register in SPIx peripheral.
- * @param[in]	SPIx	SPI peripheral selected, should be SPI
+ * @param[in]	SPIx	SPI peripheral selected, should be LPC_SPI
  * @return		Current value of SPI Status register in SPI peripheral.
  * Note:	The return value of this function must be used with
  * 			SPI_CheckStatus() to determine current flag status
@@ -389,7 +401,7 @@ void SPI_ClearIntPending(SPI_TypeDef *SPIx)
  * 			read SPI status register in one time only, then the return value
  * 			used to check all flags.
  *********************************************************************/
-uint32_t SPI_GetStatus(SPI_TypeDef* SPIx)
+uint32_t SPI_GetStatus(LPC_SPI_TypeDef* SPIx)
 {
 	CHECK_PARAM(PARAM_SPIx(SPIx));
 

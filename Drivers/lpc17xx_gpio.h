@@ -22,10 +22,16 @@
 * notification. NXP Semiconductors also make no representation or
 * warranty that such application will be suitable for the specified
 * use without further testing or modification.
+* Permission to use, copy, modify, and distribute this software and its
+* documentation is hereby granted, under NXP Semiconductors'
+* relevant copyright in the software, without fee, provided that it
+* is used in conjunction with NXP Semiconductors microcontrollers.  This
+* copyright, permission, and disclaimer notice must appear in all copies of
+* this code.
 **********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
-/** @defgroup GPIO GPIO
+/** @defgroup GPIO GPIO (General Purpose Input/Output)
  * @ingroup LPC1700CMSIS_FwLib_Drivers
  * @{
  */
@@ -49,27 +55,27 @@ extern "C"
  */
 
 /** Fast GPIO port 0 byte accessible definition */
-#define GPIO0_Byte	((GPIO_Byte_TypeDef *)(GPIO0_BASE))
+#define GPIO0_Byte	((GPIO_Byte_TypeDef *)(LPC_GPIO0_BASE))
 /** Fast GPIO port 1 byte accessible definition */
-#define GPIO1_Byte	((GPIO_Byte_TypeDef *)(GPIO1_BASE))
+#define GPIO1_Byte	((GPIO_Byte_TypeDef *)(LPC_GPIO1_BASE))
 /** Fast GPIO port 2 byte accessible definition */
-#define GPIO2_Byte	((GPIO_Byte_TypeDef *)(GPIO2_BASE))
+#define GPIO2_Byte	((GPIO_Byte_TypeDef *)(LPC_GPIO2_BASE))
 /** Fast GPIO port 3 byte accessible definition */
-#define GPIO3_Byte	((GPIO_Byte_TypeDef *)(GPIO3_BASE))
+#define GPIO3_Byte	((GPIO_Byte_TypeDef *)(LPC_GPIO3_BASE))
 /** Fast GPIO port 4 byte accessible definition */
-#define GPIO4_Byte	((GPIO_Byte_TypeDef *)(GPIO4_BASE))
+#define GPIO4_Byte	((GPIO_Byte_TypeDef *)(LPC_GPIO4_BASE))
 
 
 /** Fast GPIO port 0 half-word accessible definition */
-#define GPIO0_HalfWord	((GPIO_HalfWord_TypeDef *)(GPIO0_BASE))
+#define GPIO0_HalfWord	((GPIO_HalfWord_TypeDef *)(LPC_GPIO0_BASE))
 /** Fast GPIO port 1 half-word accessible definition */
-#define GPIO1_HalfWord	((GPIO_HalfWord_TypeDef *)(GPIO1_BASE))
+#define GPIO1_HalfWord	((GPIO_HalfWord_TypeDef *)(LPC_GPIO1_BASE))
 /** Fast GPIO port 2 half-word accessible definition */
-#define GPIO2_HalfWord	((GPIO_HalfWord_TypeDef *)(GPIO2_BASE))
+#define GPIO2_HalfWord	((GPIO_HalfWord_TypeDef *)(LPC_GPIO2_BASE))
 /** Fast GPIO port 3 half-word accessible definition */
-#define GPIO3_HalfWord	((GPIO_HalfWord_TypeDef *)(GPIO3_BASE))
+#define GPIO3_HalfWord	((GPIO_HalfWord_TypeDef *)(LPC_GPIO3_BASE))
 /** Fast GPIO port 4 half-word accessible definition */
-#define GPIO4_HalfWord	((GPIO_HalfWord_TypeDef *)(GPIO4_BASE))
+#define GPIO4_HalfWord	((GPIO_HalfWord_TypeDef *)(LPC_GPIO4_BASE))
 
 /**
  * @}

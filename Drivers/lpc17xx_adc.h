@@ -24,10 +24,16 @@
 * notification. NXP Semiconductors also make no representation or
 * warranty that such application will be suitable for the specified
 * use without further testing or modification.
+* Permission to use, copy, modify, and distribute this software and its
+* documentation is hereby granted, under NXP Semiconductors'
+* relevant copyright in the software, without fee, provided that it
+* is used in conjunction with NXP Semiconductors microcontrollers.  This
+* copyright, permission, and disclaimer notice must appear in all copies of
+* this code.
 **********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
-/** @defgroup ADC ADC
+/** @defgroup ADC ADC (Analog-to-Digital Converter)
  * @ingroup LPC1700CMSIS_FwLib_Drivers
  * @{
  */
@@ -142,7 +148,7 @@ extern "C"
 
 /* ------------------- CHECK PARAM DEFINITIONS ------------------------- */
 /** Check ADC parameter */
-#define PARAM_ADCx(n)    (((uint32_t *)n)==((uint32_t *)ADC))
+#define PARAM_ADCx(n)    (((uint32_t *)n)==((uint32_t *)LPC_ADC))
 
 /** Check ADC state parameter */
 #define PARAM_ADC_START_ON_EDGE_OPT(OPT)    ((OPT == ADC_START_ON_RISING)||(OPT == ADC_START_ON_FALLING))
@@ -258,24 +264,24 @@ typedef enum
  * @{
  */
 /* Init/DeInit ADC peripheral ----------------*/
-void ADC_Init(ADC_TypeDef *ADCx, uint32_t rate);
-void ADC_DeInit(ADC_TypeDef *ADCx);
+void ADC_Init(LPC_ADC_TypeDef *ADCx, uint32_t rate);
+void ADC_DeInit(LPC_ADC_TypeDef *ADCx);
 
 /* Enable/Disable ADC functions --------------*/
-void ADC_BurstCmd(ADC_TypeDef *ADCx, FunctionalState NewState);
-void ADC_PowerdownCmd(ADC_TypeDef *ADCx, FunctionalState NewState);
-void ADC_StartCmd(ADC_TypeDef *ADCx, uint8_t start_mode);
-void ADC_ChannelCmd (ADC_TypeDef *ADCx, uint8_t Channel, FunctionalState NewState);
+void ADC_BurstCmd(LPC_ADC_TypeDef *ADCx, FunctionalState NewState);
+void ADC_PowerdownCmd(LPC_ADC_TypeDef *ADCx, FunctionalState NewState);
+void ADC_StartCmd(LPC_ADC_TypeDef *ADCx, uint8_t start_mode);
+void ADC_ChannelCmd (LPC_ADC_TypeDef *ADCx, uint8_t Channel, FunctionalState NewState);
 
 /* Configure ADC functions -------------------*/
-void ADC_EdgeStartConfig(ADC_TypeDef *ADCx, uint8_t EdgeOption);
-void ADC_IntConfig (ADC_TypeDef *ADCx, ADC_TYPE_INT_OPT IntType, FunctionalState NewState);
+void ADC_EdgeStartConfig(LPC_ADC_TypeDef *ADCx, uint8_t EdgeOption);
+void ADC_IntConfig (LPC_ADC_TypeDef *ADCx, ADC_TYPE_INT_OPT IntType, FunctionalState NewState);
 
 /* Get ADC information functions -------------------*/
-uint16_t ADC_ChannelGetData(ADC_TypeDef *ADCx, uint8_t channel);
-FlagStatus ADC_ChannelGetStatus(ADC_TypeDef *ADCx, uint8_t channel, uint32_t StatusType);
-uint32_t ADC_GlobalGetData(ADC_TypeDef *ADCx);
-FlagStatus	ADC_GlobalGetStatus(ADC_TypeDef *ADCx, uint32_t StatusType);
+uint16_t ADC_ChannelGetData(LPC_ADC_TypeDef *ADCx, uint8_t channel);
+FlagStatus ADC_ChannelGetStatus(LPC_ADC_TypeDef *ADCx, uint8_t channel, uint32_t StatusType);
+uint32_t ADC_GlobalGetData(LPC_ADC_TypeDef *ADCx);
+FlagStatus	ADC_GlobalGetStatus(LPC_ADC_TypeDef *ADCx, uint32_t StatusType);
 
 /**
  * @}

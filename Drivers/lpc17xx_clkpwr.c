@@ -22,6 +22,12 @@
 * notification. NXP Semiconductors also make no representation or
 * warranty that such application will be suitable for the specified
 * use without further testing or modification.
+* Permission to use, copy, modify, and distribute this software and its
+* documentation is hereby granted, under NXP Semiconductors'
+* relevant copyright in the software, without fee, provided that it
+* is used in conjunction with NXP Semiconductors microcontrollers.  This
+* copyright, permission, and disclaimer notice must appear in all copies of
+* this code.
 **********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
@@ -87,19 +93,19 @@ void CLKPWR_SetPCLKDiv (uint32_t ClkType, uint32_t DivVal)
 	if (ClkType < 32)
 	{
 		/* Clear two bit at bit position */
-		SC->PCLKSEL0 &= (~(CLKPWR_PCLKSEL_BITMASK(bitpos)));
+		LPC_SC->PCLKSEL0 &= (~(CLKPWR_PCLKSEL_BITMASK(bitpos)));
 
 		/* Set two selected bit */
-		SC->PCLKSEL0 |= (CLKPWR_PCLKSEL_SET(bitpos, DivVal));
+		LPC_SC->PCLKSEL0 |= (CLKPWR_PCLKSEL_SET(bitpos, DivVal));
 	}
 	/* PCLKSEL1 selected */
 	else
 	{
 		/* Clear two bit at bit position */
-		SC->PCLKSEL1 &= ~(CLKPWR_PCLKSEL_BITMASK(bitpos));
+		LPC_SC->PCLKSEL1 &= ~(CLKPWR_PCLKSEL_BITMASK(bitpos));
 
 		/* Set two selected bit */
-		SC->PCLKSEL1 |= (CLKPWR_PCLKSEL_SET(bitpos, DivVal));
+		LPC_SC->PCLKSEL1 |= (CLKPWR_PCLKSEL_SET(bitpos, DivVal));
 	}
 }
 
@@ -145,12 +151,12 @@ uint32_t CLKPWR_GetPCLKSEL (uint32_t ClkType)
 	if (ClkType < 32)
 	{
 		bitpos = ClkType;
-		retval = SC->PCLKSEL0;
+		retval = LPC_SC->PCLKSEL0;
 	}
 	else
 	{
 		bitpos = ClkType - 32;
-		retval = SC->PCLKSEL1;
+		retval = LPC_SC->PCLKSEL1;
 	}
 
 	retval = CLKPWR_PCLKSEL_GET(bitpos, retval);
@@ -267,11 +273,11 @@ void CLKPWR_ConfigPPWR (uint32_t PPType, FunctionalState NewState)
 {
 	if (NewState == ENABLE)
 	{
-		SC->PCONP |= PPType & CLKPWR_PCONP_BITMASK;
+		LPC_SC->PCONP |= PPType & CLKPWR_PCONP_BITMASK;
 	}
 	else if (NewState == DISABLE)
 	{
-		SC->PCONP &= (~PPType) & CLKPWR_PCONP_BITMASK;
+		LPC_SC->PCONP &= (~PPType) & CLKPWR_PCONP_BITMASK;
 	}
 }
 
@@ -283,7 +289,7 @@ void CLKPWR_ConfigPPWR (uint32_t PPType, FunctionalState NewState)
  **********************************************************************/
 void CLKPWR_Sleep(void)
 {
-	SC->PCON = 0x00;
+	LPC_SC->PCON = 0x00;
 	/* Sleep Mode*/
 	__WFI();
 }
@@ -298,7 +304,7 @@ void CLKPWR_DeepSleep(void)
 {
     /* Deep-Sleep Mode, set SLEEPDEEP bit */
 	SCB->SCR = 0x4;
-	SC->PCON = 0x8;
+	LPC_SC->PCON = 0x00;
 	/* Deep Sleep Mode*/
 	__WFI();
 }
@@ -313,7 +319,7 @@ void CLKPWR_PowerDown(void)
 {
     /* Deep-Sleep Mode, set SLEEPDEEP bit */
 	SCB->SCR = 0x4;
-	SC->PCON = 0x09;
+	LPC_SC->PCON = 0x01;
 	/* Power Down Mode*/
 	__WFI();
 }
@@ -328,7 +334,7 @@ void CLKPWR_DeepPowerDown(void)
 {
     /* Deep-Sleep Mode, set SLEEPDEEP bit */
 	SCB->SCR = 0x4;
-	SC->PCON = 0x03;
+	LPC_SC->PCON = 0x03;
 	/* Deep Power Down Mode*/
 	__WFI();
 }

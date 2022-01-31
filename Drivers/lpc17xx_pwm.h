@@ -1,25 +1,37 @@
-/***********************************************************************//**
- * @file		lpc17xx_pwm.h
- * @brief		Contains all macro definitions and function prototypes
- * 				support for PWM firmware library on LPC17xx
- * @version		2.0
- * @date		21. May. 2010
- * @author		NXP MCU SW Application Team
- **************************************************************************
- * Software that is described herein is for illustrative purposes only
- * which provides customers with programming information regarding the
- * products. This software is supplied "AS IS" without any warranties.
- * NXP Semiconductors assumes no responsibility or liability for the
- * use of the software, conveys no license or title under any patent,
- * copyright, or mask work right to the product. NXP Semiconductors
- * reserves the right to make changes in the software without
- * notification. NXP Semiconductors also make no representation or
- * warranty that such application will be suitable for the specified
- * use without further testing or modification.
- **************************************************************************/
+/**********************************************************************
+* $Id$		lpc17xx_pwm.h				2011-03-31
+*//**
+* @file		lpc17xx_pwm.h
+* @brief	Contains all macro definitions and function prototypes
+* 			support for PWM firmware library on LPC17xx
+* @version	2.1
+* @date		31. Mar. 2011
+* @author	NXP MCU SW Application Team
+*
+* Copyright(C) 2011, NXP Semiconductor
+* All rights reserved.
+*
+***********************************************************************
+* Software that is described herein is for illustrative purposes only
+* which provides customers with programming information regarding the
+* products. This software is supplied "AS IS" without any warranties.
+* NXP Semiconductors assumes no responsibility or liability for the
+* use of the software, conveys no license or title under any patent,
+* copyright, or mask work right to the product. NXP Semiconductors
+* reserves the right to make changes in the software without
+* notification. NXP Semiconductors also make no representation or
+* warranty that such application will be suitable for the specified
+* use without further testing or modification.
+* Permission to use, copy, modify, and distribute this software and its
+* documentation is hereby granted, under NXP Semiconductors'
+* relevant copyright in the software, without fee, provided that it
+* is used in conjunction with NXP Semiconductors microcontrollers.  This
+* copyright, permission, and disclaimer notice must appear in all copies of
+* this code.
+**********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
-/** @defgroup PWM PWM
+/** @defgroup PWM PWM (Pulse Width Modulator)
  * @ingroup LPC1700CMSIS_FwLib_Drivers
  * @{
  */
@@ -117,10 +129,10 @@ extern "C"
 
 /* ---------------- CHECK PARAMETER DEFINITIONS ---------------------------- */
 /** Macro to determine if it is valid PWM peripheral or not */
-#define PARAM_PWMx(n)	(((uint32_t *)n)==((uint32_t *)PWM1))
+#define PARAM_PWMx(n)	(((uint32_t *)n)==((uint32_t *)LPC_PWM1))
 
 /** Macro check PWM1 match channel value */
-#define PARAM_PWM1_MATCH_CHANNEL(n)		((n>=0) && (n<=6))
+#define PARAM_PWM1_MATCH_CHANNEL(n)		(n<=6)
 
 /** Macro check PWM1 channel value */
 #define PARAM_PWM1_CHANNEL(n)			((n>=1) && (n<=6))
@@ -215,7 +227,7 @@ typedef struct {
 /** @brief PMW TC mode select option */
 typedef enum {
 	PWM_MODE_TIMER = 0,		/*!< PWM using Timer mode */
-	PWM_MODE_COUNTER,		/*!< PWM using Counter mode */
+	PWM_MODE_COUNTER		/*!< PWM using Counter mode */
 } PWM_TC_MODE_OPT;
 
 #define PARAM_PWM_TC_MODE(n) ((n==PWM_MODE_TIMER) || (n==PWM_MODE_COUNTER))
@@ -282,9 +294,15 @@ typedef enum
 	PWM_INTSTAT_CAP1 = PWM_IR_PWMCAPn(1),	/**< Interrupt flag for capture input 1 */
 	PWM_INTSTAT_MR4 = PWM_IR_PWMMRn(4),		/**< Interrupt flag for PWM match channel 4 */
 	PWM_INTSTAT_MR6 = PWM_IR_PWMMRn(5),		/**< Interrupt flag for PWM match channel 5 */
-	PWM_INTSTAT_MR5 = PWM_IR_PWMMRn(6),		/**< Interrupt flag for PWM match channel 6 */
+	PWM_INTSTAT_MR5 = PWM_IR_PWMMRn(6)		/**< Interrupt flag for PWM match channel 6 */
 }PWM_INTSTAT_TYPE;
 
+/** @brief Match update structure */
+typedef struct
+{
+	uint32_t Matchvalue;
+	FlagStatus Status;
+}PWM_Match_T;
 
 /**
  * @}
@@ -296,22 +314,22 @@ typedef enum
  * @{
  */
 
-void PWM_PinConfig(PWM_TypeDef *PWMx, uint8_t PWM_Channel, uint8_t PinselOption);
-IntStatus PWM_GetIntStatus(PWM_TypeDef *PWMx, uint32_t IntFlag);
-void PWM_ClearIntPending(PWM_TypeDef *PWMx, uint32_t IntFlag);
+void PWM_PinConfig(LPC_PWM_TypeDef *PWMx, uint8_t PWM_Channel, uint8_t PinselOption);
+IntStatus PWM_GetIntStatus(LPC_PWM_TypeDef *PWMx, uint32_t IntFlag);
+void PWM_ClearIntPending(LPC_PWM_TypeDef *PWMx, uint32_t IntFlag);
 void PWM_ConfigStructInit(uint8_t PWMTimerCounterMode, void *PWM_InitStruct);
-void PWM_Init(PWM_TypeDef *PWMx, uint32_t PWMTimerCounterMode, void *PWM_ConfigStruct);
-void PWM_DeInit (PWM_TypeDef *PWMx);
-void PWM_Cmd(PWM_TypeDef *PWMx, FunctionalState NewState);
-void PWM_CounterCmd(PWM_TypeDef *PWMx, FunctionalState NewState);
-void PWM_ResetCounter(PWM_TypeDef *PWMx);
-void PWM_ConfigMatch(PWM_TypeDef *PWMx, PWM_MATCHCFG_Type *PWM_MatchConfigStruct);
-void PWM_ConfigCapture(PWM_TypeDef *PWMx, PWM_CAPTURECFG_Type *PWM_CaptureConfigStruct);
-uint32_t PWM_GetCaptureValue(PWM_TypeDef *PWMx, uint8_t CaptureChannel);
-void PWM_MatchUpdate(PWM_TypeDef *PWMx, uint8_t MatchChannel, \
+void PWM_Init(LPC_PWM_TypeDef *PWMx, uint32_t PWMTimerCounterMode, void *PWM_ConfigStruct);
+void PWM_DeInit (LPC_PWM_TypeDef *PWMx);
+void PWM_Cmd(LPC_PWM_TypeDef *PWMx, FunctionalState NewState);
+void PWM_CounterCmd(LPC_PWM_TypeDef *PWMx, FunctionalState NewState);
+void PWM_ResetCounter(LPC_PWM_TypeDef *PWMx);
+void PWM_ConfigMatch(LPC_PWM_TypeDef *PWMx, PWM_MATCHCFG_Type *PWM_MatchConfigStruct);
+void PWM_ConfigCapture(LPC_PWM_TypeDef *PWMx, PWM_CAPTURECFG_Type *PWM_CaptureConfigStruct);
+uint32_t PWM_GetCaptureValue(LPC_PWM_TypeDef *PWMx, uint8_t CaptureChannel);
+void PWM_MatchUpdate(LPC_PWM_TypeDef *PWMx, uint8_t MatchChannel, \
 					uint32_t MatchValue, uint8_t UpdateType);
-void PWM_ChannelConfig(PWM_TypeDef *PWMx, uint8_t PWMChannel, uint8_t ModeOption);
-void PWM_ChannelCmd(PWM_TypeDef *PWMx, uint8_t PWMChannel, FunctionalState NewState);
+void PWM_ChannelConfig(LPC_PWM_TypeDef *PWMx, uint8_t PWMChannel, uint8_t ModeOption);
+void PWM_ChannelCmd(LPC_PWM_TypeDef *PWMx, uint8_t PWMChannel, FunctionalState NewState);
 
 /**
  * @}

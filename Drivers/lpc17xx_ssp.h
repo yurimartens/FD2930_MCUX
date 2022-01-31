@@ -22,10 +22,16 @@
 * notification. NXP Semiconductors also make no representation or
 * warranty that such application will be suitable for the specified
 * use without further testing or modification.
+* Permission to use, copy, modify, and distribute this software and its
+* documentation is hereby granted, under NXP Semiconductors'
+* relevant copyright in the software, without fee, provided that it
+* is used in conjunction with NXP Semiconductors microcontrollers.  This
+* copyright, permission, and disclaimer notice must appear in all copies of
+* this code.
 **********************************************************************/
 
 /* Peripheral group ----------------------------------------------------------- */
-/** @defgroup SSP SSP
+/** @defgroup SSP SSP (Synchronous Serial Port)
  * @ingroup LPC1700CMSIS_FwLib_Drivers
  * @{
  */
@@ -310,8 +316,8 @@ extern "C"
 
 /* ---------------- CHECK PARAMETER DEFINITIONS ---------------------------- */
 /** Macro to determine if it is valid SSP port number */
-#define PARAM_SSPx(n)	((((uint32_t *)n)==((uint32_t *)SSP0)) \
-|| (((uint32_t *)n)==((uint32_t *)SSP1)))
+#define PARAM_SSPx(n)	((((uint32_t *)n)==((uint32_t *)LPC_SSP0)) \
+|| (((uint32_t *)n)==((uint32_t *)LPC_SSP1)))
 
 /** Macro check clock phase control mode */
 #define PARAM_SSP_CPHA(n) 		((n==SSP_CPHA_FIRST) || (n==SSP_CPHA_SECOND))
@@ -419,35 +425,34 @@ typedef struct {
  */
 
 /* SSP Init/DeInit functions --------------------------------------------------*/
-void SSP_Init(SSP_TypeDef *SSPx, SSP_CFG_Type *SSP_ConfigStruct);
-void SSP_DeInit(SSP_TypeDef* SSPx);
+void SSP_Init(LPC_SSP_TypeDef *SSPx, SSP_CFG_Type *SSP_ConfigStruct);
+void SSP_DeInit(LPC_SSP_TypeDef* SSPx);
 
 /* SSP configure functions ----------------------------------------------------*/
 void SSP_ConfigStructInit(SSP_CFG_Type *SSP_InitStruct);
-void setSSPclock (SSP_TypeDef *SSPx, uint32_t target_clock);
 
 /* SSP enable/disable functions -----------------------------------------------*/
-void SSP_Cmd(SSP_TypeDef* SSPx, FunctionalState NewState);
-void SSP_LoopBackCmd(SSP_TypeDef* SSPx, FunctionalState NewState);
-void SSP_SlaveOutputCmd(SSP_TypeDef* SSPx, FunctionalState NewState);
-void SSP_DMACmd(SSP_TypeDef *SSPx, uint32_t DMAMode, FunctionalState NewState);
+void SSP_Cmd(LPC_SSP_TypeDef* SSPx, FunctionalState NewState);
+void SSP_LoopBackCmd(LPC_SSP_TypeDef* SSPx, FunctionalState NewState);
+void SSP_SlaveOutputCmd(LPC_SSP_TypeDef* SSPx, FunctionalState NewState);
+void SSP_DMACmd(LPC_SSP_TypeDef *SSPx, uint32_t DMAMode, FunctionalState NewState);
 
 /* SSP get information functions ----------------------------------------------*/
-FlagStatus SSP_GetStatus(SSP_TypeDef* SSPx, uint32_t FlagType);
-uint8_t SSP_GetDataSize(SSP_TypeDef* SSPx);
-IntStatus SSP_GetRawIntStatus(SSP_TypeDef *SSPx, uint32_t RawIntType);
-uint32_t SSP_GetRawIntStatusReg(SSP_TypeDef *SSPx);
-IntStatus SSP_GetIntStatus (SSP_TypeDef *SSPx, uint32_t IntType);
+FlagStatus SSP_GetStatus(LPC_SSP_TypeDef* SSPx, uint32_t FlagType);
+uint8_t SSP_GetDataSize(LPC_SSP_TypeDef* SSPx);
+IntStatus SSP_GetRawIntStatus(LPC_SSP_TypeDef *SSPx, uint32_t RawIntType);
+uint32_t SSP_GetRawIntStatusReg(LPC_SSP_TypeDef *SSPx);
+IntStatus SSP_GetIntStatus (LPC_SSP_TypeDef *SSPx, uint32_t IntType);
 
 /* SSP transfer data functions ------------------------------------------------*/
-void SSP_SendData(SSP_TypeDef* SSPx, uint16_t Data);
-uint16_t SSP_ReceiveData(SSP_TypeDef* SSPx);
-int32_t SSP_ReadWrite (SSP_TypeDef *SSPx, SSP_DATA_SETUP_Type *dataCfg, \
+void SSP_SendData(LPC_SSP_TypeDef* SSPx, uint16_t Data);
+uint16_t SSP_ReceiveData(LPC_SSP_TypeDef* SSPx);
+int32_t SSP_ReadWrite (LPC_SSP_TypeDef *SSPx, SSP_DATA_SETUP_Type *dataCfg, \
 						SSP_TRANSFER_Type xfType);
 
 /* SSP IRQ function ------------------------------------------------------------*/
-void SSP_IntConfig(SSP_TypeDef *SSPx, uint32_t IntType, FunctionalState NewState);
-void SSP_ClearIntPending(SSP_TypeDef *SSPx, uint32_t IntType);
+void SSP_IntConfig(LPC_SSP_TypeDef *SSPx, uint32_t IntType, FunctionalState NewState);
+void SSP_ClearIntPending(LPC_SSP_TypeDef *SSPx, uint32_t IntType);
 
 
 /**

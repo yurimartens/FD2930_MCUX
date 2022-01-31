@@ -1,0 +1,6 @@
+[submodule "modbus"]
+	path = modbus
+	url = https://gitlab.pozhgazpribor.ru/firmware/submodules/modbus.git
+[submodule "lpcdrivers"]
+	path = lpcdrivers
+	url = https://gitlab.pozhgazpribor.ru/firmware/submodules/lpcdrivers.git
