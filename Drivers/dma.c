@@ -1,6 +1,9 @@
 
-#include "LPC17xx.h"
-#include "lpc_types.h"
+#include <dma.h>
+#include <LPC17xx.h>
+#include <ctype.h>
+
+#include <at45.h>
 
 extern volatile PFV cb[MAX_IRQChannel];
 
@@ -49,10 +52,10 @@ INT32S DMAInit(void)
     
     /* Save base address of DMA controller registers */
     //DMADrvDat.pDMA = (DMAC_REGS_T *) DMA_BASE_ADDR;
-    DMADrvDat.pDMA = (DMAC_REGS_T *) GPDMA;
+    DMADrvDat.pDMA = (DMAC_REGS_T *) LPC_GPDMA;
     
     /* Enable clock to DMA controller (for now) */
-    SC->PCONP |= PCGPDMA;
+    LPC_SC->PCONP |= PCGPDMA;
     
     /* Make sure DMA controller and all channels are disabled.
     Controller is in little-endian mode. Disable sync signals */
@@ -77,7 +80,7 @@ INT32S DMAInit(void)
     
     /* Disable clock to DMA controller. The clock will only be
     enabled when one or moer channels are active. */
-    SC->PCONP &= ~PCGPDMA;
+    LPC_SC->PCONP &= ~PCGPDMA;
     NVIC_SetPriority(DMA_IRQn, DMA_INTERRUPT_PRIORITY);
     NVIC_EnableIRQ(DMA_IRQn);
     
@@ -154,7 +157,7 @@ INT32S DMAAllocChannel(INT32S ch, PFV cbk)
       /* Enable DMA clock if at least 1 DMA channel is used */
       if (DMADrvDat.numAllocCh == 1)
       {
-        SC->PCONP |= PCGPDMA;
+        LPC_SC->PCONP |= PCGPDMA;
         
         /* Enable DMA controller */
         DMADrvDat.pDMA->config = DMAC_CTRL_ENABLE;

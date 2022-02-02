@@ -2,7 +2,11 @@
 #ifndef DMAC_H
 #define DMAC_H
 
-#include "lpc_types.h"
+#include <stdint.h>
+#include <stdlib.h>
+#include <lpc_types.h>
+
+#include <armcm3_type_def.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -11,6 +11,9 @@ VERSION:      1.10
 #define _FLASHNVOL_
 
 #include <lpc_types.h>
+#include <at45.h>
+
+#include <system_LPC17xx.h>
 
 // Data Types
 #define UNSIGNED8 unsigned char
