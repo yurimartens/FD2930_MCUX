@@ -83,11 +83,11 @@ int main(void) {
 	while (1) {
 		ModbusIdle(&Modbus);
 
-		UARTTransmitIb(&Uart, 1);
-		if (TimerIsOverflow(&IndicationTimer)) {
-			TimerReset(&IndicationTimer, 2000);
-			UARTTransmitIb(&Uart, 2);
-		}
+
+		//if (TimerIsOverflow(&IndicationTimer)) {
+			//TimerReset(&IndicationTimer, 2000);
+			//UARTTransmitIbDMA(&Uart, 10);
+		//}
 	}
 	return 0;
 }
@@ -101,6 +101,17 @@ void UART1_IRQHandler(void)
 {
     UARTIsrHandler(&Uart);
     NVIC_ClearPendingIRQ(UART1_IRQn);
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+void DMA_IRQHandler(void)
+{
+    //UARTIsrHandler(&Uart);
+    NVIC_ClearPendingIRQ(DMA_IRQn);
 }
 
 /*********************************************************************//**
@@ -131,8 +142,14 @@ static void MCUPeriphConfiguration(void)
     NVIC_SetPriority(SysTick_IRQn, 17);
     //NVIC_EnableIRQ(SysTick_IRQn);
 
+    LPC_SC->PCLKSEL0 &= ~(3 << UART1_PCLK_OFFSET);
+    LPC_SC->PCLKSEL0 |= PCLCK_U1_CLK_1;
+    LPC_SC->PCONP |= (PCONP_PCUART1 | PCONP_PCGPDMA);
     NVIC_SetPriority(UART1_IRQn, 18);
     NVIC_EnableIRQ(UART1_IRQn);
+    NVIC_ClearPendingIRQ(UART1_IRQn);
+    //NVIC_SetPriority(DMA_IRQn, 19);
+    //NVIC_EnableIRQ(DMA_IRQn);
 }
 
 /**
