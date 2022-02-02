@@ -12,8 +12,12 @@ VERSION:      1.10
 
 #include <lpc_types.h>
 #include <at45.h>
+#include <stdint.h>
+
 
 #include <system_LPC17xx.h>
+
+#include <cmsis_gcc.h>
 
 // Data Types
 #define UNSIGNED8 unsigned char
@@ -46,8 +50,8 @@ VERSION:      1.10
 #define SECTOR_SIZE 0x8000
 // CPU clock in kHz
 #define CPU_CLK (SystemCoreClock / 1000)
-#define DISABLEIRQ __disable_interrupt()
-#define ENABLEIRQ  __enable_interrupt()
+#define DISABLEIRQ __disable_irq()
+#define ENABLEIRQ  __enable_irq()
 #define IAP_LOCATION 0x1FFF1FF1
 
 // maximum number of variables supported

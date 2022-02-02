@@ -36,6 +36,8 @@
 //#include <max11040.h>
 #include <modbus.h>
 
+#include <sys_utils.h>
+
 
 
 UartAl_t    Uart;
@@ -74,8 +76,18 @@ int main(void) {
 
 	ModbusInit(&Modbus, &Uart, 3, (uint16_t *)&DeviceData, (uint16_t *)&DeviceData, sizeof(DeviceData_t) / 2, sizeof(DeviceData_t) / 2, 0, 0);
 
+	TxBuf[0] = 1;
+	TxBuf[1] = 2;
+	TimerInit(&IndicationTimer, 0);
+	TimerReset(&IndicationTimer, 2000);
 	while (1) {
 		ModbusIdle(&Modbus);
+
+		UARTTransmitIb(&Uart, 1);
+		if (TimerIsOverflow(&IndicationTimer)) {
+			TimerReset(&IndicationTimer, 2000);
+			UARTTransmitIb(&Uart, 2);
+		}
 	}
 	return 0;
 }
@@ -98,7 +110,9 @@ void UART1_IRQHandler(void)
 ***********************************************************************/
 void SysTick_Handler(void)
 {
+  TimerDispatch(&Uart.Timer);
   TimerDispatch(&Modbus.Timer);
+  TimerDispatch(&IndicationTimer);
 }
 
 /**
@@ -115,7 +129,7 @@ static void MCUPeriphConfiguration(void)
     SYSTICK_Cmd(ENABLE);
 
     NVIC_SetPriority(SysTick_IRQn, 17);
-    NVIC_EnableIRQ(SysTick_IRQn);
+    //NVIC_EnableIRQ(SysTick_IRQn);
 
     NVIC_SetPriority(UART1_IRQn, 18);
     NVIC_EnableIRQ(UART1_IRQn);
