@@ -68,7 +68,7 @@ int main(void) {
 
 	DeviceInit();
 
-	ADCInit(LPC_ADC, 10000, 3.3);
+	ADCInit(LPC_ADC, ADC_RATE, ADC_REFERENCE_mV);
 
 	Uart1AndProtocolInit();
 
@@ -82,9 +82,10 @@ int main(void) {
 	TimerReset(&IndicationTimer, 20000);
 
 	while (1) {
-		ModbusIdle(&Modbus);
 
+		ModbusIdle(&Modbus);
 		ADCTask();
+		FunctionalTask();
 
 	}
 	return 0;
@@ -102,17 +103,28 @@ void UART1_IRQHandler(void)
 }
 
 
-/*********************************************************************//**
+/**
 * @brief 		SysTick interrupt handler
 * @param		None
 * @return 		None
-***********************************************************************/
+*/
 void SysTick_Handler(void)
 {
-  TimerDispatch(&Uart.Timer);
-  TimerDispatch(&Modbus.Timer);
-  TimerDispatch(&IndicationTimer);
-  TimerDispatch(&MeasurmentTimer);
+	TimerDispatch(&Modbus.Timer);
+	TimerDispatch(&IndicationTimer);
+	TimerDispatch(&MeasurmentTimer);
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+void RIT_IRQHandler(void)
+{
+	RIT_GetIntStatus(LPC_RIT);
+	RTC_GetFullTime(LPC_RTC, &DeviceTime);
+    NVIC_ClearPendingIRQ(RIT_IRQn);
 }
 
 /**
@@ -123,9 +135,7 @@ void SysTick_Handler(void)
 __STATIC_INLINE void MCUPeriphConfiguration(void)
 {
     SYSTICK_InternalInit(1);
-    //Enable System Tick interrupt
     SYSTICK_IntCmd(ENABLE);
-    //Enable System Tick Counter
     SYSTICK_Cmd(ENABLE);
 
     NVIC_SetPriority(SysTick_IRQn, 17);
@@ -140,6 +150,18 @@ __STATIC_INLINE void MCUPeriphConfiguration(void)
 
     LPC_SC->PCONP |= PCONP_PCAD;
     NVIC_ClearPendingIRQ(ADC_IRQn);
+
+    RIT_Init(LPC_RIT);
+    RIT_TimerConfig(LPC_RIT, RIT_INTERVAL_mS);
+    NVIC_SetPriority(RIT_IRQn, 20);
+    NVIC_EnableIRQ(RIT_IRQn);
+    NVIC_ClearPendingIRQ(RIT_IRQn);
+
+    RTC_Init(LPC_RTC);
+    NVIC_DisableIRQ(RTC_IRQn);
+    RTC_ResetClockTickCounter(LPC_RTC);
+    RTC_Cmd(LPC_RTC, ENABLE);
+    RTC_CalibCounterCmd(LPC_RTC, DISABLE);
 }
 
 /**
@@ -147,7 +169,7 @@ __STATIC_INLINE void MCUPeriphConfiguration(void)
   * @param
   * @retval
   */
-__STATIC_INLINE  void MCUPinsConfiguration(void)
+__STATIC_INLINE void MCUPinsConfiguration(void)
 {
     PINSEL_CFG_Type PinCfg;
 

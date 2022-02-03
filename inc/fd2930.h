@@ -18,23 +18,27 @@ extern "C" {
 #include <gpio_al.h>
 #include <sys_utils.h>
 
+#include <lpc17xx_rtc.h>
+
 
 #define DEVICE_TYPE                     (10 << 8)
 
-#define FW_VERSION                     	102
+#define FW_VERSION                     	101
 
-#define FW_VERSION_HI                  	2021
-#define FW_VERSION_LO                  	1210
+#define FW_VERSION_HI                  	2022
+#define FW_VERSION_LO                  	203
 
 
 #define MB_REG_ADDR(_STR_, _REG_)      	((uint16_t *)&_STR_._REG_ - (uint16_t *)&_STR_)
 
+#define RIT_INTERVAL_mS					1
+
+#define ADC_REFERENCE_mV				3300
+#define ADC_RATE						10000
 
 #define ADC_SAMPLING_PERIOD				1000
 
 #define UV_VOLTAGE_SCALE				0.247
-
-#define ADC_PWR_VOLTAGE_SAMPLES			3
 
 #define INDICATION_TIME					100
 
@@ -82,6 +86,85 @@ extern "C" {
 #define DEF_SERIAL						1
 
 
+
+#define TEMPERATURE_MAXIMUM             110
+#define TEMPERATURE_MINIMUM             -55
+#define VOLTAGE_UV_WORKING_MAXIMUM      600
+#define VOLTAGE_UV_WORKING_MINIMUM      400
+#define TEMPERATURE_FAULT_DELAY         100
+
+
+
+#define FD2930_DEVICE_STATUS_FIRE                       (1 << 0)
+#define FD2930_DEVICE_STATUS_PREFIRE                    (1 << 1)
+#define FD2930_DEVICE_STATUS_FAULT                      (1 << 2)//îøèáêà
+#define FD2930_DEVICE_STATUS_BREAK                      (1 << 3)//àâàðèÿ
+#define FD2930_DEVICE_STATUS_ALARM_IR                   (1 << 4)
+#define FD2930_DEVICE_STATUS_ALARM_UV                   (1 << 5)
+#define FD2930_DEVICE_STATUS_SELF_TEST                  (1 << 6)
+#define FD2930_DEVICE_STATUS_MAGNET                     (1 << 7)
+#define FD2930_DEVICE_STATUS_TESTING                    (1 << 8)
+#define FD2930_DEVICEFLAGS_DUST_DUBL                    (1 << 9)//äóáëèðóþùèé ôëàã çàïûëåííîñòè
+#define FD2930_DEVICE_STATUS_FLASH_OK                   (1 << 10)
+#define FD2930_DEVICE_STATUS_CRC_OK                     (1 << 11)
+#define FD2930_DEVICE_STATUS_IR_UV_SET                  (1 << 12)
+#define FD2930_DEVICE_STATUS_TEST_CALIBR                (1 << 13)
+#define FD2930_DEVICE_STATUS_TEST_ZERO                  (1 << 14)
+#define FD2930_DEVICE_STATUS_SD_CARD                    (1 << 15)
+
+
+#define FD2930_DEVICEFLAGS_FIRE_RELAY_ON           (1 << 0)
+#define FD2930_DEVICEFLAGS_WORK_RELAY_ON           (1 << 1)
+#define FD2930_DEVICEFLAGS_DUST_RELAY_ON           (1 << 2)
+#define FD2930_DEVICEFLAGS_BLINK_LED               (1 << 3)
+#define FD2930_DEVICEFLAGS_20mA_ON                 (1 << 4)
+#define FD2930_DEVICEFLAGS_IR_ERROR                (1 << 5)
+#define FD2930_DEVICEFLAGS_UV_ERROR                (1 << 6)
+//#define FD2930_DEVICEFLAGS                       (1 << 7)
+//#define FD2930_DEVICEFLAGS                       (1 << 8)
+//#define FD2930_DEVICEFLAGS                       (1 << 9)
+//#define FD2930_DEVICEFLAGS                       (1 << 10)
+#define FD2930_DEVICEFLAGS_BREAK_DUST              (1 << 11)
+#define FD2930_DEVICEFLAGS_DUST                    (1 << 12)
+#define FD2930_DEVICEFLAGS_ERROR_TEMPERATURE       (1 << 13)
+#define FD2930_DEVICEFLAGS_ERROR_UV_VOLTAGE        (1 << 14)
+#define FD2930_DEVICEFLAGS_ERROR_24V               (1 << 15)
+
+
+#define FD2930_DEVICECONFIG_FIRE_BIT0                   (1 << 0)
+#define FD2930_DEVICECONFIG_FIRE_BIT1                   (1 << 1)
+#define FD2930_DEVICECONFIG_FIRE_BIT2                   (1 << 2)
+#define FD2930_DEVICECONFIG_FIRE_BIT3                   (1 << 3)
+#define FD2930_DEVICECONFIG_FIRE_FIXATION               (1 << 4)
+#define FD2930_DEVICECONFIG_LOW_SENS                    (1 << 5)
+#define FD2930_DEVICECONFIG_HEAT_ALLOWED                (1 << 6)
+#define FD2930_DEVICECONFIG_RELAY_FIRE_ALLOWED          (1 << 7)
+#define FD2930_DEVICECONFIG_RELAY_FAULT_ALLOWED         (1 << 8)
+#define FD2930_DEVICECONFIG_RELAY_DUST_ALLOWED          (1 << 9)
+//#define FD2930_DEVICECONFIG_ARCHIVE_ALLOWED             (1 << 10)
+#define FD2930_DEVICECONFIG_IPES_MB_HEADER              (1 << 10)
+#define FD2930_DEVICECONFIG_SELFTEST_ALLOWED            (1 << 11)
+#define FD2930_DEVICECONFIG_DUST_TO_RELAY               (1 << 12)
+#define FD2930_DEVICECONFIG_ERROR_TEMP_TO_RELAY         (1 << 13)
+#define FD2930_DEVICECONFIG_ERROR_UV_VOLTAGE_TO_RELAY   (1 << 14)
+#define FD2930_DEVICECONFIG_ERROR_24V_TO_RELAY          (1 << 15)
+
+#define FD2930_DEFAULT_DEVICE_CONFIG    (FD2930_DEVICECONFIG_RELAY_FIRE_ALLOWED | FD2930_DEVICECONFIG_RELAY_FAULT_ALLOWED | FD2930_DEVICECONFIG_RELAY_DUST_ALLOWED | \
+  FD2930_DEVICECONFIG_ERROR_TEMP_TO_RELAY | FD2930_DEVICECONFIG_ERROR_UV_VOLTAGE_TO_RELAY  \
+    | FD2930_DEVICECONFIG_FIRE_BIT1 | FD2930_DEVICECONFIG_SELFTEST_ALLOWED | FD2930_DEVICECONFIG_DUST_TO_RELAY | FD2930_DEVICECONFIG_HEAT_ALLOWED)
+
+
+#define FD2930_STATE_FLAG_START                 (1 << 0)
+#define FD2930_STATE_FLAG_CHANGE_BAUDRATE       (1 << 1)
+#define FD2930_STATE_FLAG_UPDATE_CURRENT        (1 << 2)
+#define FD2930_STATE_FLAG_ERASE_ARCHIVE         (1 << 3)
+#define FD2930_STATE_FLAG_FFT_START             (1 << 4)
+#define FD2930_STATE_FLAG_FFT_ACTIVE            (1 << 5)
+#define FD2930_STATE_FLAG_MODBUS_SEND           (1 << 6)
+#define FD2930_STATE_FLAG_MODBUS_SEND_READY     (1 << 7)
+
+
+
 typedef struct
 {
     uint16_t MBId;                      //modbus address
@@ -90,9 +173,9 @@ typedef struct
     uint16_t DeviceType;
     uint16_t HWVersion;
     uint16_t FWVersion;
-    uint16_t DeviceStatus;
-    uint16_t DeviceFlags;
-    uint16_t DeviceConfig;
+    uint16_t Status;
+    uint16_t Flags;
+    uint16_t Config;
     uint16_t UVGainLevel;   //отфильтрованное значение с учетом масштабирования
     uint16_t IRGainLevel;   //отфильтрованное значение с учетом масштабирования
     uint16_t FFTLimit;
@@ -102,7 +185,7 @@ typedef struct
     uint16_t IRCoeff;
     uint16_t FireDelay;
     uint16_t FaultDelay;
-    uint16_t DeviceCommand;
+    uint16_t Command;
     uint16_t HeatPower;
     int16_t HeaterThres;
     int16_t Temperature;
@@ -131,6 +214,8 @@ typedef struct
     uint16_t CntFaultIR;
     uint16_t CntFaultUV;
 
+    uint16_t StateFlags;
+
     uint16_t Reserved[154];
 
     uint16_t ArchivePage[100];
@@ -138,6 +223,7 @@ typedef struct
 } DeviceData_t;
 
 extern DeviceData_t	DeviceData;
+extern RTC_TIME_Type DeviceTime;
 extern uint8_t		ChangeConnectionSettings;
 
 
@@ -149,6 +235,7 @@ extern Timer_t		IndicationTimer, MeasurmentTimer;
 
 void DeviceInit();
 void ADCTask();
+void FunctionalTask();
 
 
 
