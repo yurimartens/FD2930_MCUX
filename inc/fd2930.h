@@ -30,7 +30,9 @@ extern "C" {
 #define MB_REG_ADDR(_STR_, _REG_)      	((uint16_t *)&_STR_._REG_ - (uint16_t *)&_STR_)
 
 
-#define ADC_INTERVAL					10000
+#define ADC_SAMPLING_PERIOD				1000
+
+#define UV_VOLTAGE_SCALE				0.247
 
 #define ADC_PWR_VOLTAGE_SAMPLES			3
 
@@ -140,7 +142,13 @@ extern uint8_t		ChangeConnectionSettings;
 
 
 
-extern Timer_t		IndicationTimer;
+extern Timer_t		IndicationTimer, MeasurmentTimer;
+
+
+
+
+void DeviceInit();
+void ADCTask();
 
 
 

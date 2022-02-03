@@ -52,8 +52,9 @@ uint8_t     InBuf[16];
 
 
 
-static void MCUPinsConfiguration(void);
-static void MCUPeriphConfiguration(void);
+__STATIC_INLINE void MCUPinsConfiguration(void);
+__STATIC_INLINE void MCUPeriphConfiguration(void);
+__STATIC_INLINE void Uart1AndProtocolInit();
 
 
 
@@ -65,29 +66,26 @@ int main(void) {
 	MCUPinsConfiguration();
 	MCUPeriphConfiguration();
 
+	DeviceInit();
+
+	ADCInit(LPC_ADC, 10000, 3.3);
+
+	Uart1AndProtocolInit();
+
 	//IRPortInit();
 
 	//AppTimerInit();  //запуск по таймеру рабочего цикла
 
-	UARTInit(&Uart, (LPC_UART_TypeDef *)LPC_UART1, 9600, UART_PARITY_NONE, UART_STOPBIT_1, UART_FLAG_RS485_MODE_ENABLED);
-	UARTInitDMA(&Uart, LPC_GPDMA, -1, 1);
-	UARTInitTxBuf(&Uart, TxBuf, sizeof(TxBuf));
-	UARTInitRxBuf(&Uart, RxBuf, sizeof(RxBuf));
 
-	ModbusInit(&Modbus, &Uart, 3, (uint16_t *)&DeviceData, (uint16_t *)&DeviceData, sizeof(DeviceData_t) / 2, sizeof(DeviceData_t) / 2, 0, 0);
 
-	TxBuf[0] = 1;
-	TxBuf[1] = 2;
 	TimerInit(&IndicationTimer, 0);
-	TimerReset(&IndicationTimer, 2000);
+	TimerReset(&IndicationTimer, 20000);
+
 	while (1) {
 		ModbusIdle(&Modbus);
 
+		ADCTask();
 
-		//if (TimerIsOverflow(&IndicationTimer)) {
-			//TimerReset(&IndicationTimer, 2000);
-			//UARTTransmitIbDMA(&Uart, 10);
-		//}
 	}
 	return 0;
 }
@@ -103,16 +101,6 @@ void UART1_IRQHandler(void)
     NVIC_ClearPendingIRQ(UART1_IRQn);
 }
 
-/**
-  * @brief
-  * @param
-  * @retval
-  */
-void DMA_IRQHandler(void)
-{
-    //UARTIsrHandler(&Uart);
-    NVIC_ClearPendingIRQ(DMA_IRQn);
-}
 
 /*********************************************************************//**
 * @brief 		SysTick interrupt handler
@@ -124,6 +112,7 @@ void SysTick_Handler(void)
   TimerDispatch(&Uart.Timer);
   TimerDispatch(&Modbus.Timer);
   TimerDispatch(&IndicationTimer);
+  TimerDispatch(&MeasurmentTimer);
 }
 
 /**
@@ -131,7 +120,7 @@ void SysTick_Handler(void)
   * @param
   * @retval
   */
-static void MCUPeriphConfiguration(void)
+__STATIC_INLINE void MCUPeriphConfiguration(void)
 {
     SYSTICK_InternalInit(1);
     //Enable System Tick interrupt
@@ -148,8 +137,9 @@ static void MCUPeriphConfiguration(void)
     NVIC_SetPriority(UART1_IRQn, 18);
     NVIC_EnableIRQ(UART1_IRQn);
     NVIC_ClearPendingIRQ(UART1_IRQn);
-    //NVIC_SetPriority(DMA_IRQn, 19);
-    //NVIC_EnableIRQ(DMA_IRQn);
+
+    LPC_SC->PCONP |= PCONP_PCAD;
+    NVIC_ClearPendingIRQ(ADC_IRQn);
 }
 
 /**
@@ -157,7 +147,7 @@ static void MCUPeriphConfiguration(void)
   * @param
   * @retval
   */
-static void MCUPinsConfiguration(void)
+__STATIC_INLINE  void MCUPinsConfiguration(void)
 {
     PINSEL_CFG_Type PinCfg;
 
@@ -377,6 +367,21 @@ static void MCUPinsConfiguration(void)
     */
 }
 
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+__STATIC_INLINE void Uart1AndProtocolInit()
+{
+	UARTInit(&Uart, (LPC_UART_TypeDef *)LPC_UART1, 9600, UART_PARITY_NONE, UART_STOPBIT_1, UART_FLAG_RS485_MODE_ENABLED);
+	UARTInitDMA(&Uart, LPC_GPDMA, -1, 1);
+	UARTInitTxBuf(&Uart, TxBuf, sizeof(TxBuf));
+	UARTInitRxBuf(&Uart, RxBuf, sizeof(RxBuf));
+
+	ModbusInit(&Modbus, &Uart, 3, (uint16_t *)&DeviceData, (uint16_t *)&DeviceData, sizeof(DeviceData_t) / 2, sizeof(DeviceData_t) / 2, 0, 0);
+}
 //------------------------------------------------------------------------------
 // end
 //------------------------------------------------------------------------------
