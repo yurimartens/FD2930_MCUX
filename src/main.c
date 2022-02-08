@@ -33,7 +33,7 @@
 #include <ssp_al.h>
 #include <uart_al.h>
 #include <adc_al.h>
-//#include <max11040.h>
+#include <max11040.h>
 #include <modbus.h>
 
 #include <sys_utils.h>
@@ -72,6 +72,20 @@ int main(void) {
 
 	Uart1AndProtocolInit();
 
+	SSPInit(&SSP, LPC_SSP1, 1000000, SSP_CPHA_FIRST, SSP_CPOL_LO);
+	SSPInitCSPin(&SSP, 0, LPC_GPIO0, SSEL1);
+	SSPInitTxBuf(&SSP, OutBuf, sizeof(OutBuf));
+	SSPInitRxBuf(&SSP, InBuf, sizeof(InBuf));
+
+	Max11040Init(&SSP, 0, 2200);	// ref in mV
+
+	uint8_t *reg = Max11040GetReg(MAX11040_REG_CONFIG, 1);
+
+	//reg = Max11040GetReg(MAX11040_REG_ADC_DATA, 1);
+	//reg = Max11040GetReg(MAX11040_REG_CONFIG, 1);
+
+
+
 	//IRPortInit();
 
 	//AppTimerInit();  //запуск по таймеру рабочего цикла
@@ -85,7 +99,7 @@ int main(void) {
 
 		ModbusIdle(&Modbus);
 		ADCTask();
-		FunctionalTask();
+		FunctionalTaskBG();
 
 	}
 	return 0;
@@ -125,6 +139,8 @@ void RIT_IRQHandler(void)
 	RIT_GetIntStatus(LPC_RIT);
 	RTC_GetFullTime(LPC_RTC, &DeviceTime);
     NVIC_ClearPendingIRQ(RIT_IRQn);
+
+    FunctionalTaskPeriodic();
 }
 
 /**

@@ -164,6 +164,19 @@ extern "C" {
 #define FD2930_STATE_FLAG_MODBUS_SEND_READY     (1 << 7)
 
 
+typedef enum
+{
+  FD2930_STATE_STARTING1,                       //стартовая задержка, в 100мс для установки дефолтных настроек модбас
+  FD2930_STATE_STARTING2,                       //задержка перед инициализацией DAC 1000мс
+  FD2930_STATE_STARTING3,                       //успокоение аналогового тракта и цифрового фильтра
+  FD2930_STATE_WORKING,                         //рабочий режим (дежурный режим)
+  FD2930_STATE_SELFTEST,                        //самотестирование, дежурный режим, но данные с АЦП не обновляются
+  FD2930_STATE_TEST,                            //режим тест, прибор не считывает данные, проверка реле и токового выхода
+  FD2930_STATE_BREAK,                           //режим авария, блокировка всех реле
+  FD2930_STATE_CHANNEL_CALIBR,                  //режим калибровки каналов, блокировка всех реле
+  FD2930_STATE_TEST_CALIBR,                     //режим калибровка тестовых источников, блокировка всех реле
+  FD2930_STATE_TEST_ZERO,                       //установка нуля тестовых источников
+} DeviceState_t;
 
 typedef struct
 {
@@ -176,8 +189,8 @@ typedef struct
     uint16_t Status;
     uint16_t Flags;
     uint16_t Config;
-    uint16_t UVGainLevel;   //отфильтрованное значение с учетом масштабирования
-    uint16_t IRGainLevel;   //отфильтрованное значение с учетом масштабирования
+    uint16_t UVGain;   //отфильтрованное значение с учетом масштабирования
+    uint16_t IRGain;   //отфильтрованное значение с учетом масштабирования
     uint16_t FFTLimit;
     uint16_t UVThres;
     uint16_t IRThres;
@@ -213,10 +226,12 @@ typedef struct
     uint16_t ArchPageLo;
     uint16_t CntFaultIR;
     uint16_t CntFaultUV;
-
+    uint16_t Reserved0[10];
     uint16_t StateFlags;
 
-    uint16_t Reserved[154];
+    uint16_t UVRaw;
+
+    uint16_t Reserved1[142];
 
     uint16_t ArchivePage[100];
     uint16_t FFTData[100];
@@ -235,7 +250,9 @@ extern Timer_t		IndicationTimer, MeasurmentTimer;
 
 void DeviceInit();
 void ADCTask();
-void FunctionalTask();
+void SDADCTask();
+void FunctionalTaskBG();
+void FunctionalTaskPeriodic();
 
 
 
