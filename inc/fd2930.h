@@ -20,13 +20,14 @@ extern "C" {
 
 #include <lpc17xx_rtc.h>
 
+#include <board.h>
 
 #define DEVICE_TYPE                     (10 << 8)
 
 #define FW_VERSION                     	101
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	203
+#define FW_VERSION_LO                  	209
 
 
 #define MB_REG_ADDR(_STR_, _REG_)      	((uint16_t *)&_STR_._REG_ - (uint16_t *)&_STR_)
@@ -45,6 +46,22 @@ extern "C" {
 #define STARTUP_BLINK					500
 
 #define MB_ADDR_RUN_BOOTLOADER			0xFFFC
+
+#define FFT_POINTS						1024
+
+#define START_DELAY           			100//25//10   //стартовая задержка, в 100мс для установки дефолтных настроек модбас
+#define AFTER_START_DELAY     			1000//250//100    //задержка перед инициализацией DAC 1000мс
+#define DELAY_05S             			500//250//100    //задержка 1 секунда
+#define DELAY_1S              			1000//250//100    //задержка 1 секунда
+#define DELAY_2S              			2000//250//100    //задержка 2 секунды
+#define DELAY_3S              			3000//250//100    //задержка 3 секунды
+#define DELAY_5S              			5000//1250//500    //задержка 5 секунда
+#define DELAY_8S              			8000//1250//500    //задержка 5 секунда
+#define DELAY_10S             			10000//2500//1000    //задержка 10 секунда
+#define DELAY_checkFireStatus           10000//2500//1000    //задержка 10 секунда
+#define DELAY_15S             			15000//2500//1000    //задержка 15 секунд
+#define DELAY_20S             			20000//2500//1000    //задержка 20 секунд
+
 
 // STATUS BITS
 #define STATUS_BITS_WORK_POS	        0
@@ -163,12 +180,16 @@ extern "C" {
 #define FD2930_STATE_FLAG_MODBUS_SEND           (1 << 6)
 #define FD2930_STATE_FLAG_MODBUS_SEND_READY     (1 << 7)
 
+#define UV_PICK_LIMIT							10000
+#define UV_PICK_WORK_AREA						500
+#define IR_GAIN_UV_PICK							150
+
 
 typedef enum
 {
-  FD2930_STATE_STARTING1,                       //стартовая задержка, в 100мс для установки дефолтных настроек модбас
-  FD2930_STATE_STARTING2,                       //задержка перед инициализацией DAC 1000мс
-  FD2930_STATE_STARTING3,                       //успокоение аналогового тракта и цифрового фильтра
+  FD2930_STATE_START1,                       //стартовая задержка, в 100мс для установки дефолтных настроек модбас
+  FD2930_STATE_START2,                       //задержка перед инициализацией DAC 1000мс
+  FD2930_STATE_START3,                       //успокоение аналогового тракта и цифрового фильтра
   FD2930_STATE_WORKING,                         //рабочий режим (дежурный режим)
   FD2930_STATE_SELFTEST,                        //самотестирование, дежурный режим, но данные с АЦП не обновляются
   FD2930_STATE_TEST,                            //режим тест, прибор не считывает данные, проверка реле и токового выхода
@@ -177,6 +198,19 @@ typedef enum
   FD2930_STATE_TEST_CALIBR,                     //режим калибровка тестовых источников, блокировка всех реле
   FD2930_STATE_TEST_ZERO,                       //установка нуля тестовых источников
 } DeviceState_t;
+
+
+typedef enum
+{
+  FD2930_CONFIG_1= 1,
+  FD2930_CONFIG_2,
+  FD2930_CONFIG_3,
+  FD2930_CONFIG_4,
+  FD2930_CONFIG_5,
+  FD2930_CONFIG_6,
+  FD2930_CONFIG_7,
+  FD2930_CONFIG_8,
+} DeviceFireConfig_t;
 
 typedef struct
 {
@@ -250,7 +284,7 @@ extern Timer_t		IndicationTimer, MeasurmentTimer;
 
 void DeviceInit();
 void ADCTask();
-void SDADCTask();
+void SDADCTask(float avCoeffIR, float avCoeffUV);
 void FunctionalTaskBG();
 void FunctionalTaskPeriodic();
 

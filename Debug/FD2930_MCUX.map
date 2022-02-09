@@ -53,7 +53,7 @@ c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5
 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
                               ./src/fd2930.o (__aeabi_dmul)
 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
-                              ./src/max11040.o (__aeabi_fmul)
+                              ./src/fd2930.o (__aeabi_fmul)
 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(memcpy.o)
                               c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libcr_c.a(memcpy.o) (__aeabi_memcpy)
 
@@ -115,11 +115,14 @@ Discarded input sections
  .group         0x00000000        0xc ./src/fd2930.o
  .group         0x00000000        0xc ./src/fd2930.o
  .group         0x00000000        0xc ./src/fd2930.o
+ .group         0x00000000        0xc ./src/fd2930.o
  .text          0x00000000        0x0 ./src/fd2930.o
  .data          0x00000000        0x0 ./src/fd2930.o
  .bss           0x00000000        0x0 ./src/fd2930.o
- .text.SDADCTask
-                0x00000000       0x44 ./src/fd2930.o
+ .data.FFTOutputData
+                0x00000000        0x4 ./src/fd2930.o
+ .bss.cntST.1   0x00000000        0x4 ./src/fd2930.o
+ .bss.cnt24.0   0x00000000        0x4 ./src/fd2930.o
  .debug_macro   0x00000000      0xa7e ./src/fd2930.o
  .debug_macro   0x00000000       0x10 ./src/fd2930.o
  .debug_macro   0x00000000      0x12e ./src/fd2930.o
@@ -171,9 +174,10 @@ Discarded input sections
  .debug_macro   0x00000000      0xbb1 ./src/main.o
  .debug_macro   0x00000000      0x2c7 ./src/main.o
  .debug_macro   0x00000000       0x66 ./src/main.o
- .debug_macro   0x00000000       0x16 ./src/main.o
+ .debug_macro   0x00000000       0x1c ./src/main.o
  .debug_macro   0x00000000       0x10 ./src/main.o
- .debug_macro   0x00000000      0x249 ./src/main.o
+ .debug_macro   0x00000000      0x387 ./src/main.o
+ .debug_macro   0x00000000      0x2b7 ./src/main.o
  .debug_macro   0x00000000       0x22 ./src/main.o
  .group         0x00000000        0xc ./src/max11040.o
  .group         0x00000000        0xc ./src/max11040.o
@@ -191,9 +195,6 @@ Discarded input sections
  .text          0x00000000        0x0 ./src/max11040.o
  .data          0x00000000        0x0 ./src/max11040.o
  .bss           0x00000000        0x0 ./src/max11040.o
- .bss.Data      0x00000000       0x10 ./src/max11040.o
- .text.Max11040GetData
-                0x00000000       0xfc ./src/max11040.o
  .debug_macro   0x00000000      0xa7e ./src/max11040.o
  .debug_macro   0x00000000       0x10 ./src/max11040.o
  .debug_macro   0x00000000      0x12e ./src/max11040.o
@@ -282,7 +283,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x2d ./modbus/Modbus.o
  .debug_macro   0x00000000      0xbb1 ./modbus/Modbus.o
  .debug_macro   0x00000000      0x2c7 ./modbus/Modbus.o
- .debug_macro   0x00000000       0x1c ./modbus/Modbus.o
+ .debug_macro   0x00000000       0x22 ./modbus/Modbus.o
  .debug_macro   0x00000000       0x10 ./modbus/Modbus.o
  .debug_macro   0x00000000       0x22 ./modbus/Modbus.o
  .group         0x00000000        0xc ./lpcdrivers/adc_al.o
@@ -367,7 +368,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x2d ./lpcdrivers/ssp_al.o
  .debug_macro   0x00000000      0xbb1 ./lpcdrivers/ssp_al.o
  .debug_macro   0x00000000      0x2c7 ./lpcdrivers/ssp_al.o
- .debug_macro   0x00000000       0x1c ./lpcdrivers/ssp_al.o
+ .debug_macro   0x00000000       0x22 ./lpcdrivers/ssp_al.o
  .debug_macro   0x00000000       0x10 ./lpcdrivers/ssp_al.o
  .debug_macro   0x00000000       0x34 ./lpcdrivers/ssp_al.o
  .debug_macro   0x00000000       0x66 ./lpcdrivers/ssp_al.o
@@ -439,7 +440,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x2d ./lpcdrivers/uart_al.o
  .debug_macro   0x00000000      0xbb1 ./lpcdrivers/uart_al.o
  .debug_macro   0x00000000      0x2c7 ./lpcdrivers/uart_al.o
- .debug_macro   0x00000000       0x1c ./lpcdrivers/uart_al.o
+ .debug_macro   0x00000000       0x22 ./lpcdrivers/uart_al.o
  .debug_macro   0x00000000       0x10 ./lpcdrivers/uart_al.o
  .debug_macro   0x00000000       0x46 ./lpcdrivers/uart_al.o
  .debug_macro   0x00000000      0x344 ./lpcdrivers/uart_al.o
@@ -1442,12 +1443,20 @@ Discarded input sections
  .bss           0x00000000        0x0 ./Drivers/lpc17xx_ssp.o
  .text.SSP_DeInit
                 0x00000000       0x5c ./Drivers/lpc17xx_ssp.o
+ .text.SSP_GetDataSize
+                0x00000000       0x40 ./Drivers/lpc17xx_ssp.o
  .text.SSP_ConfigStructInit
                 0x00000000       0x3c ./Drivers/lpc17xx_ssp.o
  .text.SSP_LoopBackCmd
                 0x00000000       0x70 ./Drivers/lpc17xx_ssp.o
  .text.SSP_SlaveOutputCmd
                 0x00000000       0x70 ./Drivers/lpc17xx_ssp.o
+ .text.SSP_SendData
+                0x00000000       0x40 ./Drivers/lpc17xx_ssp.o
+ .text.SSP_ReceiveData
+                0x00000000       0x3c ./Drivers/lpc17xx_ssp.o
+ .text.SSP_ReadWrite
+                0x00000000      0x34e ./Drivers/lpc17xx_ssp.o
  .text.SSP_GetStatus
                 0x00000000       0x74 ./Drivers/lpc17xx_ssp.o
  .text.SSP_IntConfig
@@ -1986,12 +1995,8 @@ Discarded input sections
                 0x00000000       0x72 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
  .text.__aeabi_d2ulz
                 0x00000000       0x54 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
- .text.__bhs_ui2d
-                0x00000000       0x46 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
  .text.__bhs_ul2d
                 0x00000000       0x8a c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
- .text.__aeabi_i2d
-                0x00000000       0x12 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
  .text.__aeabi_ui2d
                 0x00000000        0x8 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
  .text.__aeabi_l2d
@@ -2000,13 +2005,9 @@ Discarded input sections
                 0x00000000        0x8 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
  .text.__aeabi_dcmpeq
                 0x00000000       0x3c c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
- .text.__aeabi_dcmplt
-                0x00000000       0x58 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
  .text.__aeabi_dcmpgt
                 0x00000000       0x58 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
  .text.__aeabi_dcmple
-                0x00000000       0x62 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
- .text.__aeabi_dcmpge
                 0x00000000       0x62 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
  .text.__aeabi_dcmpun
                 0x00000000       0x1a c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
@@ -2021,16 +2022,12 @@ Discarded input sections
                 0x00000000        0xc c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
  .text.__aeabi_fneg
                 0x00000000        0x6 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
- .text.__aeabi_f2uiz
-                0x00000000       0x28 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
  .text.__aeabi_f2lz
                 0x00000000       0x5c c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
  .text.__aeabi_f2ulz
                 0x00000000       0x3e c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
  .text.__bhs_ul2f
                 0x00000000       0x46 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
- .text.__aeabi_i2f
-                0x00000000       0x12 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
  .text.__aeabi_l2f
                 0x00000000       0x1c c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
  .text.__aeabi_ul2f
@@ -2128,7 +2125,7 @@ END GROUP
                 0x20084000                __top_RamAHB32 = 0x20084000
                 0x20084000                __top_RAM2 = 0x20084000
 
-.text           0x00000000     0x4180
+.text           0x00000000     0x4bf8
  FILL mask 0xff
                 0x00000000                __vectors_start__ = ABSOLUTE (.)
  *(.isr_vector)
@@ -2137,16 +2134,16 @@ END GROUP
                 0x000000cc                . = ALIGN (0x4)
                 0x000000cc                __section_table_start = .
                 0x000000cc                __data_section_table = .
-                0x000000cc        0x4 LONG 0x4180 LOADADDR (.data)
+                0x000000cc        0x4 LONG 0x4bf8 LOADADDR (.data)
                 0x000000d0        0x4 LONG 0x10000000 ADDR (.data)
-                0x000000d4        0x4 LONG 0x84 SIZEOF (.data)
-                0x000000d8        0x4 LONG 0x4180 LOADADDR (.data_RAM2)
+                0x000000d4        0x4 LONG 0x88 SIZEOF (.data)
+                0x000000d8        0x4 LONG 0x4bf8 LOADADDR (.data_RAM2)
                 0x000000dc        0x4 LONG 0x2007c000 ADDR (.data_RAM2)
                 0x000000e0        0x4 LONG 0x0 SIZEOF (.data_RAM2)
                 0x000000e4                __data_section_table_end = .
                 0x000000e4                __bss_section_table = .
-                0x000000e4        0x4 LONG 0x10000084 ADDR (.bss)
-                0x000000e8        0x4 LONG 0x688 SIZEOF (.bss)
+                0x000000e4        0x4 LONG 0x10000088 ADDR (.bss)
+                0x000000e8        0x4 LONG 0x6bc SIZEOF (.bss)
                 0x000000ec        0x4 LONG 0x2007c000 ADDR (.bss_RAM2)
                 0x000000f0        0x4 LONG 0x0 SIZEOF (.bss_RAM2)
                 0x000000f4                __bss_section_table_end = .
@@ -2214,343 +2211,353 @@ END GROUP
  .text.FunctionalTaskBG
                 0x00000320       0x64 ./src/fd2930.o
                 0x00000320                FunctionalTaskBG
+ *fill*         0x00000384        0x4 ff
  .text.FunctionalTaskPeriodic
-                0x00000384       0x20 ./src/fd2930.o
-                0x00000384                FunctionalTaskPeriodic
- *fill*         0x000003a4        0x4 ff
- .text.ADCTask  0x000003a8      0x130 ./src/fd2930.o
-                0x000003a8                ADCTask
+                0x00000388      0x778 ./src/fd2930.o
+                0x00000388                FunctionalTaskPeriodic
+ .text.SDADCTask
+                0x00000b00      0x2ac ./src/fd2930.o
+                0x00000b00                SDADCTask
+ *fill*         0x00000dac        0x4 ff
+ .text.ADCTask  0x00000db0      0x130 ./src/fd2930.o
+                0x00000db0                ADCTask
  .text.NVIC_SetPriorityGrouping
-                0x000004d8       0x48 ./src/main.o
+                0x00000ee0       0x48 ./src/main.o
  .text.NVIC_EnableIRQ
-                0x00000520       0x30 ./src/main.o
+                0x00000f28       0x30 ./src/main.o
  .text.NVIC_DisableIRQ
-                0x00000550       0x34 ./src/main.o
+                0x00000f58       0x34 ./src/main.o
  .text.NVIC_ClearPendingIRQ
-                0x00000584       0x34 ./src/main.o
+                0x00000f8c       0x34 ./src/main.o
  .text.NVIC_SetPriority
-                0x000005b8       0x54 ./src/main.o
- .text.main     0x0000060c       0xc0 ./src/main.o
-                0x0000060c                main
+                0x00000fc0       0x54 ./src/main.o
+ .text.main     0x00001014       0xc0 ./src/main.o
+                0x00001014                main
  .text.UART1_IRQHandler
-                0x000006cc       0x18 ./src/main.o
-                0x000006cc                UART1_IRQHandler
+                0x000010d4       0x18 ./src/main.o
+                0x000010d4                UART1_IRQHandler
  .text.SysTick_Handler
-                0x000006e4       0x28 ./src/main.o
-                0x000006e4                SysTick_Handler
+                0x000010ec       0x28 ./src/main.o
+                0x000010ec                SysTick_Handler
  .text.RIT_IRQHandler
-                0x0000070c       0x2c ./src/main.o
-                0x0000070c                RIT_IRQHandler
+                0x00001114       0x3c ./src/main.o
+                0x00001114                RIT_IRQHandler
  .text.MCUPeriphConfiguration
-                0x00000738       0xd4 ./src/main.o
+                0x00001150       0xd4 ./src/main.o
  .text.MCUPinsConfiguration
-                0x0000080c      0x280 ./src/main.o
+                0x00001224      0x3e8 ./src/main.o
  .text.Uart1AndProtocolInit
-                0x00000a8c       0x88 ./src/main.o
+                0x0000160c       0x88 ./src/main.o
  .text.Max11040Init
-                0x00000b14       0x40 ./src/max11040.o
-                0x00000b14                Max11040Init
+                0x00001694       0x40 ./src/max11040.o
+                0x00001694                Max11040Init
  .text.Max11040Reset
-                0x00000b54       0x2c ./src/max11040.o
-                0x00000b54                Max11040Reset
+                0x000016d4       0x2c ./src/max11040.o
+                0x000016d4                Max11040Reset
  .text.Max11040Config
-                0x00000b80       0x80 ./src/max11040.o
-                0x00000b80                Max11040Config
+                0x00001700       0x80 ./src/max11040.o
+                0x00001700                Max11040Config
  .text.Max11040GetReg
-                0x00000c00       0x4c ./src/max11040.o
-                0x00000c00                Max11040GetReg
+                0x00001780       0x4c ./src/max11040.o
+                0x00001780                Max11040GetReg
+ .text.Max11040GetData
+                0x000017cc       0xfc ./src/max11040.o
+                0x000017cc                Max11040GetData
  .text.ModbusInit
-                0x00000c4c       0x88 ./modbus/Modbus.o
-                0x00000c4c                ModbusInit
+                0x000018c8       0x88 ./modbus/Modbus.o
+                0x000018c8                ModbusInit
  .text.BuildCRC
-                0x00000cd4       0x64 ./modbus/Modbus.o
-                0x00000cd4                BuildCRC
- .text.Process  0x00000d38      0x5e0 ./modbus/Modbus.o
+                0x00001950       0x64 ./modbus/Modbus.o
+                0x00001950                BuildCRC
+ .text.Process  0x000019b4      0x5e0 ./modbus/Modbus.o
  .text.ModbusIdle
-                0x00001318      0x1ce ./modbus/Modbus.o
-                0x00001318                ModbusIdle
+                0x00001f94      0x1ce ./modbus/Modbus.o
+                0x00001f94                ModbusIdle
  .text.__defaultCallback
-                0x000014e6       0x1c ./modbus/Modbus.o
- *fill*         0x00001502        0x2 ff
- .text.ADCInit  0x00001504       0x30 ./lpcdrivers/adc_al.o
-                0x00001504                ADCInit
+                0x00002162       0x1c ./modbus/Modbus.o
+ *fill*         0x0000217e        0x2 ff
+ .text.ADCInit  0x00002180       0x30 ./lpcdrivers/adc_al.o
+                0x00002180                ADCInit
  .text.ADCGetDataSingleChannel
-                0x00001534       0xc8 ./lpcdrivers/adc_al.o
-                0x00001534                ADCGetDataSingleChannel
- .text.SSPInit  0x000015fc       0x86 ./lpcdrivers/ssp_al.o
-                0x000015fc                SSPInit
+                0x000021b0       0xc8 ./lpcdrivers/adc_al.o
+                0x000021b0                ADCGetDataSingleChannel
+ .text.SSPInit  0x00002278       0x86 ./lpcdrivers/ssp_al.o
+                0x00002278                SSPInit
  .text.SSPInitCSPin
-                0x00001682       0x40 ./lpcdrivers/ssp_al.o
-                0x00001682                SSPInitCSPin
+                0x000022fe       0x40 ./lpcdrivers/ssp_al.o
+                0x000022fe                SSPInitCSPin
  .text.SSPInitTxBuf
-                0x000016c2       0x22 ./lpcdrivers/ssp_al.o
-                0x000016c2                SSPInitTxBuf
+                0x0000233e       0x22 ./lpcdrivers/ssp_al.o
+                0x0000233e                SSPInitTxBuf
  .text.SSPInitRxBuf
-                0x000016e4       0x22 ./lpcdrivers/ssp_al.o
-                0x000016e4                SSPInitRxBuf
+                0x00002360       0x22 ./lpcdrivers/ssp_al.o
+                0x00002360                SSPInitRxBuf
  .text.SSPTransmit
-                0x00001706       0x96 ./lpcdrivers/ssp_al.o
-                0x00001706                SSPTransmit
+                0x00002382       0x96 ./lpcdrivers/ssp_al.o
+                0x00002382                SSPTransmit
  .text.SSPTransmitReceive
-                0x0000179c       0x92 ./lpcdrivers/ssp_al.o
-                0x0000179c                SSPTransmitReceive
+                0x00002418      0x152 ./lpcdrivers/ssp_al.o
+                0x00002418                SSPTransmitReceive
  .text.TimerInit
-                0x0000182e       0x32 ./lpcdrivers/sys_utils.o
-                0x0000182e                TimerInit
+                0x0000256a       0x32 ./lpcdrivers/sys_utils.o
+                0x0000256a                TimerInit
  .text.TimerReset
-                0x00001860       0x2c ./lpcdrivers/sys_utils.o
-                0x00001860                TimerReset
+                0x0000259c       0x2c ./lpcdrivers/sys_utils.o
+                0x0000259c                TimerReset
  .text.TimerAssert
-                0x0000188c       0x24 ./lpcdrivers/sys_utils.o
-                0x0000188c                TimerAssert
+                0x000025c8       0x24 ./lpcdrivers/sys_utils.o
+                0x000025c8                TimerAssert
  .text.TimerStop
-                0x000018b0       0x1e ./lpcdrivers/sys_utils.o
-                0x000018b0                TimerStop
+                0x000025ec       0x1e ./lpcdrivers/sys_utils.o
+                0x000025ec                TimerStop
  .text.TimerIsOverflow
-                0x000018ce       0x16 ./lpcdrivers/sys_utils.o
-                0x000018ce                TimerIsOverflow
+                0x0000260a       0x16 ./lpcdrivers/sys_utils.o
+                0x0000260a                TimerIsOverflow
  .text.TimerDispatch
-                0x000018e4       0x4a ./lpcdrivers/sys_utils.o
-                0x000018e4                TimerDispatch
- *fill*         0x0000192e        0x2 ff
+                0x00002620       0x4a ./lpcdrivers/sys_utils.o
+                0x00002620                TimerDispatch
+ *fill*         0x0000266a        0x2 ff
  .text.UARTInit
-                0x00001930      0x14c ./lpcdrivers/uart_al.o
-                0x00001930                UARTInit
+                0x0000266c      0x14c ./lpcdrivers/uart_al.o
+                0x0000266c                UARTInit
  .text.UARTInitTxBuf
-                0x00001a7c       0x22 ./lpcdrivers/uart_al.o
-                0x00001a7c                UARTInitTxBuf
+                0x000027b8       0x22 ./lpcdrivers/uart_al.o
+                0x000027b8                UARTInitTxBuf
  .text.UARTInitRxBuf
-                0x00001a9e       0x22 ./lpcdrivers/uart_al.o
-                0x00001a9e                UARTInitRxBuf
+                0x000027da       0x22 ./lpcdrivers/uart_al.o
+                0x000027da                UARTInitRxBuf
  .text.UARTInitDMA
-                0x00001ac0       0x64 ./lpcdrivers/uart_al.o
-                0x00001ac0                UARTInitDMA
+                0x000027fc       0x64 ./lpcdrivers/uart_al.o
+                0x000027fc                UARTInitDMA
  .text.UARTFillTxFIFO
-                0x00001b24       0x6a ./lpcdrivers/uart_al.o
- *fill*         0x00001b8e        0x2 ff
+                0x00002860       0x6a ./lpcdrivers/uart_al.o
+ *fill*         0x000028ca        0x2 ff
  .text.UARTTransmitIbDMA
-                0x00001b90       0xd8 ./lpcdrivers/uart_al.o
-                0x00001b90                UARTTransmitIbDMA
+                0x000028cc       0xd8 ./lpcdrivers/uart_al.o
+                0x000028cc                UARTTransmitIbDMA
  .text.UARTReceiveIbIT
-                0x00001c68       0x4e ./lpcdrivers/uart_al.o
-                0x00001c68                UARTReceiveIbIT
+                0x000029a4       0x4e ./lpcdrivers/uart_al.o
+                0x000029a4                UARTReceiveIbIT
  .text.UARTIsrHandler
-                0x00001cb6      0x1ce ./lpcdrivers/uart_al.o
-                0x00001cb6                UARTIsrHandler
+                0x000029f2      0x1ce ./lpcdrivers/uart_al.o
+                0x000029f2                UARTIsrHandler
  .text.ADC_Init
-                0x00001e84       0x90 ./Drivers/lpc17xx_adc.o
-                0x00001e84                ADC_Init
+                0x00002bc0       0x90 ./Drivers/lpc17xx_adc.o
+                0x00002bc0                ADC_Init
  .text.CLKPWR_GetPCLKSEL
-                0x00001f14       0x48 ./Drivers/lpc17xx_clkpwr.o
-                0x00001f14                CLKPWR_GetPCLKSEL
+                0x00002c50       0x48 ./Drivers/lpc17xx_clkpwr.o
+                0x00002c50                CLKPWR_GetPCLKSEL
  .text.CLKPWR_GetPCLK
-                0x00001f5c       0x64 ./Drivers/lpc17xx_clkpwr.o
-                0x00001f5c                CLKPWR_GetPCLK
+                0x00002c98       0x64 ./Drivers/lpc17xx_clkpwr.o
+                0x00002c98                CLKPWR_GetPCLK
  .text.CLKPWR_ConfigPPWR
-                0x00001fc0       0x58 ./Drivers/lpc17xx_clkpwr.o
-                0x00001fc0                CLKPWR_ConfigPPWR
+                0x00002cfc       0x58 ./Drivers/lpc17xx_clkpwr.o
+                0x00002cfc                CLKPWR_ConfigPPWR
  .text.GPDMA_Init
-                0x00002018       0x74 ./Drivers/lpc17xx_gpdma.o
-                0x00002018                GPDMA_Init
+                0x00002d54       0x74 ./Drivers/lpc17xx_gpdma.o
+                0x00002d54                GPDMA_Init
  .text.GPDMA_Setup
-                0x0000208c      0x328 ./Drivers/lpc17xx_gpdma.o
-                0x0000208c                GPDMA_Setup
+                0x00002dc8      0x328 ./Drivers/lpc17xx_gpdma.o
+                0x00002dc8                GPDMA_Setup
  .text.GPDMA_ChannelCmd
-                0x000023b4       0x48 ./Drivers/lpc17xx_gpdma.o
-                0x000023b4                GPDMA_ChannelCmd
+                0x000030f0       0x48 ./Drivers/lpc17xx_gpdma.o
+                0x000030f0                GPDMA_ChannelCmd
  .text.GPIO_GetPointer
-                0x000023fc       0x70 ./Drivers/lpc17xx_gpio.o
+                0x00003138       0x70 ./Drivers/lpc17xx_gpio.o
  .text.GPIO_SetDir
-                0x0000246c       0x4a ./Drivers/lpc17xx_gpio.o
-                0x0000246c                GPIO_SetDir
+                0x000031a8       0x4a ./Drivers/lpc17xx_gpio.o
+                0x000031a8                GPIO_SetDir
  .text.GPIO_SetValue
-                0x000024b6       0x2a ./Drivers/lpc17xx_gpio.o
-                0x000024b6                GPIO_SetValue
+                0x000031f2       0x2a ./Drivers/lpc17xx_gpio.o
+                0x000031f2                GPIO_SetValue
  .text.check_failed
-                0x000024e0        0xc ./Drivers/lpc17xx_libcfg_default.o
-                0x000024e0                check_failed
+                0x0000321c        0xc ./Drivers/lpc17xx_libcfg_default.o
+                0x0000321c                check_failed
  .text.set_PinFunc
-                0x000024ec       0x80 ./Drivers/lpc17xx_pinsel.o
+                0x00003228       0x80 ./Drivers/lpc17xx_pinsel.o
  .text.set_ResistorMode
-                0x0000256c       0x80 ./Drivers/lpc17xx_pinsel.o
+                0x000032a8       0x80 ./Drivers/lpc17xx_pinsel.o
  .text.set_OpenDrainMode
-                0x000025ec       0x68 ./Drivers/lpc17xx_pinsel.o
+                0x00003328       0x68 ./Drivers/lpc17xx_pinsel.o
  .text.PINSEL_ConfigPin
-                0x00002654       0x46 ./Drivers/lpc17xx_pinsel.o
-                0x00002654                PINSEL_ConfigPin
- *fill*         0x0000269a        0x2 ff
+                0x00003390       0x46 ./Drivers/lpc17xx_pinsel.o
+                0x00003390                PINSEL_ConfigPin
+ *fill*         0x000033d6        0x2 ff
  .text.RIT_Init
-                0x0000269c       0x4c ./Drivers/lpc17xx_rit.o
-                0x0000269c                RIT_Init
+                0x000033d8       0x4c ./Drivers/lpc17xx_rit.o
+                0x000033d8                RIT_Init
  .text.RIT_TimerConfig
-                0x000026e8       0x60 ./Drivers/lpc17xx_rit.o
-                0x000026e8                RIT_TimerConfig
+                0x00003424       0x60 ./Drivers/lpc17xx_rit.o
+                0x00003424                RIT_TimerConfig
  .text.RIT_GetIntStatus
-                0x00002748       0x50 ./Drivers/lpc17xx_rit.o
-                0x00002748                RIT_GetIntStatus
+                0x00003484       0x50 ./Drivers/lpc17xx_rit.o
+                0x00003484                RIT_GetIntStatus
  .text.RTC_Init
-                0x00002798       0x50 ./Drivers/lpc17xx_rtc.o
-                0x00002798                RTC_Init
+                0x000034d4       0x50 ./Drivers/lpc17xx_rtc.o
+                0x000034d4                RTC_Init
  .text.RTC_ResetClockTickCounter
-                0x000027e8       0x48 ./Drivers/lpc17xx_rtc.o
-                0x000027e8                RTC_ResetClockTickCounter
- .text.RTC_Cmd  0x00002830       0x68 ./Drivers/lpc17xx_rtc.o
-                0x00002830                RTC_Cmd
+                0x00003524       0x48 ./Drivers/lpc17xx_rtc.o
+                0x00003524                RTC_ResetClockTickCounter
+ .text.RTC_Cmd  0x0000356c       0x68 ./Drivers/lpc17xx_rtc.o
+                0x0000356c                RTC_Cmd
  .text.RTC_GetFullTime
-                0x00002898       0xa8 ./Drivers/lpc17xx_rtc.o
-                0x00002898                RTC_GetFullTime
+                0x000035d4       0xa8 ./Drivers/lpc17xx_rtc.o
+                0x000035d4                RTC_GetFullTime
  .text.RTC_CalibCounterCmd
-                0x00002940       0x6c ./Drivers/lpc17xx_rtc.o
-                0x00002940                RTC_CalibCounterCmd
+                0x0000367c       0x6c ./Drivers/lpc17xx_rtc.o
+                0x0000367c                RTC_CalibCounterCmd
  .text.setSSPclock
-                0x000029ac       0xc4 ./Drivers/lpc17xx_ssp.o
+                0x000036e8       0xc4 ./Drivers/lpc17xx_ssp.o
  .text.SSP_Init
-                0x00002a70       0x9c ./Drivers/lpc17xx_ssp.o
-                0x00002a70                SSP_Init
- .text.SSP_GetDataSize
-                0x00002b0c       0x40 ./Drivers/lpc17xx_ssp.o
-                0x00002b0c                SSP_GetDataSize
- .text.SSP_Cmd  0x00002b4c       0x6c ./Drivers/lpc17xx_ssp.o
-                0x00002b4c                SSP_Cmd
- .text.SSP_SendData
-                0x00002bb8       0x40 ./Drivers/lpc17xx_ssp.o
-                0x00002bb8                SSP_SendData
- .text.SSP_ReceiveData
-                0x00002bf8       0x3c ./Drivers/lpc17xx_ssp.o
-                0x00002bf8                SSP_ReceiveData
- .text.SSP_ReadWrite
-                0x00002c34      0x34e ./Drivers/lpc17xx_ssp.o
-                0x00002c34                SSP_ReadWrite
- *fill*         0x00002f82        0x2 ff
+                0x000037ac       0x9c ./Drivers/lpc17xx_ssp.o
+                0x000037ac                SSP_Init
+ .text.SSP_Cmd  0x00003848       0x6c ./Drivers/lpc17xx_ssp.o
+                0x00003848                SSP_Cmd
  .text.SYSTICK_InternalInit
-                0x00002f84       0x7c ./Drivers/lpc17xx_systick.o
-                0x00002f84                SYSTICK_InternalInit
+                0x000038b4       0x7c ./Drivers/lpc17xx_systick.o
+                0x000038b4                SYSTICK_InternalInit
  .text.SYSTICK_Cmd
-                0x00003000       0x50 ./Drivers/lpc17xx_systick.o
-                0x00003000                SYSTICK_Cmd
+                0x00003930       0x50 ./Drivers/lpc17xx_systick.o
+                0x00003930                SYSTICK_Cmd
  .text.SYSTICK_IntCmd
-                0x00003050       0x50 ./Drivers/lpc17xx_systick.o
-                0x00003050                SYSTICK_IntCmd
+                0x00003980       0x50 ./Drivers/lpc17xx_systick.o
+                0x00003980                SYSTICK_IntCmd
  .text.uart_set_divisors
-                0x000030a0      0x2dc ./Drivers/lpc17xx_uart.o
+                0x000039d0      0x2dc ./Drivers/lpc17xx_uart.o
  .text.UART_Init
-                0x0000337c      0x2e4 ./Drivers/lpc17xx_uart.o
-                0x0000337c                UART_Init
+                0x00003cac      0x2e4 ./Drivers/lpc17xx_uart.o
+                0x00003cac                UART_Init
  .text.UART_TxCmd
-                0x00003660       0xc8 ./Drivers/lpc17xx_uart.o
-                0x00003660                UART_TxCmd
+                0x00003f90       0xc8 ./Drivers/lpc17xx_uart.o
+                0x00003f90                UART_TxCmd
  .text.SystemInit
-                0x00003728      0x140 ./BSP/system_LPC17xx.o
-                0x00003728                SystemInit
+                0x00004058      0x140 ./BSP/system_LPC17xx.o
+                0x00004058                SystemInit
  .text.__weak_main
-                0x00003868        0x4 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libcr_c.a(__weak__main.o)
-                0x00003868                __weak_main
-                0x00003868                __main
+                0x00004198        0x4 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libcr_c.a(__weak__main.o)
+                0x00004198                __weak_main
+                0x00004198                __main
  .text.__aeabi_division_uldivmod
-                0x0000386c      0x174 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(division_64.o)
-                0x0000386c                __aeabi_uldivmod
-                0x00003870                __bhs_ldivmod1
+                0x0000419c      0x174 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(division_64.o)
+                0x0000419c                __aeabi_uldivmod
+                0x000041a0                __bhs_ldivmod1
  .text.__aeabi_division_idiv0
-                0x000039e0        0x2 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(division_idiv0.o)
-                0x000039e0                __aeabi_idiv0
- *fill*         0x000039e2        0x2 ff
+                0x00004310        0x2 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(division_idiv0.o)
+                0x00004310                __aeabi_idiv0
+ *fill*         0x00004312        0x2 ff
  .text.__aeabi_dmul
-                0x000039e4       0xfc c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
-                0x000039e4                __aeabi_dmul
+                0x00004314       0xfc c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
+                0x00004314                __aeabi_dmul
  .text.__aeabi_d2uiz
-                0x00003ae0       0x32 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
-                0x00003ae0                __aeabi_d2uiz
- *fill*         0x00003b12        0x2 ff
+                0x00004410       0x32 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
+                0x00004410                __aeabi_d2uiz
+ .text.__bhs_ui2d
+                0x00004442       0x46 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
+                0x00004442                __bhs_ui2d
+ .text.__aeabi_i2d
+                0x00004488       0x12 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
+                0x00004488                __aeabi_i2d
+ .text.__aeabi_dcmplt
+                0x0000449a       0x58 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
+                0x0000449a                __aeabi_dcmplt
+ .text.__aeabi_dcmpge
+                0x000044f2       0x62 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
+                0x000044f2                __aeabi_dcmpge
  .text.__aeabi_fmul
-                0x00003b14       0xac c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
-                0x00003b14                __aeabi_fmul
+                0x00004554       0xac c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
+                0x00004554                __aeabi_fmul
  .text.__aeabi_fdiv
-                0x00003bc0       0xbc c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
-                0x00003bc0                __aeabi_fdiv
+                0x00004600       0xbc c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
+                0x00004600                __aeabi_fdiv
  .text.__aeabi_fsub
-                0x00003c7c       0xe4 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
-                0x00003c7c                __aeabi_fsub
+                0x000046bc       0xe4 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
+                0x000046bc                __aeabi_fsub
  .text.__aeabi_fadd
-                0x00003d60       0xb4 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
-                0x00003d60                __aeabi_fadd
+                0x000047a0       0xb4 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
+                0x000047a0                __aeabi_fadd
  .text.__aeabi_f2iz
-                0x00003e14       0x34 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
-                0x00003e14                __aeabi_f2iz
+                0x00004854       0x34 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
+                0x00004854                __aeabi_f2iz
+ .text.__aeabi_f2uiz
+                0x00004888       0x28 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
+                0x00004888                __aeabi_f2uiz
  .text.__bhs_ui2f
-                0x00003e48       0x26 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
-                0x00003e48                __bhs_ui2f
+                0x000048b0       0x26 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
+                0x000048b0                __bhs_ui2f
+ .text.__aeabi_i2f
+                0x000048d6       0x12 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
+                0x000048d6                __aeabi_i2f
  .text.__aeabi_ui2f
-                0x00003e6e        0x8 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
-                0x00003e6e                __aeabi_ui2f
- *fill*         0x00003e76        0x2 ff
+                0x000048e8        0x8 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
+                0x000048e8                __aeabi_ui2f
  .text.__aeabi_f2d
-                0x00003e78       0x38 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
-                0x00003e78                __aeabi_f2d
+                0x000048f0       0x38 c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
+                0x000048f0                __aeabi_f2d
  .text.__aeabi_fcmplt
-                0x00003eb0       0x3a c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
-                0x00003eb0                __aeabi_fcmplt
+                0x00004928       0x3a c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
+                0x00004928                __aeabi_fcmplt
  *(.rodata .rodata.* .constdata .constdata.*)
- *fill*         0x00003eea        0x2 ff
+ *fill*         0x00004962        0x2 ff
  .rodata.auchCRCHi_exp
-                0x00003eec      0x100 ./modbus/Modbus.o
-                0x00003eec                auchCRCHi_exp
+                0x00004964      0x100 ./modbus/Modbus.o
+                0x00004964                auchCRCHi_exp
  .rodata.auchCRCLo_exp
-                0x00003fec      0x100 ./modbus/Modbus.o
-                0x00003fec                auchCRCLo_exp
+                0x00004a64      0x100 ./modbus/Modbus.o
+                0x00004a64                auchCRCLo_exp
  .rodata.ADC_Init.str1.4
-                0x000040ec        0xe ./Drivers/lpc17xx_adc.o
- *fill*         0x000040fa        0x2 ff
+                0x00004b64        0xe ./Drivers/lpc17xx_adc.o
+ *fill*         0x00004b72        0x2 ff
  .rodata.GPDMA_LUTPerBurst
-                0x000040fc       0x18 ./Drivers/lpc17xx_gpdma.o
-                0x000040fc                GPDMA_LUTPerBurst
+                0x00004b74       0x18 ./Drivers/lpc17xx_gpdma.o
+                0x00004b74                GPDMA_LUTPerBurst
  .rodata.GPDMA_LUTPerWid
-                0x00004114       0x18 ./Drivers/lpc17xx_gpdma.o
-                0x00004114                GPDMA_LUTPerWid
+                0x00004b8c       0x18 ./Drivers/lpc17xx_gpdma.o
+                0x00004b8c                GPDMA_LUTPerWid
  .rodata.RIT_Init.str1.4
-                0x0000412c        0xe ./Drivers/lpc17xx_rit.o
- *fill*         0x0000413a        0x2 ff
+                0x00004ba4        0xe ./Drivers/lpc17xx_rit.o
+ *fill*         0x00004bb2        0x2 ff
  .rodata.RTC_Init.str1.4
-                0x0000413c        0xe ./Drivers/lpc17xx_rtc.o
- *fill*         0x0000414a        0x2 ff
+                0x00004bb4        0xe ./Drivers/lpc17xx_rtc.o
+ *fill*         0x00004bc2        0x2 ff
  .rodata.setSSPclock.str1.4
-                0x0000414c        0xe ./Drivers/lpc17xx_ssp.o
- *fill*         0x0000415a        0x2 ff
+                0x00004bc4        0xe ./Drivers/lpc17xx_ssp.o
+ *fill*         0x00004bd2        0x2 ff
  .rodata.SYSTICK_Cmd.str1.4
-                0x0000415c       0x12 ./Drivers/lpc17xx_systick.o
- *fill*         0x0000416e        0x2 ff
+                0x00004bd4       0x12 ./Drivers/lpc17xx_systick.o
+ *fill*         0x00004be6        0x2 ff
  .rodata.UART_Init.str1.4
-                0x00004170        0xf ./Drivers/lpc17xx_uart.o
-                0x00004180                . = ALIGN (0x4)
- *fill*         0x0000417f        0x1 ff
+                0x00004be8        0xf ./Drivers/lpc17xx_uart.o
+                0x00004bf8                . = ALIGN (0x4)
+ *fill*         0x00004bf7        0x1 ff
 
-.glue_7         0x00004180        0x0
- .glue_7        0x00004180        0x0 linker stubs
+.glue_7         0x00004bf8        0x0
+ .glue_7        0x00004bf8        0x0 linker stubs
 
-.glue_7t        0x00004180        0x0
- .glue_7t       0x00004180        0x0 linker stubs
+.glue_7t        0x00004bf8        0x0
+ .glue_7t       0x00004bf8        0x0 linker stubs
 
-.vfp11_veneer   0x00004180        0x0
- .vfp11_veneer  0x00004180        0x0 linker stubs
+.vfp11_veneer   0x00004bf8        0x0
+ .vfp11_veneer  0x00004bf8        0x0 linker stubs
 
-.v4_bx          0x00004180        0x0
- .v4_bx         0x00004180        0x0 linker stubs
+.v4_bx          0x00004bf8        0x0
+ .v4_bx         0x00004bf8        0x0 linker stubs
 
-.iplt           0x00004180        0x0
- .iplt          0x00004180        0x0 ./src/fd2930.o
+.iplt           0x00004bf8        0x0
+ .iplt          0x00004bf8        0x0 ./src/fd2930.o
 
-.rel.dyn        0x00004180        0x0
- .rel.iplt      0x00004180        0x0 ./src/fd2930.o
+.rel.dyn        0x00004bf8        0x0
+ .rel.iplt      0x00004bf8        0x0 ./src/fd2930.o
 
 .ARM.extab
  *(.ARM.extab* .gnu.linkonce.armextab.*)
 
-.ARM.exidx      0x00004180        0x0
-                0x00004180                __exidx_start = .
+.ARM.exidx      0x00004bf8        0x0
+                0x00004bf8                __exidx_start = .
  *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-                0x00004180                __exidx_end = .
-                0x00004180                _etext = .
+                0x00004bf8                __exidx_end = .
+                0x00004bf8                _etext = .
 
-.data_RAM2      0x2007c000        0x0 load address 0x00004180
+.data_RAM2      0x2007c000        0x0 load address 0x00004bf8
  FILL mask 0xff
                 [!provide]                PROVIDE (__start_data_RAM2 = .)
                 [!provide]                PROVIDE (__start_data_RamAHB32 = .)
@@ -2571,7 +2578,7 @@ END GROUP
                 0x10000000                . = ALIGN (0x4)
                 0x10000000                _end_uninit_RESERVED = .
 
-.data           0x10000000       0x84 load address 0x00004180
+.data           0x10000000       0x88 load address 0x00004bf8
  FILL mask 0xff
                 0x10000000                _data = .
                 [!provide]                PROVIDE (__start_data_RAM = .)
@@ -2582,22 +2589,25 @@ END GROUP
  *(DataQuickAccess)
  *(RamFunction)
  *(.data*)
+ .data.FFTInputData
+                0x10000000        0x4 ./src/fd2930.o
+                0x10000000                FFTInputData
  .data.GPDMA_LUTPerAddr
-                0x10000000       0x60 ./Drivers/lpc17xx_gpdma.o
-                0x10000000                GPDMA_LUTPerAddr
+                0x10000004       0x60 ./Drivers/lpc17xx_gpdma.o
+                0x10000004                GPDMA_LUTPerAddr
  .data.pGPDMACh
-                0x10000060       0x20 ./Drivers/lpc17xx_gpdma.o
-                0x10000060                pGPDMACh
+                0x10000064       0x20 ./Drivers/lpc17xx_gpdma.o
+                0x10000064                pGPDMACh
  .data.SystemCoreClock
-                0x10000080        0x4 ./BSP/system_LPC17xx.o
-                0x10000080                SystemCoreClock
-                0x10000084                . = ALIGN (0x4)
-                0x10000084                _edata = .
+                0x10000084        0x4 ./BSP/system_LPC17xx.o
+                0x10000084                SystemCoreClock
+                0x10000088                . = ALIGN (0x4)
+                0x10000088                _edata = .
                 [!provide]                PROVIDE (__end_data_RAM = .)
                 [!provide]                PROVIDE (__end_data_RamLoc32 = .)
 
-.igot.plt       0x10000084        0x0 load address 0x00004204
- .igot.plt      0x10000084        0x0 ./src/fd2930.o
+.igot.plt       0x10000088        0x0 load address 0x00004c80
+ .igot.plt      0x10000088        0x0 ./src/fd2930.o
 
 .bss_RAM2       0x2007c000        0x0
                 [!provide]                PROVIDE (__start_bss_RAM2 = .)
@@ -2610,59 +2620,100 @@ END GROUP
                 [!provide]                PROVIDE (__end_bss_RAM2 = .)
                 [!provide]                PROVIDE (__end_bss_RamAHB32 = .)
 
-.bss            0x10000084      0x688
-                0x10000084                _bss = .
+.bss            0x10000088      0x6bc
+                0x10000088                _bss = .
                 [!provide]                PROVIDE (__start_bss_RAM = .)
                 [!provide]                PROVIDE (__start_bss_RamLoc32 = .)
  *(.bss*)
  .bss.DeviceData
-                0x10000084      0x320 ./src/fd2930.o
-                0x10000084                DeviceData
+                0x10000088      0x320 ./src/fd2930.o
+                0x10000088                DeviceData
  .bss.DeviceState
-                0x100003a4        0x1 ./src/fd2930.o
-                0x100003a4                DeviceState
- *fill*         0x100003a5        0x3 
+                0x100003a8        0x1 ./src/fd2930.o
+                0x100003a8                DeviceState
+ *fill*         0x100003a9        0x3 
  .bss.DeviceTime
-                0x100003a8       0x20 ./src/fd2930.o
-                0x100003a8                DeviceTime
+                0x100003ac       0x20 ./src/fd2930.o
+                0x100003ac                DeviceTime
  .bss.IndicationTimer
-                0x100003c8       0x14 ./src/fd2930.o
-                0x100003c8                IndicationTimer
+                0x100003cc       0x14 ./src/fd2930.o
+                0x100003cc                IndicationTimer
  .bss.MeasurmentTimer
-                0x100003dc       0x14 ./src/fd2930.o
-                0x100003dc                MeasurmentTimer
+                0x100003e0       0x14 ./src/fd2930.o
+                0x100003e0                MeasurmentTimer
  .bss.CntTemperatureFault
-                0x100003f0        0x2 ./src/fd2930.o
-                0x100003f0                CntTemperatureFault
- *fill*         0x100003f2        0x2 
- .bss.Uart      0x100003f4       0x5c ./src/main.o
-                0x100003f4                Uart
- .bss.RxBuf     0x10000450      0x100 ./src/main.o
-                0x10000450                RxBuf
- .bss.TxBuf     0x10000550      0x100 ./src/main.o
-                0x10000550                TxBuf
- .bss.Modbus    0x10000650       0x3c ./src/main.o
-                0x10000650                Modbus
- .bss.SSP       0x1000068c       0x40 ./src/main.o
-                0x1000068c                SSP
- .bss.OutBuf    0x100006cc        0xa ./src/main.o
-                0x100006cc                OutBuf
- *fill*         0x100006d6        0x2 
- .bss.InBuf     0x100006d8       0x10 ./src/main.o
-                0x100006d8                InBuf
+                0x100003f4        0x2 ./src/fd2930.o
+                0x100003f4                CntTemperatureFault
+ .bss.UVNoise   0x100003f6        0x2 ./src/fd2930.o
+                0x100003f6                UVNoise
+ .bss.UVNoiseTest
+                0x100003f8        0x2 ./src/fd2930.o
+                0x100003f8                UVNoiseTest
+ .bss.IRNoiseTest
+                0x100003fa        0x2 ./src/fd2930.o
+                0x100003fa                IRNoiseTest
+ .bss.UVTestLevel
+                0x100003fc        0x2 ./src/fd2930.o
+                0x100003fc                UVTestLevel
+ .bss.IRTestLevel
+                0x100003fe        0x2 ./src/fd2930.o
+                0x100003fe                IRTestLevel
+ .bss.UVTestFaultCnt
+                0x10000400        0x2 ./src/fd2930.o
+                0x10000400                UVTestFaultCnt
+ .bss.IRTestFaultCnt
+                0x10000402        0x2 ./src/fd2930.o
+                0x10000402                IRTestFaultCnt
+ .bss.UVPickCnt
+                0x10000404        0x2 ./src/fd2930.o
+                0x10000404                UVPickCnt
+ .bss.SelfTestCnt
+                0x10000406        0x2 ./src/fd2930.o
+                0x10000406                SelfTestCnt
+ .bss.SelfTest  0x10000408        0x2 ./src/fd2930.o
+                0x10000408                SelfTest
+ .bss.BadSelfTest
+                0x1000040a        0x2 ./src/fd2930.o
+                0x1000040a                BadSelfTest
+ .bss.CheckFireStatusCnt
+                0x1000040c        0x2 ./src/fd2930.o
+                0x1000040c                CheckFireStatusCnt
+ .bss.FFTCnt    0x1000040e        0x2 ./src/fd2930.o
+                0x1000040e                FFTCnt
+ .bss.IR        0x10000410        0x4 ./src/fd2930.o
+                0x10000410                IR
+ .bss.UV        0x10000414        0x4 ./src/fd2930.o
+                0x10000414                UV
+ .bss.cnt.2     0x10000418        0x4 ./src/fd2930.o
+ .bss.Uart      0x1000041c       0x5c ./src/main.o
+                0x1000041c                Uart
+ .bss.RxBuf     0x10000478      0x100 ./src/main.o
+                0x10000478                RxBuf
+ .bss.TxBuf     0x10000578      0x100 ./src/main.o
+                0x10000578                TxBuf
+ .bss.Modbus    0x10000678       0x3c ./src/main.o
+                0x10000678                Modbus
+ .bss.SSP       0x100006b4       0x40 ./src/main.o
+                0x100006b4                SSP
+ .bss.OutBuf    0x100006f4        0xa ./src/main.o
+                0x100006f4                OutBuf
+ *fill*         0x100006fe        0x2 
+ .bss.InBuf     0x10000700       0x10 ./src/main.o
+                0x10000700                InBuf
  .bss.SSPAlInst
-                0x100006e8        0x4 ./src/max11040.o
- .bss.CS        0x100006ec        0x1 ./src/max11040.o
- .bss.En24Bit   0x100006ed        0x1 ./src/max11040.o
- *fill*         0x100006ee        0x2 
- .bss.Ref       0x100006f0        0x4 ./src/max11040.o
- .bss.RawData   0x100006f4        0xd ./src/max11040.o
- *fill*         0x10000701        0x3 
- .bss.ADCInst   0x10000704        0x4 ./lpcdrivers/adc_al.o
- .bss.Ref       0x10000708        0x4 ./lpcdrivers/adc_al.o
+                0x10000710        0x4 ./src/max11040.o
+ .bss.CS        0x10000714        0x1 ./src/max11040.o
+ .bss.En24Bit   0x10000715        0x1 ./src/max11040.o
+ *fill*         0x10000716        0x2 
+ .bss.Ref       0x10000718        0x4 ./src/max11040.o
+ .bss.RawData   0x1000071c        0xd ./src/max11040.o
+ *fill*         0x10000729        0x3 
+ .bss.Data      0x1000072c       0x10 ./src/max11040.o
+ .bss.ADCInst   0x1000073c        0x4 ./lpcdrivers/adc_al.o
+ .bss.Ref       0x10000740        0x4 ./lpcdrivers/adc_al.o
  *(COMMON)
-                0x1000070c                . = ALIGN (0x4)
-                0x1000070c                _ebss = .
+                0x10000744                . = ALIGN (0x4)
+                0x10000744                _ebss = .
                 [!provide]                PROVIDE (__end_bss_RAM = .)
                 [!provide]                PROVIDE (__end_bss_RamLoc32 = .)
                 [!provide]                PROVIDE (end = .)
@@ -2678,71 +2729,71 @@ END GROUP
                 [!provide]                PROVIDE (__end_noinit_RAM2 = .)
                 [!provide]                PROVIDE (__end_noinit_RamAHB32 = .)
 
-.noinit         0x1000070c        0x0
-                0x1000070c                _noinit = .
+.noinit         0x10000744        0x0
+                0x10000744                _noinit = .
                 [!provide]                PROVIDE (__start_noinit_RAM = .)
                 [!provide]                PROVIDE (__start_noinit_RamLoc32 = .)
  *(.noinit*)
-                0x1000070c                . = ALIGN (0x4)
-                0x1000070c                _end_noinit = .
+                0x10000744                . = ALIGN (0x4)
+                0x10000744                _end_noinit = .
                 [!provide]                PROVIDE (__end_noinit_RAM = .)
                 [!provide]                PROVIDE (__end_noinit_RamLoc32 = .)
-                0x1000070c                PROVIDE (_pvHeapStart = DEFINED (__user_heap_base)?__user_heap_base:.)
+                0x10000744                PROVIDE (_pvHeapStart = DEFINED (__user_heap_base)?__user_heap_base:.)
                 0x10008000                PROVIDE (_vStackTop = DEFINED (__user_stack_top)?__user_stack_top:(__top_RamLoc32 - 0x0))
                 0xefff74da                PROVIDE (__valid_user_code_checksum = (0x0 - ((((((_vStackTop + (ResetISR + 0x1)) + (NMI_Handler + 0x1)) + (HardFault_Handler + 0x1)) + (DEFINED (MemManage_Handler)?MemManage_Handler:0x0 + 0x1)) + (DEFINED (BusFault_Handler)?BusFault_Handler:0x0 + 0x1)) + (DEFINED (UsageFault_Handler)?UsageFault_Handler:0x0 + 0x1))))
                 0x00000000                _image_start = LOADADDR (.text)
-                0x00004204                _image_end = (LOADADDR (.data) + SIZEOF (.data))
-                0x00004204                _image_size = (_image_end - _image_start)
+                0x00004c80                _image_end = (LOADADDR (.data) + SIZEOF (.data))
+                0x00004c80                _image_size = (_image_end - _image_start)
 OUTPUT(FD2930_MCUX.axf elf32-littlearm)
 LOAD linker stubs
 
-.debug_info     0x00000000     0xbf30
- .debug_info    0x00000000      0x612 ./src/fd2930.o
- .debug_info    0x00000612     0x1dd5 ./src/main.o
- .debug_info    0x000023e7      0x885 ./src/max11040.o
- .debug_info    0x00002c6c      0xd76 ./modbus/Modbus.o
- .debug_info    0x000039e2      0x239 ./lpcdrivers/adc_al.o
- .debug_info    0x00003c1b      0xe3c ./lpcdrivers/ssp_al.o
- .debug_info    0x00004a57      0x210 ./lpcdrivers/sys_utils.o
- .debug_info    0x00004c67     0x13f8 ./lpcdrivers/uart_al.o
- .debug_info    0x0000605f      0x613 ./Drivers/lpc17xx_adc.o
- .debug_info    0x00006672      0x69c ./Drivers/lpc17xx_clkpwr.o
- .debug_info    0x00006d0e     0x105e ./Drivers/lpc17xx_gpdma.o
- .debug_info    0x00007d6c      0xdc9 ./Drivers/lpc17xx_gpio.o
- .debug_info    0x00008b35       0xca ./Drivers/lpc17xx_libcfg_default.o
- .debug_info    0x00008bff      0x479 ./Drivers/lpc17xx_pinsel.o
- .debug_info    0x00009078      0x299 ./Drivers/lpc17xx_rit.o
- .debug_info    0x00009311      0x9c0 ./Drivers/lpc17xx_rtc.o
- .debug_info    0x00009cd1      0x762 ./Drivers/lpc17xx_ssp.o
- .debug_info    0x0000a433      0x21b ./Drivers/lpc17xx_systick.o
- .debug_info    0x0000a64e     0x12fc ./Drivers/lpc17xx_uart.o
- .debug_info    0x0000b94a      0x27f ./BSP/cr_startup_lpc175x_6x.o
- .debug_info    0x0000bbc9       0x40 ./BSP/crp.o
- .debug_info    0x0000bc09      0x327 ./BSP/system_LPC17xx.o
+.debug_info     0x00000000     0xc3ef
+ .debug_info    0x00000000      0xadf ./src/fd2930.o
+ .debug_info    0x00000adf     0x1e61 ./src/main.o
+ .debug_info    0x00002940      0x885 ./src/max11040.o
+ .debug_info    0x000031c5      0xd76 ./modbus/Modbus.o
+ .debug_info    0x00003f3b      0x239 ./lpcdrivers/adc_al.o
+ .debug_info    0x00004174      0xda2 ./lpcdrivers/ssp_al.o
+ .debug_info    0x00004f16      0x210 ./lpcdrivers/sys_utils.o
+ .debug_info    0x00005126     0x13f8 ./lpcdrivers/uart_al.o
+ .debug_info    0x0000651e      0x613 ./Drivers/lpc17xx_adc.o
+ .debug_info    0x00006b31      0x69c ./Drivers/lpc17xx_clkpwr.o
+ .debug_info    0x000071cd     0x105e ./Drivers/lpc17xx_gpdma.o
+ .debug_info    0x0000822b      0xdc9 ./Drivers/lpc17xx_gpio.o
+ .debug_info    0x00008ff4       0xca ./Drivers/lpc17xx_libcfg_default.o
+ .debug_info    0x000090be      0x479 ./Drivers/lpc17xx_pinsel.o
+ .debug_info    0x00009537      0x299 ./Drivers/lpc17xx_rit.o
+ .debug_info    0x000097d0      0x9c0 ./Drivers/lpc17xx_rtc.o
+ .debug_info    0x0000a190      0x762 ./Drivers/lpc17xx_ssp.o
+ .debug_info    0x0000a8f2      0x21b ./Drivers/lpc17xx_systick.o
+ .debug_info    0x0000ab0d     0x12fc ./Drivers/lpc17xx_uart.o
+ .debug_info    0x0000be09      0x27f ./BSP/cr_startup_lpc175x_6x.o
+ .debug_info    0x0000c088       0x40 ./BSP/crp.o
+ .debug_info    0x0000c0c8      0x327 ./BSP/system_LPC17xx.o
 
-.debug_abbrev   0x00000000     0x2462
- .debug_abbrev  0x00000000      0x160 ./src/fd2930.o
- .debug_abbrev  0x00000160      0x336 ./src/main.o
- .debug_abbrev  0x00000496      0x1a5 ./src/max11040.o
- .debug_abbrev  0x0000063b      0x2be ./modbus/Modbus.o
- .debug_abbrev  0x000008f9       0xfe ./lpcdrivers/adc_al.o
- .debug_abbrev  0x000009f7      0x277 ./lpcdrivers/ssp_al.o
- .debug_abbrev  0x00000c6e      0x114 ./lpcdrivers/sys_utils.o
- .debug_abbrev  0x00000d82      0x2b4 ./lpcdrivers/uart_al.o
- .debug_abbrev  0x00001036      0x16e ./Drivers/lpc17xx_adc.o
- .debug_abbrev  0x000011a4      0x1e7 ./Drivers/lpc17xx_clkpwr.o
- .debug_abbrev  0x0000138b      0x23f ./Drivers/lpc17xx_gpdma.o
- .debug_abbrev  0x000015ca      0x248 ./Drivers/lpc17xx_gpio.o
- .debug_abbrev  0x00001812       0x72 ./Drivers/lpc17xx_libcfg_default.o
- .debug_abbrev  0x00001884      0x148 ./Drivers/lpc17xx_pinsel.o
- .debug_abbrev  0x000019cc      0x128 ./Drivers/lpc17xx_rit.o
- .debug_abbrev  0x00001af4      0x1bc ./Drivers/lpc17xx_rtc.o
- .debug_abbrev  0x00001cb0      0x1e0 ./Drivers/lpc17xx_ssp.o
- .debug_abbrev  0x00001e90      0x147 ./Drivers/lpc17xx_systick.o
- .debug_abbrev  0x00001fd7      0x23d ./Drivers/lpc17xx_uart.o
- .debug_abbrev  0x00002214      0x122 ./BSP/cr_startup_lpc175x_6x.o
- .debug_abbrev  0x00002336       0x38 ./BSP/crp.o
- .debug_abbrev  0x0000236e       0xf4 ./BSP/system_LPC17xx.o
+.debug_abbrev   0x00000000     0x24d7
+ .debug_abbrev  0x00000000      0x21e ./src/fd2930.o
+ .debug_abbrev  0x0000021e      0x336 ./src/main.o
+ .debug_abbrev  0x00000554      0x1a5 ./src/max11040.o
+ .debug_abbrev  0x000006f9      0x2be ./modbus/Modbus.o
+ .debug_abbrev  0x000009b7       0xfe ./lpcdrivers/adc_al.o
+ .debug_abbrev  0x00000ab5      0x22e ./lpcdrivers/ssp_al.o
+ .debug_abbrev  0x00000ce3      0x114 ./lpcdrivers/sys_utils.o
+ .debug_abbrev  0x00000df7      0x2b4 ./lpcdrivers/uart_al.o
+ .debug_abbrev  0x000010ab      0x16e ./Drivers/lpc17xx_adc.o
+ .debug_abbrev  0x00001219      0x1e7 ./Drivers/lpc17xx_clkpwr.o
+ .debug_abbrev  0x00001400      0x23f ./Drivers/lpc17xx_gpdma.o
+ .debug_abbrev  0x0000163f      0x248 ./Drivers/lpc17xx_gpio.o
+ .debug_abbrev  0x00001887       0x72 ./Drivers/lpc17xx_libcfg_default.o
+ .debug_abbrev  0x000018f9      0x148 ./Drivers/lpc17xx_pinsel.o
+ .debug_abbrev  0x00001a41      0x128 ./Drivers/lpc17xx_rit.o
+ .debug_abbrev  0x00001b69      0x1bc ./Drivers/lpc17xx_rtc.o
+ .debug_abbrev  0x00001d25      0x1e0 ./Drivers/lpc17xx_ssp.o
+ .debug_abbrev  0x00001f05      0x147 ./Drivers/lpc17xx_systick.o
+ .debug_abbrev  0x0000204c      0x23d ./Drivers/lpc17xx_uart.o
+ .debug_abbrev  0x00002289      0x122 ./BSP/cr_startup_lpc175x_6x.o
+ .debug_abbrev  0x000023ab       0x38 ./BSP/crp.o
+ .debug_abbrev  0x000023e3       0xf4 ./BSP/system_LPC17xx.o
 
 .debug_aranges  0x00000000      0x978
  .debug_aranges
@@ -2813,139 +2864,139 @@ LOAD linker stubs
  .debug_ranges  0x00000788       0x70 ./BSP/cr_startup_lpc175x_6x.o
  .debug_ranges  0x000007f8       0x18 ./BSP/system_LPC17xx.o
 
-.debug_macro    0x00000000     0x3726
- .debug_macro   0x00000000       0xdb ./src/fd2930.o
- .debug_macro   0x000000db       0x1c ./src/fd2930.o
- .debug_macro   0x000000f7      0x2c7 ./src/fd2930.o
- .debug_macro   0x000003be       0x16 ./src/fd2930.o
- .debug_macro   0x000003d4       0x10 ./src/fd2930.o
- .debug_macro   0x000003e4      0x249 ./src/fd2930.o
- .debug_macro   0x0000062d       0x22 ./src/fd2930.o
- .debug_macro   0x0000064f       0x3a ./src/fd2930.o
- .debug_macro   0x00000689       0x58 ./src/fd2930.o
- .debug_macro   0x000006e1      0x14f ./src/main.o
- .debug_macro   0x00000830       0x82 ./src/main.o
- .debug_macro   0x000008b2       0x46 ./src/main.o
- .debug_macro   0x000008f8      0x2a7 ./src/main.o
- .debug_macro   0x00000b9f      0x344 ./src/main.o
- .debug_macro   0x00000ee3       0xef ./src/main.o
- .debug_macro   0x00000fd2       0x28 ./src/main.o
- .debug_macro   0x00000ffa       0x46 ./src/main.o
- .debug_macro   0x00001040      0x146 ./src/main.o
- .debug_macro   0x00001186      0x1b1 ./src/main.o
- .debug_macro   0x00001337      0x387 ./src/main.o
- .debug_macro   0x000016be       0x4c ./src/main.o
- .debug_macro   0x0000170a       0x34 ./src/main.o
- .debug_macro   0x0000173e       0x5e ./src/main.o
- .debug_macro   0x0000179c       0x22 ./src/main.o
- .debug_macro   0x000017be       0x88 ./src/main.o
- .debug_macro   0x00001846       0xa7 ./src/max11040.o
- .debug_macro   0x000018ed       0x1c ./src/max11040.o
- .debug_macro   0x00001909       0x34 ./src/max11040.o
- .debug_macro   0x0000193d       0xc4 ./modbus/Modbus.o
- .debug_macro   0x00001a01       0x46 ./modbus/Modbus.o
- .debug_macro   0x00001a47       0x88 ./modbus/Modbus.o
- .debug_macro   0x00001acf       0xa2 ./lpcdrivers/adc_al.o
- .debug_macro   0x00001b71       0x1c ./lpcdrivers/adc_al.o
- .debug_macro   0x00001b8d       0xe8 ./lpcdrivers/adc_al.o
- .debug_macro   0x00001c75       0xbd ./lpcdrivers/ssp_al.o
- .debug_macro   0x00001d32      0x2a1 ./lpcdrivers/ssp_al.o
- .debug_macro   0x00001fd3      0x2b0 ./lpcdrivers/ssp_al.o
- .debug_macro   0x00002283       0x4c ./lpcdrivers/sys_utils.o
- .debug_macro   0x000022cf       0xd9 ./lpcdrivers/uart_al.o
- .debug_macro   0x000023a8       0x16 ./lpcdrivers/uart_al.o
- .debug_macro   0x000023be       0x5f ./lpcdrivers/uart_al.o
- .debug_macro   0x0000241d      0x2f6 ./lpcdrivers/uart_al.o
- .debug_macro   0x00002713       0xa2 ./Drivers/lpc17xx_adc.o
- .debug_macro   0x000027b5       0xdb ./Drivers/lpc17xx_adc.o
- .debug_macro   0x00002890       0x90 ./Drivers/lpc17xx_clkpwr.o
- .debug_macro   0x00002920       0xa2 ./Drivers/lpc17xx_gpdma.o
- .debug_macro   0x000029c2      0x2aa ./Drivers/lpc17xx_gpdma.o
- .debug_macro   0x00002c6c       0x99 ./Drivers/lpc17xx_gpio.o
- .debug_macro   0x00002d05       0x40 ./Drivers/lpc17xx_gpio.o
- .debug_macro   0x00002d45       0x5a ./Drivers/lpc17xx_libcfg_default.o
- .debug_macro   0x00002d9f       0xd5 ./Drivers/lpc17xx_libcfg_default.o
- .debug_macro   0x00002e74       0x90 ./Drivers/lpc17xx_pinsel.o
- .debug_macro   0x00002f04       0xa2 ./Drivers/lpc17xx_rit.o
- .debug_macro   0x00002fa6       0x22 ./Drivers/lpc17xx_rit.o
- .debug_macro   0x00002fc8       0xa2 ./Drivers/lpc17xx_rtc.o
- .debug_macro   0x0000306a       0xa2 ./Drivers/lpc17xx_ssp.o
- .debug_macro   0x0000310c       0xa2 ./Drivers/lpc17xx_systick.o
- .debug_macro   0x000031ae       0xa2 ./Drivers/lpc17xx_uart.o
- .debug_macro   0x00003250      0x33e ./Drivers/lpc17xx_uart.o
- .debug_macro   0x0000358e       0x1d ./BSP/cr_startup_lpc175x_6x.o
- .debug_macro   0x000035ab       0x1a ./BSP/crp.o
- .debug_macro   0x000035c5       0x34 ./BSP/crp.o
- .debug_macro   0x000035f9      0x12d ./BSP/system_LPC17xx.o
+.debug_macro    0x00000000     0x37b0
+ .debug_macro   0x00000000       0xeb ./src/fd2930.o
+ .debug_macro   0x000000eb       0x1c ./src/fd2930.o
+ .debug_macro   0x00000107      0x2c7 ./src/fd2930.o
+ .debug_macro   0x000003ce       0x1c ./src/fd2930.o
+ .debug_macro   0x000003ea       0x10 ./src/fd2930.o
+ .debug_macro   0x000003fa      0x387 ./src/fd2930.o
+ .debug_macro   0x00000781      0x2b7 ./src/fd2930.o
+ .debug_macro   0x00000a38       0x22 ./src/fd2930.o
+ .debug_macro   0x00000a5a       0x3a ./src/fd2930.o
+ .debug_macro   0x00000a94       0x58 ./src/fd2930.o
+ .debug_macro   0x00000aec      0x14f ./src/main.o
+ .debug_macro   0x00000c3b       0x82 ./src/main.o
+ .debug_macro   0x00000cbd       0x46 ./src/main.o
+ .debug_macro   0x00000d03      0x2a7 ./src/main.o
+ .debug_macro   0x00000faa      0x344 ./src/main.o
+ .debug_macro   0x000012ee       0xef ./src/main.o
+ .debug_macro   0x000013dd       0x28 ./src/main.o
+ .debug_macro   0x00001405       0x46 ./src/main.o
+ .debug_macro   0x0000144b      0x146 ./src/main.o
+ .debug_macro   0x00001591      0x1b1 ./src/main.o
+ .debug_macro   0x00001742       0x4c ./src/main.o
+ .debug_macro   0x0000178e       0x34 ./src/main.o
+ .debug_macro   0x000017c2       0x5e ./src/main.o
+ .debug_macro   0x00001820       0x22 ./src/main.o
+ .debug_macro   0x00001842       0x88 ./src/main.o
+ .debug_macro   0x000018ca       0xa7 ./src/max11040.o
+ .debug_macro   0x00001971       0x22 ./src/max11040.o
+ .debug_macro   0x00001993       0x34 ./src/max11040.o
+ .debug_macro   0x000019c7       0xc4 ./modbus/Modbus.o
+ .debug_macro   0x00001a8b       0x46 ./modbus/Modbus.o
+ .debug_macro   0x00001ad1       0x88 ./modbus/Modbus.o
+ .debug_macro   0x00001b59       0xa2 ./lpcdrivers/adc_al.o
+ .debug_macro   0x00001bfb       0x1c ./lpcdrivers/adc_al.o
+ .debug_macro   0x00001c17       0xe8 ./lpcdrivers/adc_al.o
+ .debug_macro   0x00001cff       0xbd ./lpcdrivers/ssp_al.o
+ .debug_macro   0x00001dbc      0x2a1 ./lpcdrivers/ssp_al.o
+ .debug_macro   0x0000205d      0x2b0 ./lpcdrivers/ssp_al.o
+ .debug_macro   0x0000230d       0x4c ./lpcdrivers/sys_utils.o
+ .debug_macro   0x00002359       0xd9 ./lpcdrivers/uart_al.o
+ .debug_macro   0x00002432       0x16 ./lpcdrivers/uart_al.o
+ .debug_macro   0x00002448       0x5f ./lpcdrivers/uart_al.o
+ .debug_macro   0x000024a7      0x2f6 ./lpcdrivers/uart_al.o
+ .debug_macro   0x0000279d       0xa2 ./Drivers/lpc17xx_adc.o
+ .debug_macro   0x0000283f       0xdb ./Drivers/lpc17xx_adc.o
+ .debug_macro   0x0000291a       0x90 ./Drivers/lpc17xx_clkpwr.o
+ .debug_macro   0x000029aa       0xa2 ./Drivers/lpc17xx_gpdma.o
+ .debug_macro   0x00002a4c      0x2aa ./Drivers/lpc17xx_gpdma.o
+ .debug_macro   0x00002cf6       0x99 ./Drivers/lpc17xx_gpio.o
+ .debug_macro   0x00002d8f       0x40 ./Drivers/lpc17xx_gpio.o
+ .debug_macro   0x00002dcf       0x5a ./Drivers/lpc17xx_libcfg_default.o
+ .debug_macro   0x00002e29       0xd5 ./Drivers/lpc17xx_libcfg_default.o
+ .debug_macro   0x00002efe       0x90 ./Drivers/lpc17xx_pinsel.o
+ .debug_macro   0x00002f8e       0xa2 ./Drivers/lpc17xx_rit.o
+ .debug_macro   0x00003030       0x22 ./Drivers/lpc17xx_rit.o
+ .debug_macro   0x00003052       0xa2 ./Drivers/lpc17xx_rtc.o
+ .debug_macro   0x000030f4       0xa2 ./Drivers/lpc17xx_ssp.o
+ .debug_macro   0x00003196       0xa2 ./Drivers/lpc17xx_systick.o
+ .debug_macro   0x00003238       0xa2 ./Drivers/lpc17xx_uart.o
+ .debug_macro   0x000032da      0x33e ./Drivers/lpc17xx_uart.o
+ .debug_macro   0x00003618       0x1d ./BSP/cr_startup_lpc175x_6x.o
+ .debug_macro   0x00003635       0x1a ./BSP/crp.o
+ .debug_macro   0x0000364f       0x34 ./BSP/crp.o
+ .debug_macro   0x00003683      0x12d ./BSP/system_LPC17xx.o
 
-.debug_line     0x00000000     0x7502
- .debug_line    0x00000000      0x3e8 ./src/fd2930.o
- .debug_line    0x000003e8      0x76a ./src/main.o
- .debug_line    0x00000b52      0x3a6 ./src/max11040.o
- .debug_line    0x00000ef8      0x9fd ./modbus/Modbus.o
- .debug_line    0x000018f5      0x301 ./lpcdrivers/adc_al.o
- .debug_line    0x00001bf6      0x5bc ./lpcdrivers/ssp_al.o
- .debug_line    0x000021b2      0x2a2 ./lpcdrivers/sys_utils.o
- .debug_line    0x00002454      0x9c7 ./lpcdrivers/uart_al.o
- .debug_line    0x00002e1b      0x529 ./Drivers/lpc17xx_adc.o
- .debug_line    0x00003344      0x3a9 ./Drivers/lpc17xx_clkpwr.o
- .debug_line    0x000036ed      0x59b ./Drivers/lpc17xx_gpdma.o
- .debug_line    0x00003c88      0x6ee ./Drivers/lpc17xx_gpio.o
- .debug_line    0x00004376      0x1b7 ./Drivers/lpc17xx_libcfg_default.o
- .debug_line    0x0000452d      0x32d ./Drivers/lpc17xx_pinsel.o
- .debug_line    0x0000485a      0x365 ./Drivers/lpc17xx_rit.o
- .debug_line    0x00004bbf      0x9bd ./Drivers/lpc17xx_rtc.o
- .debug_line    0x0000557c      0x883 ./Drivers/lpc17xx_ssp.o
- .debug_line    0x00005dff      0x352 ./Drivers/lpc17xx_systick.o
- .debug_line    0x00006151      0xda6 ./Drivers/lpc17xx_uart.o
- .debug_line    0x00006ef7      0x15f ./BSP/cr_startup_lpc175x_6x.o
- .debug_line    0x00007056       0xb1 ./BSP/crp.o
- .debug_line    0x00007107      0x3fb ./BSP/system_LPC17xx.o
+.debug_line     0x00000000     0x7a9b
+ .debug_line    0x00000000      0x7fc ./src/fd2930.o
+ .debug_line    0x000007fc      0x800 ./src/main.o
+ .debug_line    0x00000ffc      0x3a6 ./src/max11040.o
+ .debug_line    0x000013a2      0x9fd ./modbus/Modbus.o
+ .debug_line    0x00001d9f      0x301 ./lpcdrivers/adc_al.o
+ .debug_line    0x000020a0      0x6ab ./lpcdrivers/ssp_al.o
+ .debug_line    0x0000274b      0x2a2 ./lpcdrivers/sys_utils.o
+ .debug_line    0x000029ed      0x9c7 ./lpcdrivers/uart_al.o
+ .debug_line    0x000033b4      0x529 ./Drivers/lpc17xx_adc.o
+ .debug_line    0x000038dd      0x3a9 ./Drivers/lpc17xx_clkpwr.o
+ .debug_line    0x00003c86      0x59b ./Drivers/lpc17xx_gpdma.o
+ .debug_line    0x00004221      0x6ee ./Drivers/lpc17xx_gpio.o
+ .debug_line    0x0000490f      0x1b7 ./Drivers/lpc17xx_libcfg_default.o
+ .debug_line    0x00004ac6      0x32d ./Drivers/lpc17xx_pinsel.o
+ .debug_line    0x00004df3      0x365 ./Drivers/lpc17xx_rit.o
+ .debug_line    0x00005158      0x9bd ./Drivers/lpc17xx_rtc.o
+ .debug_line    0x00005b15      0x883 ./Drivers/lpc17xx_ssp.o
+ .debug_line    0x00006398      0x352 ./Drivers/lpc17xx_systick.o
+ .debug_line    0x000066ea      0xda6 ./Drivers/lpc17xx_uart.o
+ .debug_line    0x00007490      0x15f ./BSP/cr_startup_lpc175x_6x.o
+ .debug_line    0x000075ef       0xb1 ./BSP/crp.o
+ .debug_line    0x000076a0      0x3fb ./BSP/system_LPC17xx.o
 
-.debug_str      0x00000000    0x16b07
- .debug_str     0x00000000     0xbbb8 ./src/fd2930.o
-                               0xbc7b (size before relaxing)
- .debug_str     0x0000bbb8     0x5a98 ./src/main.o
-                              0x115bc (size before relaxing)
- .debug_str     0x00011650       0xa0 ./src/max11040.o
-                               0xa47b (size before relaxing)
- .debug_str     0x000116f0      0x145 ./modbus/Modbus.o
-                               0xa9a4 (size before relaxing)
- .debug_str     0x00011835      0x79a ./lpcdrivers/adc_al.o
+.debug_str      0x00000000    0x16e37
+ .debug_str     0x00000000     0xcc55 ./src/fd2930.o
+                               0xcd21 (size before relaxing)
+ .debug_str     0x0000cc55     0x4d2b ./src/main.o
+                              0x11746 (size before relaxing)
+ .debug_str     0x00011980       0xa0 ./src/max11040.o
+                               0xa4ca (size before relaxing)
+ .debug_str     0x00011a20      0x145 ./modbus/Modbus.o
+                               0xa9f3 (size before relaxing)
+ .debug_str     0x00011b65      0x79a ./lpcdrivers/adc_al.o
                                0xa6d3 (size before relaxing)
- .debug_str     0x00011fcf     0x1535 ./lpcdrivers/ssp_al.o
-                               0xc8ff (size before relaxing)
- .debug_str     0x00013504       0x7d ./lpcdrivers/sys_utils.o
+ .debug_str     0x000122ff     0x14c1 ./lpcdrivers/ssp_al.o
+                               0xc8da (size before relaxing)
+ .debug_str     0x000137c0       0x7d ./lpcdrivers/sys_utils.o
                                0x449c (size before relaxing)
- .debug_str     0x00013581     0x159f ./lpcdrivers/uart_al.o
-                               0xe66a (size before relaxing)
- .debug_str     0x00014b20      0x471 ./Drivers/lpc17xx_adc.o
+ .debug_str     0x0001383d     0x159f ./lpcdrivers/uart_al.o
+                               0xe6b9 (size before relaxing)
+ .debug_str     0x00014ddc      0x471 ./Drivers/lpc17xx_adc.o
                                0xbcba (size before relaxing)
- .debug_str     0x00014f91       0xdf ./Drivers/lpc17xx_clkpwr.o
+ .debug_str     0x0001524d       0xdf ./Drivers/lpc17xx_clkpwr.o
                                0xb307 (size before relaxing)
- .debug_str     0x00015070      0x2b5 ./Drivers/lpc17xx_gpdma.o
+ .debug_str     0x0001532c      0x2b5 ./Drivers/lpc17xx_gpdma.o
                                0xcb19 (size before relaxing)
- .debug_str     0x00015325      0x2fd ./Drivers/lpc17xx_gpio.o
+ .debug_str     0x000155e1      0x2fd ./Drivers/lpc17xx_gpio.o
                                0xa652 (size before relaxing)
- .debug_str     0x00015622       0x36 ./Drivers/lpc17xx_libcfg_default.o
+ .debug_str     0x000158de       0x36 ./Drivers/lpc17xx_libcfg_default.o
                                0x46cd (size before relaxing)
- .debug_str     0x00015658      0x206 ./Drivers/lpc17xx_pinsel.o
+ .debug_str     0x00015914      0x206 ./Drivers/lpc17xx_pinsel.o
                                0xa579 (size before relaxing)
- .debug_str     0x0001585e       0x97 ./Drivers/lpc17xx_rit.o
+ .debug_str     0x00015b1a       0x97 ./Drivers/lpc17xx_rit.o
                                0xb395 (size before relaxing)
- .debug_str     0x000158f5      0x28e ./Drivers/lpc17xx_rtc.o
+ .debug_str     0x00015bb1      0x28e ./Drivers/lpc17xx_rtc.o
                                0xbe43 (size before relaxing)
- .debug_str     0x00015b83      0x1c6 ./Drivers/lpc17xx_ssp.o
+ .debug_str     0x00015e3f      0x23a ./Drivers/lpc17xx_ssp.o
                                0xc4d9 (size before relaxing)
- .debug_str     0x00015d49       0xbd ./Drivers/lpc17xx_systick.o
+ .debug_str     0x00016079       0xbd ./Drivers/lpc17xx_systick.o
                                0xb476 (size before relaxing)
- .debug_str     0x00015e06      0x786 ./Drivers/lpc17xx_uart.o
+ .debug_str     0x00016136      0x786 ./Drivers/lpc17xx_uart.o
                                0xd33b (size before relaxing)
- .debug_str     0x0001658c      0x1b2 ./BSP/cr_startup_lpc175x_6x.o
+ .debug_str     0x000168bc      0x1b2 ./BSP/cr_startup_lpc175x_6x.o
                                0x2ea5 (size before relaxing)
- .debug_str     0x0001673e       0xe9 ./BSP/crp.o
+ .debug_str     0x00016a6e       0xe9 ./BSP/crp.o
                                0x2dc6 (size before relaxing)
- .debug_str     0x00016827      0x2e0 ./BSP/system_LPC17xx.o
+ .debug_str     0x00016b57      0x2e0 ./BSP/system_LPC17xx.o
                                0xa0fa (size before relaxing)
 
 .comment        0x00000000       0x49
@@ -3033,28 +3084,28 @@ LOAD linker stubs
  .ARM.attributes
                 0x00000474       0x2d c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
 
-.debug_frame    0x00000000     0x2328
- .debug_frame   0x00000000       0xac ./src/fd2930.o
- .debug_frame   0x000000ac      0x1b4 ./src/main.o
- .debug_frame   0x00000260       0xc8 ./src/max11040.o
- .debug_frame   0x00000328      0x170 ./modbus/Modbus.o
- .debug_frame   0x00000498       0x58 ./lpcdrivers/adc_al.o
- .debug_frame   0x000004f0      0x350 ./lpcdrivers/ssp_al.o
- .debug_frame   0x00000840      0x120 ./lpcdrivers/sys_utils.o
- .debug_frame   0x00000960      0x334 ./lpcdrivers/uart_al.o
- .debug_frame   0x00000c94      0x1e8 ./Drivers/lpc17xx_adc.o
- .debug_frame   0x00000e7c      0x12c ./Drivers/lpc17xx_clkpwr.o
- .debug_frame   0x00000fa8       0xc4 ./Drivers/lpc17xx_gpdma.o
- .debug_frame   0x0000106c      0x428 ./Drivers/lpc17xx_gpio.o
- .debug_frame   0x00001494       0x2c ./Drivers/lpc17xx_libcfg_default.o
- .debug_frame   0x000014c0       0xfc ./Drivers/lpc17xx_pinsel.o
- .debug_frame   0x000015bc       0xe8 ./Drivers/lpc17xx_rit.o
- .debug_frame   0x000016a4      0x2e4 ./Drivers/lpc17xx_rtc.o
- .debug_frame   0x00001988      0x2a0 ./Drivers/lpc17xx_ssp.o
- .debug_frame   0x00001c28       0xe0 ./Drivers/lpc17xx_systick.o
- .debug_frame   0x00001d08      0x44c ./Drivers/lpc17xx_uart.o
- .debug_frame   0x00002154      0x170 ./BSP/cr_startup_lpc175x_6x.o
- .debug_frame   0x000022c4       0x64 ./BSP/system_LPC17xx.o
+.debug_frame    0x00000000     0x2334
+ .debug_frame   0x00000000       0xb4 ./src/fd2930.o
+ .debug_frame   0x000000b4      0x1b4 ./src/main.o
+ .debug_frame   0x00000268       0xc8 ./src/max11040.o
+ .debug_frame   0x00000330      0x170 ./modbus/Modbus.o
+ .debug_frame   0x000004a0       0x58 ./lpcdrivers/adc_al.o
+ .debug_frame   0x000004f8      0x354 ./lpcdrivers/ssp_al.o
+ .debug_frame   0x0000084c      0x120 ./lpcdrivers/sys_utils.o
+ .debug_frame   0x0000096c      0x334 ./lpcdrivers/uart_al.o
+ .debug_frame   0x00000ca0      0x1e8 ./Drivers/lpc17xx_adc.o
+ .debug_frame   0x00000e88      0x12c ./Drivers/lpc17xx_clkpwr.o
+ .debug_frame   0x00000fb4       0xc4 ./Drivers/lpc17xx_gpdma.o
+ .debug_frame   0x00001078      0x428 ./Drivers/lpc17xx_gpio.o
+ .debug_frame   0x000014a0       0x2c ./Drivers/lpc17xx_libcfg_default.o
+ .debug_frame   0x000014cc       0xfc ./Drivers/lpc17xx_pinsel.o
+ .debug_frame   0x000015c8       0xe8 ./Drivers/lpc17xx_rit.o
+ .debug_frame   0x000016b0      0x2e4 ./Drivers/lpc17xx_rtc.o
+ .debug_frame   0x00001994      0x2a0 ./Drivers/lpc17xx_ssp.o
+ .debug_frame   0x00001c34       0xe0 ./Drivers/lpc17xx_systick.o
+ .debug_frame   0x00001d14      0x44c ./Drivers/lpc17xx_uart.o
+ .debug_frame   0x00002160      0x170 ./BSP/cr_startup_lpc175x_6x.o
+ .debug_frame   0x000022d0       0x64 ./BSP/system_LPC17xx.o
 
 Cross Reference Table
 
@@ -3083,6 +3134,7 @@ ADC_StartCmd                                      ./Drivers/lpc17xx_adc.o
 AppRTCTaskGetTime                                 ./Drivers/rtc_cal.o
 AppRTCTaskInit                                    ./Drivers/rtc_cal.o
 BOD_IRQHandler                                    ./BSP/cr_startup_lpc175x_6x.o
+BadSelfTest                                       ./src/fd2930.o
 BlankCheckSector                                  ./Drivers/lpc17xx_iap.o
 BuildCRC                                          ./modbus/Modbus.o
 BusFault_Handler                                  ./BSP/cr_startup_lpc175x_6x.o
@@ -3117,6 +3169,7 @@ CLKPWR_SetPCLKDiv                                 ./Drivers/lpc17xx_clkpwr.o
                                                   ./fat_sd/diskio.o
 CLKPWR_Sleep                                      ./Drivers/lpc17xx_clkpwr.o
 CRP_WORD                                          ./BSP/crp.o
+CheckFireStatusCnt                                ./src/fd2930.o
 CntTemperatureFault                               ./src/fd2930.o
 Compare                                           ./Drivers/lpc17xx_iap.o
 CopyRAM2Flash                                     ./Drivers/lpc17xx_iap.o
@@ -3135,6 +3188,9 @@ EINT2_IRQHandler                                  ./BSP/cr_startup_lpc175x_6x.o
 EINT3_IRQHandler                                  ./BSP/cr_startup_lpc175x_6x.o
 ENET_IRQHandler                                   ./BSP/cr_startup_lpc175x_6x.o
 EraseSector                                       ./Drivers/lpc17xx_iap.o
+FFTCnt                                            ./src/fd2930.o
+FFTInputData                                      ./src/fd2930.o
+FFTOutputData                                     ./src/fd2930.o
 FIO_ByteClearValue                                ./Drivers/lpc17xx_gpio.o
 FIO_ByteReadValue                                 ./Drivers/lpc17xx_gpio.o
 FIO_ByteSetDir                                    ./Drivers/lpc17xx_gpio.o
@@ -3186,6 +3242,10 @@ I2C0_IRQHandler                                   ./BSP/cr_startup_lpc175x_6x.o
 I2C1_IRQHandler                                   ./BSP/cr_startup_lpc175x_6x.o
 I2C2_IRQHandler                                   ./BSP/cr_startup_lpc175x_6x.o
 I2S_IRQHandler                                    ./BSP/cr_startup_lpc175x_6x.o
+IR                                                ./src/fd2930.o
+IRNoiseTest                                       ./src/fd2930.o
+IRTestFaultCnt                                    ./src/fd2930.o
+IRTestLevel                                       ./src/fd2930.o
 InBuf                                             ./src/main.o
 IndicationTimer                                   ./src/fd2930.o
                                                   ./src/main.o
@@ -3363,7 +3423,6 @@ SSP_Init                                          ./Drivers/lpc17xx_ssp.o
 SSP_IntConfig                                     ./Drivers/lpc17xx_ssp.o
 SSP_LoopBackCmd                                   ./Drivers/lpc17xx_ssp.o
 SSP_ReadWrite                                     ./Drivers/lpc17xx_ssp.o
-                                                  ./lpcdrivers/ssp_al.o
 SSP_ReceiveData                                   ./Drivers/lpc17xx_ssp.o
 SSP_SendData                                      ./Drivers/lpc17xx_ssp.o
 SSP_SlaveOutputCmd                                ./Drivers/lpc17xx_ssp.o
@@ -3377,6 +3436,8 @@ SYSTICK_IntCmd                                    ./Drivers/lpc17xx_systick.o
                                                   ./src/main.o
 SYSTICK_InternalInit                              ./Drivers/lpc17xx_systick.o
                                                   ./src/main.o
+SelfTest                                          ./src/fd2930.o
+SelfTestCnt                                       ./src/fd2930.o
 SysTick_Handler                                   ./src/main.o
 SystemCoreClock                                   ./BSP/system_LPC17xx.o
                                                   ./Drivers/lpc17xx_systick.o
@@ -3486,6 +3547,12 @@ UART_TxCmd                                        ./Drivers/lpc17xx_uart.o
                                                   ./lpcdrivers/uart_al.o
 USBActivity_IRQHandler                            ./BSP/cr_startup_lpc175x_6x.o
 USB_IRQHandler                                    ./BSP/cr_startup_lpc175x_6x.o
+UV                                                ./src/fd2930.o
+UVNoise                                           ./src/fd2930.o
+UVNoiseTest                                       ./src/fd2930.o
+UVPickCnt                                         ./src/fd2930.o
+UVTestFaultCnt                                    ./src/fd2930.o
+UVTestLevel                                       ./src/fd2930.o
 Uart                                              ./src/main.o
 UsageFault_Handler                                ./BSP/cr_startup_lpc175x_6x.o
 VarRecTable                                       ./Drivers/flash_nvol.o
@@ -3512,9 +3579,11 @@ __aeabi_d2ulz                                     c:/nxp/mcuxpressoide_11.5.0_72
 __aeabi_dadd                                      c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
 __aeabi_dcmpeq                                    c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
 __aeabi_dcmpge                                    c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
+                                                  ./src/fd2930.o
 __aeabi_dcmpgt                                    c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
 __aeabi_dcmple                                    c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
 __aeabi_dcmplt                                    c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
+                                                  ./src/fd2930.o
 __aeabi_dcmpun                                    c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
 __aeabi_ddiv                                      c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
 __aeabi_dmul                                      c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
@@ -3546,12 +3615,15 @@ __aeabi_fdiv                                      c:/nxp/mcuxpressoide_11.5.0_72
 __aeabi_fmul                                      c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
                                                   ./lpcdrivers/adc_al.o
                                                   ./src/max11040.o
+                                                  ./src/fd2930.o
 __aeabi_fneg                                      c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
 __aeabi_frsub                                     c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
 __aeabi_fsub                                      c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
                                                   ./src/fd2930.o
 __aeabi_i2d                                       c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)
+                                                  ./src/fd2930.o
 __aeabi_i2f                                       c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(float.o)
+                                                  ./src/fd2930.o
 __aeabi_idiv0                                     c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(division_idiv0.o)
                                                   c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(division_64.o)
 __aeabi_l2d                                       c:/nxp/mcuxpressoide_11.5.0_7232/ide/plugins/com.nxp.mcuxpresso.tools.win32_11.5.0.202107051138/tools/bin/../lib/gcc/arm-none-eabi/10.3.1/thumb/v7-m/nofp\libcr_eabihelpers.a(double.o)

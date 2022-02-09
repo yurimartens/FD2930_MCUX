@@ -141,6 +141,8 @@ void RIT_IRQHandler(void)
     NVIC_ClearPendingIRQ(RIT_IRQn);
 
     FunctionalTaskPeriodic();
+
+    LPC_WDT->WDFEED = 0xAA; LPC_WDT->WDFEED = 0x55;
 }
 
 /**
@@ -154,8 +156,7 @@ __STATIC_INLINE void MCUPeriphConfiguration(void)
     SYSTICK_IntCmd(ENABLE);
     SYSTICK_Cmd(ENABLE);
 
-    NVIC_SetPriority(SysTick_IRQn, 17);
-    //NVIC_EnableIRQ(SysTick_IRQn);
+    NVIC_SetPriority(SysTick_IRQn, 17); //NVIC_EnableIRQ(SysTick_IRQn); already enabled
 
     LPC_SC->PCLKSEL0 &= ~(3 << UART1_PCLK_OFFSET);
     LPC_SC->PCLKSEL0 |= PCLCK_U1_CLK_1;
@@ -305,7 +306,7 @@ __STATIC_INLINE void MCUPinsConfiguration(void)
     GPIO_SetDir(1, 1 << PINSEL_PIN_22, 1);
     GPIO_SetValue(1, 1 << PINSEL_PIN_22);
 
-    /*
+
     PinCfg.Portnum = 2;
     PinCfg.Pinnum = PINSEL_PIN_0;
     PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
@@ -314,7 +315,7 @@ __STATIC_INLINE void MCUPinsConfiguration(void)
     PINSEL_ConfigPin(&PinCfg);  //heaton
     GPIO_SetDir(2, 1 << PINSEL_PIN_0, 1);
     GPIO_SetValue(2, 1 << PINSEL_PIN_0);
-    */
+
     PinCfg.Portnum = 2;
     PinCfg.Pinnum = PINSEL_PIN_1;
     PinCfg.OpenDrain = PINSEL_PINMODE_OPENDRAIN;
@@ -341,7 +342,7 @@ __STATIC_INLINE void MCUPinsConfiguration(void)
     PINSEL_ConfigPin(&PinCfg);  //LED3
     GPIO_SetDir(2, 1 << PINSEL_PIN_3, 1);
     GPIO_SetValue(2, 1 << PINSEL_PIN_3);
-    /*
+
     PinCfg.Portnum = 2;
     PinCfg.Pinnum = PINSEL_PIN_4;
     PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
@@ -402,7 +403,6 @@ __STATIC_INLINE void MCUPinsConfiguration(void)
     PinCfg.Pinmode = PINSEL_PINMODE_PULLUP;
     PINSEL_ConfigPin(&PinCfg);  //HALL2
     GPIO_SetDir(4, 1 << PINSEL_PIN_28, 0);
-    */
 }
 
 
