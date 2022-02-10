@@ -221,6 +221,7 @@ void FunctionalTaskPeriodic()
 			}
 		break;
 		case FD2930_STATE_WORKING:
+			/*
 		    if (CheckFireStatusCnt >= DELAY_CHECK_FIRE_STATUS) CheckFireStatus();          //анализ данных каналов, спустя задержку после процессов самотестирования и калибровки
 		    SetFireStatus();	// else????????????
 
@@ -365,6 +366,7 @@ void FunctionalTaskPeriodic()
 		       counter_selftest = 0;
 		      }
 		    }
+		    */
 		  break;
 	}
 }
