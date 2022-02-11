@@ -101,8 +101,8 @@ Max11040ChannelData_t *Max11040GetData(uint8_t chNum)
     for (uint8_t i = 0; i < chNum; i++) {
         temp = (RawData[i * 3 + 1] << 16) | (RawData[i * 3 + 2] << 8) | RawData[i * 3 + 1];
         if (En24Bit == 0) temp &= 0xFFFFE0;
-        if (RawData[i * 3] & 0x80) {
-            temp = ~temp; temp++;
+        if (RawData[i * 3 + 1] & 0x80) {
+            temp = ~temp; temp &= 0x007fffff;
         }
         Data.ch[i] = temp * Ref / (MAX11040_MAX_CODE / 2);
     }    
