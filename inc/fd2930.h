@@ -58,7 +58,7 @@ extern "C" {
 #define DELAY_5S              			5000//1250//500    //задержка 5 секунда
 #define DELAY_8S              			8000//1250//500    //задержка 5 секунда
 #define DELAY_10S             			10000//2500//1000    //задержка 10 секунда
-#define DELAY_checkFireStatus           10000//2500//1000    //задержка 10 секунда
+#define DELAY_CHECK_FIRE_STATUS         10000//2500//1000    //задержка 10 секунда
 #define DELAY_15S             			15000//2500//1000    //задержка 15 секунд
 #define DELAY_20S             			20000//2500//1000    //задержка 20 секунд
 
@@ -102,6 +102,35 @@ extern "C" {
 #define DEF_BAUDRATE					1152
 #define DEF_SERIAL						1
 
+#define FD2930_DEFAULT_TRES_IR          400
+#define FD2930_MIN_TRES_IR              100
+#define FD2930_MAX_TRES_IR              2000
+#define FD2930_DEFAULT_TRES_UV          400
+#define FD2930_MIN_TRES_UV              100
+#define FD2930_MAX_TRES_UV              2000
+#define FD2930_DEFAULT_K_IR             40
+#define FD2930_MIN_K_IR                 1
+#define FD2930_MAX_K_IR                 100
+#define FD2930_DEFAULT_K_UV             40
+#define FD2930_MIN_K_UV                 1
+#define FD2930_MAX_K_UV                 100
+#define FD2930_DEFAULT_WAIT_FIRE        3
+#define FD2930_MIN_WAIT_FIRE            1
+#define FD2930_MAX_WAIT_FIRE            20
+#define FD2930_DEFAULT_WAIT_FAULT       3
+#define FD2930_MIN_WAIT_FAULT           1
+#define FD2930_MAX_WAIT_FAULT           20
+#define FD2930_DEFAULT_TRES_HEATER      20
+#define FD2930_MIN_TRES_HEATER          0
+#define FD2930_MAX_TRES_HEATER          50
+#define FD2930_DEFAULT_HEATPOWER        50
+#define FD2930_MIN_HEATPOWER            1
+#define FD2930_MAX_HEATPOWER            100
+#define FD2930_DEFAULT_GAIN_FFT         29
+#define FD2930_MIN_GAIN_FFT             5
+#define FD2930_MAX_GAIN_FFT             100
+#define FD2930_W_TRL                    3600// 3600 1 ÷àñ
+#define FD2930_W_TRL_P                  10800//800// 108003 ÷àñà
 
 
 #define TEMPERATURE_MAXIMUM             110
@@ -238,8 +267,7 @@ typedef struct
     int16_t Temperature;
     uint16_t UVVoltage;
     uint16_t InPowerVoltage;
-    uint16_t WorkedTimeHi;
-    uint16_t WorkedTimeLo;
+    uint32_t WorkedTime;
     uint16_t Seconds;
     uint16_t Minutes;
     uint16_t Hours;

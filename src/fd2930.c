@@ -19,8 +19,12 @@ Timer_t			IndicationTimer, MeasurmentTimer;
 
 uint16_t		CntTemperatureFault;
 
-uint16_t		UVNoise, UVNoiseTest, IRNoiseTest;
+uint16_t		UVNoise, UVNoiseTest, IRNoise, IRNoiseTest;
 uint16_t		UVTestLevel, IRTestLevel, UVTestFaultCnt, IRTestFaultCnt;
+
+uint16_t		IRThresF, UVThresF;
+
+uint16_t		IRTroubleCnt, IRTroubleCntPiece, UVTroubleCnt, UVTroubleCntPiece;
 
 uint16_t 		UVPickCnt;
 uint16_t 		SelfTestCnt, SelfTest, BadSelfTest;
@@ -71,7 +75,8 @@ void FunctionalTaskBG()
   */
 void FunctionalTaskPeriodic()
 {
-	static uint32_t cnt = 0, cnt24 = 0, cntST = 0;
+	static uint32_t cnt = 0, cnt24 = 0, postFireCnt = 0;
+	static uint64_t selfTestCnt = 0;
 
 	SDADCTask(0.0014, 0.001);
 	switch (DeviceState) {
@@ -221,153 +226,146 @@ void FunctionalTaskPeriodic()
 			}
 		break;
 		case FD2930_STATE_WORKING:
-			/*
-		    if (CheckFireStatusCnt >= DELAY_CHECK_FIRE_STATUS) CheckFireStatus();          //анализ данных каналов, спустя задержку после процессов самотестирования и калибровки
-		    SetFireStatus();	// else????????????
+		    //if (CheckFireStatusCnt >= DELAY_CHECK_FIRE_STATUS) CheckFireStatus();          //анализ данных каналов, спустя задержку после процессов самотестирования и калибровки
+		    //SetFireStatus();	// else????????????
 
 		    if (cnt < DELAY_1S) {
 		    	cnt++;
 		    } else {
+		    	cnt = 0;
 		        //push_live_data();
-		    	if (DeviceData.Status & FD2930_DEVICE_STATUS_FIRE) PostFireCnt = 10;// счетчик мертвого времени после сброса пожара, что бы плавающие пороги не подпрыгивали от остаточных сигналов в ИК и УФ
-		    	else if (PostFireCnt > 0) PostFireCnt--;
+		    	if (DeviceData.Status & FD2930_DEVICE_STATUS_FIRE) postFireCnt = 10;// счетчик мертвого времени после сброса пожара, что бы плавающие пороги не подпрыгивали от остаточных сигналов в ИК и УФ
+		    	else if (postFireCnt > 0) postFireCnt--;
 
-		    	if (DeviceData.IRGain > (0.5 * DeviceData.IRThres) && DeviceData.UVGain > (0.5 * DeviceData.UVThres)) counter_selftest=0;;
+		    	if (DeviceData.IRGain > (0.5 * DeviceData.IRThres) && DeviceData.UVGain > (0.5 * DeviceData.UVThres)) selfTestCnt = 0;
 
-		      if( (DeviceData.device_config & 0xf) <= 4)// , только для двухканальных режимов
-		      {
-		      if(DeviceData.level_UV_gain < 150 && cnt_post_fire ==0 && DeviceData.cnt_uv_pick < 1 )// если на уф канале все спокойно то вычисляем уровень шума в ИК и прибавляем часть его к установленному порогу
-		      {
-		        DeviceData.ir_noise = DeviceData.ir_noise + ((DeviceData.level_IR_gain*100) - (DeviceData.ir_noise*100))/1000;// усредненное значение шума для плавающего порога
-		        DeviceData.thres_IR_f = DeviceData.thres_IR + 0.7 * DeviceData.ir_noise;
-		      };
-		      if(DeviceData.thres_IR_f > 1000) DeviceData.thres_IR_f = 1000;;
-		      if(cnt_post_fire > 0) {DeviceData.ir_noise = 0; DeviceData.thres_IR_f = DeviceData.thres_IR;};
-		      }
-		      else
-		      {DeviceData.ir_noise = 0; DeviceData.thres_IR_f = DeviceData.thres_IR;}
-
-		      if( DeviceData.level_IR_gain > (0.7 * DeviceData.thres_IR))
-		        {
-		          if ( DeviceData.level_UV_gain < 150 && cnt_post_fire ==0)
-		          {
-		            if (DeviceData.cnt_ir_trouble < FD2930_W_TRL)DeviceData.cnt_ir_trouble++;;// 1 час
-		            if (DeviceData.cnt_ir_trouble_piece < FD2930_W_TRL_P)DeviceData.cnt_ir_trouble_piece++;;// 3 часов
-		            if ( ((DeviceData.device_config & 0xf) == 5) || ((DeviceData.device_config & 0xf) == 7) || ((DeviceData.device_config & 0xf) == 8)) { DeviceData.cnt_ir_trouble = 0; DeviceData.cnt_ir_trouble_piece = 0;};// в одноканальных ИК+FFT и УФ и КПГ режимах нет смысла проверять помеху по ИК
-		          }
+		    	if ((DeviceData.Config & 0x0F) <= 4) { // , только для двухканальных режимов
+		    		if ((DeviceData.UVGain < 150) && (postFireCnt == 0) && (UVPickCnt < 1)) {// если на уф канале все спокойно то вычисляем уровень шума в ИК и прибавляем часть его к установленному порогу
+		    			IRNoise = IRNoise + ((DeviceData.IRGain * 100) - (IRNoise * 100)) / 1000;// усредненное значение шума для плавающего порога
+		    			IRThresF = DeviceData.IRThres + 0.7 * IRNoise;
+		    		}
+		    		if (IRThresF > 1000) IRThresF = 1000;
+		    		if (postFireCnt > 0) {
+		    			IRNoise = 0;
+		    			IRThresF = DeviceData.IRThres;
+		    		}
+		    	} else {
+		    		IRNoise = 0;
+		    		IRThresF = DeviceData.IRThres;
+		    	}
+		    	if (DeviceData.IRGain > (0.7 * DeviceData.IRThres)) {
+		    		if (DeviceData.UVGain < 150 && postFireCnt == 0) {
+		    			if (IRTroubleCnt < FD2930_W_TRL) IRTroubleCnt++; // 1 час
+		    			if (IRTroubleCntPiece < FD2930_W_TRL_P) IRTroubleCntPiece++; // 3 часов
+		    			if (((DeviceData.Config & 0xf) == 5) || ((DeviceData.Config & 0xf) == 7) || ((DeviceData.Config & 0xf) == 8)) {
+		    				IRTroubleCnt = 0;
+		    				IRTroubleCntPiece = 0;
+		    			} // в одноканальных ИК+FFT и УФ и КПГ режимах нет смысла проверять помеху по ИК
+		    		}
+		        } else {
+		        	IRTroubleCnt = 0;
 		        }
-		        else
-		        DeviceData.cnt_ir_trouble = 0;
-		      if (DeviceData.cnt_ir_trouble == FD2930_W_TRL || DeviceData.cnt_ir_trouble_piece == FD2930_W_TRL_P ) DeviceData.Flags |= FD2930_DEVICEFLAGS_IR_ERROR;;//3600 10800
-		//====
-		      if( (DeviceData.device_config & 0xf) <= 4)// , только для двухканальных режимов
-		      {
-		      if(DeviceData.level_IR_gain < 150 && cnt_post_fire ==0) // если на ИК канале все спокойно то вычисляем уровень шума в УФ и прибавляем часть его к установленному порогу,
-		      {
-		        DeviceData.uv_noise = DeviceData.uv_noise + ((DeviceData.level_UV_gain*100) - (DeviceData.uv_noise*100))/1000;// усредненное значение шума для плавающего порога
-		        DeviceData.thres_UV_f = DeviceData.thres_UV + 0.7 * DeviceData.uv_noise;
-		      };
-		      if(DeviceData.thres_UV_f > 1000) DeviceData.thres_UV_f = 1000;;
-		      if(cnt_post_fire > 0) {DeviceData.uv_noise = 0; DeviceData.thres_UV_f = DeviceData.thres_UV;};
-		      }
-		      else
-		      {DeviceData.uv_noise = 0; DeviceData.thres_UV_f = DeviceData.thres_UV;}
+		    	if (IRTroubleCnt == FD2930_W_TRL || IRTroubleCntPiece == FD2930_W_TRL_P) DeviceData.Flags |= FD2930_DEVICEFLAGS_IR_ERROR; //3600 10800
 
+		    	if ((DeviceData.Config & 0xf) <= 4) { // , только для двухканальных режимов
+		    		if(DeviceData.IRGain < 150 && postFireCnt == 0) { // если на ИК канале все спокойно то вычисляем уровень шума в УФ и прибавляем часть его к установленному порогу,
+		    			UVNoise = UVNoise + ((DeviceData.UVGain * 100) - (UVNoise * 100)) / 1000;// усредненное значение шума для плавающего порога
+		    			UVThresF = DeviceData.UVThres + 0.7 * UVNoise;
+		    		}
+		    		if (UVThresF > 1000) UVThresF = 1000;
+		    		if (postFireCnt > 0) {
+		    			UVNoise = 0;
+		    			UVThresF = DeviceData.UVThres;
+		    		}
+		    	} else {
+		    		UVNoise = 0;
+		    		UVThresF = DeviceData.UVThres;
+		    	}
 
-		      if( DeviceData.level_UV_gain > (0.7 * DeviceData.thres_UV))
-		        {
-		          if(DeviceData.level_IR_gain < 150 && cnt_post_fire ==0)
-		          {
-		            if (DeviceData.cnt_uv_trouble < FD2930_W_TRL)DeviceData.cnt_uv_trouble++;;// 1 час
-		            if (DeviceData.cnt_uv_trouble_piece < FD2930_W_TRL_P)DeviceData.cnt_uv_trouble_piece++;;// 3 часов
-		            if ( ((DeviceData.device_config & 0xf) == 5) || ((DeviceData.device_config & 0xf) == 6) || ((DeviceData.device_config & 0xf) == 8)) { DeviceData.cnt_uv_trouble = 0; DeviceData.cnt_uv_trouble_piece = 0;};// в одноканальных ИК режимах и КПГ нет смысла проверять помеху по УФ
-		          }
+		    	if (DeviceData.UVGain > (0.7 * DeviceData.UVThres)) {
+		    		if (DeviceData.IRGain < 150 && postFireCnt == 0) {
+		    			if (UVTroubleCnt < FD2930_W_TRL) UVTroubleCnt++;;// 1 час
+		    			if (UVTroubleCntPiece < FD2930_W_TRL_P) UVTroubleCntPiece++;;// 3 часов
+		    			if (((DeviceData.Config & 0xf) == 5) || ((DeviceData.Config & 0xf) == 6) || ((DeviceData.Config & 0xf) == 8)) {
+		    				UVTroubleCnt = 0;
+		    				UVTroubleCntPiece = 0;
+		    			}// в одноканальных ИК режимах и КПГ нет смысла проверять помеху по УФ
+		    		}
+		        } else {
+		        	UVTroubleCnt = 0;
 		        }
-		        else
-		        DeviceData.cnt_uv_trouble = 0;
-		        if (DeviceData.cnt_uv_trouble == FD2930_W_TRL || DeviceData.cnt_uv_trouble_piece == FD2930_W_TRL_P ) DeviceData.Flags |= FD2930_DEVICEFLAGS_UV_ERROR;;//3600 10800
+		        if (UVTroubleCnt == FD2930_W_TRL || UVTroubleCntPiece == FD2930_W_TRL_P) DeviceData.Flags |= FD2930_DEVICEFLAGS_UV_ERROR;;//3600 10800
 
-		//===
-		        if( DeviceData.level_IR_gain < (0.7 * DeviceData.thres_IR) && DeviceData.cnt_ir_trouble_piece < FD2930_W_TRL_P)
-		        {
-		          DeviceData.cnt_ir_trouble = 0;
-		          DeviceData.Flags &= ~FD2930_DEVICEFLAGS_IR_ERROR;
-		          DeviceState = FD2930_STATE_WORKING;
-		        };
-		        if( DeviceData.level_UV_gain < (0.7 * DeviceData.thres_UV)  && DeviceData.cnt_uv_trouble_piece < FD2930_W_TRL_P)
-		        {
-		          DeviceData.cnt_uv_trouble = 0;
-		          DeviceData.Flags &= ~FD2930_DEVICEFLAGS_UV_ERROR;
-		          DeviceState = FD2930_STATE_WORKING;
-		        };
-		//===================================================================================
-		      AppRTCTaskGetTime(); //get current time
-		      AppFD2930Task();  //заполнение буфера для контроллера высокого уровня, управление светодиодами и реле, установка тока
-		      counter = 0;
-		      if(!(GPIO_ReadValue(HALL_PORT) & HALL1) | !(GPIO_ReadValue(HALL_PORT) & HALL2))  //сработал датчик Холла
-		      {
-		        if(!(DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET))
-		        {
-		          DeviceData.Status |= FD2930_DEVICE_STATUS_MAGNET;
-		          push_flash_command(FLASH_WRITE_EVENT, EVENT_HALL_ON, MBS.buffer);
+		        if (DeviceData.IRGain < (0.7 * DeviceData.IRThres) && IRTroubleCntPiece < FD2930_W_TRL_P) {
+		        	IRTroubleCnt = 0;
+		        	DeviceData.Flags &= ~FD2930_DEVICEFLAGS_IR_ERROR;
 		        }
-		        ResetFireStatus(); //сброс зафиксированного состояния пожар
-		      }
-		      else if(DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET)
-		      {
-		        DeviceData.Status &= ~FD2930_DEVICE_STATUS_MAGNET;
-		        push_flash_command(FLASH_WRITE_EVENT, EVENT_HALL_OFF, MBS.buffer);
-		      }
-		      GPIO_SET(GPIO2, (UV_TEST)); GPIO_SET(GPIO0, (UV_TEST2)); //turn off UV test source
-		      GPIO_SET(GPIO2, IR_TEST);
+		        if (DeviceData.UVGain < (0.7 * DeviceData.UVThres) && UVTroubleCntPiece < FD2930_W_TRL_P) {
+		        	UVTroubleCnt = 0;
+		        	DeviceData.Flags &= ~FD2930_DEVICEFLAGS_UV_ERROR;
+		        }
+
+		        //AppRTCTaskGetTime(); //get current time
+		        //AppFD2930Task();  //заполнение буфера для контроллера высокого уровня, управление светодиодами и реле, установка тока
+
+		        if ((!GPIO_READ_PIN(LPC_GPIO4, HALL1)) || (!GPIO_READ_PIN(LPC_GPIO4, HALL2))) {
+		        	if (!(DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET)) {
+		        		DeviceData.Status |= FD2930_DEVICE_STATUS_MAGNET;
+		        		//push_flash_command(FLASH_WRITE_EVENT, EVENT_HALL_ON, MBS.buffer);
+		        	}
+		        	//ResetFireStatus(); //сброс зафиксированного состояния пожар
+		        } else {
+		        	if (DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET) {
+		        		DeviceData.Status &= ~FD2930_DEVICE_STATUS_MAGNET;
+		        		//push_flash_command(FLASH_WRITE_EVENT, EVENT_HALL_OFF, MBS.buffer);
+		        	}
+		    	}
+		        GPIO_SET_PIN(LPC_GPIO2, (UV_TEST));
+		        GPIO_SET_PIN(LPC_GPIO0, (UV_TEST2)); //turn off UV test source
+		        GPIO_SET_PIN(LPC_GPIO2, IR_TEST);
 		    }
-		    if( DeviceData.Flags & FD2930_DEVICEFLAGS_DUST)// если запыленность неаварийная тестируемся  чаще
-		    {
-		    if(counter_selftest < (3 * 60 * DELAY_1S)) counter_selftest++;//яя// тестируемся каждые три минуты
-		    else
-		     {
-		      DeviceData.worked_time += 30;
-		      //push_flash_command(FLASH_WRITE_EVENT, EVENT_30MIN, MBS.buffer);
-		      if(counter_24h < 48) counter_24h++;
-		      else
-		      {
-		        counter_24h = 0;
-		        write_parameters();
-		      }
-		      if(DeviceData.device_config & FD2930_DEVICECONFIG_SELFTEST_ALLOWED)
-		      {
-			GPIO_CLR(GPIO2, (UV_TEST)); GPIO_CLR(GPIO0, (UV_TEST2));
-			DeviceState = FD2930_STATE_SELFTEST; //начинаем самотестирование
-		        DeviceData.Status |= FD2930_DEVICE_STATUS_SELF_TEST;
-		      }
-		      counter_selftest = 0;
-		      }
+
+		    if (DeviceData.Flags & FD2930_DEVICEFLAGS_DUST) { // если запыленность неаварийная тестируемся  чаще
+		    	if (selfTestCnt < (3 * 60 * DELAY_1S)) {
+		    		selfTestCnt++;//яя// тестируемся каждые три минуты
+		    	} else {
+		    		selfTestCnt = 0;
+		    		DeviceData.WorkedTime += 30;
+		    		if (cnt24 < 48) {
+		    			cnt24++;
+		    		} else {
+						cnt24 = 0;
+						//write_parameters();
+		    		}
+		    		if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_ALLOWED) {
+		    			GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
+		    			GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
+		    			DeviceState = FD2930_STATE_SELFTEST; //начинаем самотестирование
+		    			DeviceData.Status |= FD2930_DEVICE_STATUS_SELF_TEST;
+		    		}
+		    	}
+		    } else {// иначе в дежурном режиме когда все хорошо, тестируемся каждые 10 мин. Требует Транснефть
+		    	if (selfTestCnt < (10 * 60 * DELAY_1S)) {
+		    		selfTestCnt++;//яя
+		    	} else {
+		    		selfTestCnt = 0;
+		    		DeviceData.WorkedTime += 30;
+		    		if (cnt24 < 48) {
+		    			cnt24++;
+		    		} else {
+		    			cnt24 = 0;
+		    			//write_parameters();
+		    		}
+		    		if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_ALLOWED) {
+		    			GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
+		    			GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
+		    			DeviceState = FD2930_STATE_SELFTEST; //начинаем самотестирование
+		    			if (SelfTest < 14) SelfTest++;
+		    			DeviceData.Status |= FD2930_DEVICE_STATUS_SELF_TEST;
+		    		}
+		    	}
 		    }
-		    else// иначе в дежурном режиме когда все хорошо, тестируемся каждые 10 мин. Требует Транснефть
-		    {
-		      if(counter_selftest < (10 * 60 * DELAY_1S)) counter_selftest++;//яя
-		      else
-		      {
-		       DeviceData.worked_time += 30;
-		       //push_flash_command(FLASH_WRITE_EVENT, EVENT_30MIN, MBS.buffer);
-		       if(counter_24h < 48) counter_24h++;
-		       else
-		       {
-		         counter_24h = 0;
-		         write_parameters();
-		       }
-		       if(DeviceData.device_config & FD2930_DEVICECONFIG_SELFTEST_ALLOWED)
-		       {
-			 GPIO_CLR(GPIO2, (UV_TEST)); GPIO_CLR(GPIO0, (UV_TEST2));
-			 DeviceState = FD2930_STATE_SELFTEST; //начинаем самотестирование
-			 if(DeviceData.counter_Ntest < 14)DeviceData.counter_Ntest++;
-		         DeviceData.Status |= FD2930_DEVICE_STATUS_SELF_TEST;
-		       }
-		       counter_selftest = 0;
-		      }
-		    }
-		    */
-		  break;
+		break;
 	}
 }
 
