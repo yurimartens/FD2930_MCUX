@@ -45,9 +45,13 @@ uint8_t     RxBuf[256];
 uint8_t     TxBuf[256];
 Modbus_t    Modbus;
 
-SSPAl_t     SSP;
-uint8_t     OutBuf[10];
-uint8_t     InBuf[16];
+SSPAl_t     SSPADC;
+uint8_t     ADCOutBuf[10];
+uint8_t     ADCInBuf[16];
+
+SSPAl_t     SSPSD420;
+uint8_t     SD420OutBuf[10];
+uint8_t     SD420InBuf[16];
 
 
 
@@ -72,17 +76,18 @@ int main(void) {
 
 	Uart1AndProtocolInit();
 
-	SSPInit(&SSP, LPC_SSP1, 1000000, SSP_CPHA_FIRST, SSP_CPOL_LO);
-	SSPInitCSPin(&SSP, 0, LPC_GPIO0, SSEL1);
-	SSPInitTxBuf(&SSP, OutBuf, sizeof(OutBuf));
-	SSPInitRxBuf(&SSP, InBuf, sizeof(InBuf));
+	SSPInit(&SSPADC, LPC_SSP1, 1000000, SSP_CPHA_FIRST, SSP_CPOL_LO);
+	SSPInitCSPin(&SSPADC, 0, LPC_GPIO0, SSEL1);
+	SSPInitTxBuf(&SSPADC, ADCOutBuf, sizeof(ADCOutBuf));
+	SSPInitRxBuf(&SSPADC, ADCInBuf, sizeof(ADCInBuf));
 
-	Max11040Init(&SSP, 0, 2200);	// ref in mV
+	Max11040Init(&SSPADC, 0, MAX_REFERENCE_mV);	// ref in mV
 
-	uint8_t *reg = Max11040GetReg(MAX11040_REG_CONFIG, 1);
-
-	//reg = Max11040GetReg(MAX11040_REG_ADC_DATA, 1);
-	//reg = Max11040GetReg(MAX11040_REG_CONFIG, 1);
+	SSPInit(&SSPSD420, LPC_SSP1, 1000000, SSP_CPHA_SECOND, SSP_CPOL_HI);
+	SSPInitCSPin(&SSPSD420, 0, LPC_GPIO1, SYNC);
+	SSPInitCSPin(&SSPSD420, 1, LPC_GPIO1, SSEL0);
+	SSPInitTxBuf(&SSPSD420, SD420OutBuf, sizeof(SD420OutBuf));
+	SSPInitRxBuf(&SSPSD420, SD420InBuf, sizeof(SD420InBuf));
 
 
 
@@ -156,7 +161,7 @@ __STATIC_INLINE void MCUPeriphConfiguration(void)
     SYSTICK_IntCmd(ENABLE);
     SYSTICK_Cmd(ENABLE);
 
-    NVIC_SetPriority(SysTick_IRQn, 17); //NVIC_EnableIRQ(SysTick_IRQn); already enabled
+    NVIC_SetPriority(SysTick_IRQn, 20); //NVIC_EnableIRQ(SysTick_IRQn); already enabled
 
     LPC_SC->PCLKSEL0 &= ~(3 << UART1_PCLK_OFFSET);
     LPC_SC->PCLKSEL0 |= PCLCK_U1_CLK_1;
@@ -170,7 +175,7 @@ __STATIC_INLINE void MCUPeriphConfiguration(void)
 
     RIT_Init(LPC_RIT);
     RIT_TimerConfig(LPC_RIT, RIT_INTERVAL_mS);
-    NVIC_SetPriority(RIT_IRQn, 20);
+    NVIC_SetPriority(RIT_IRQn, 19);
     NVIC_EnableIRQ(RIT_IRQn);
     NVIC_ClearPendingIRQ(RIT_IRQn);
 

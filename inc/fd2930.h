@@ -34,6 +34,8 @@ extern "C" {
 
 #define RIT_INTERVAL_mS					1
 
+#define MAX_REFERENCE_mV				2200
+
 #define ADC_REFERENCE_mV				3300
 #define ADC_RATE						10000
 
@@ -95,7 +97,7 @@ extern "C" {
 
 #define BAUDRATE_SCALE					100
 
-
+#define FD2930_NUMBER_FFT_CRIM_CHANNEL  20
 
 
 #define DEF_MBID						3
@@ -216,6 +218,17 @@ extern "C" {
 
 typedef enum
 {
+  FD2930_LED_OFF = 0,
+  FD2930_LED_YELLOW,
+  FD2930_LED_YELLOW_BLINKING,
+  FD2930_LED_RED,
+  FD2930_LED_RED_BLINKING,
+  FD2930_LED_GREEN,
+  FD2930_LED_BLUE,
+} DeviceLEDState_t;
+
+typedef enum
+{
   FD2930_STATE_START1,                       //стартовая задержка, в 100мс для установки дефолтных настроек модбас
   FD2930_STATE_START2,                       //задержка перед инициализацией DAC 1000мс
   FD2930_STATE_START3,                       //успокоение аналогового тракта и цифрового фильтра
@@ -277,7 +290,7 @@ typedef struct
     uint16_t ArchiveLastPageHi;
     uint16_t ArchiveLastPageLo;
     uint16_t BlockService;
-    uint16_t SetCurrent;
+    uint16_t Current420;
     uint16_t FWCheckSumm;
     uint16_t ArchiveEvent;
     uint16_t FFTThres;

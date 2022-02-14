@@ -14,6 +14,8 @@
 DeviceData_t	DeviceData;
 DeviceState_t	DeviceState;
 
+uint16_t		DeviceStatusTemp;
+
 RTC_TIME_Type 	DeviceTime;
 Timer_t			IndicationTimer, MeasurmentTimer;
 
@@ -30,13 +32,25 @@ uint16_t 		UVPickCnt;
 uint16_t 		SelfTestCnt, SelfTest, BadSelfTest;
 
 uint16_t 		CheckFireStatusCnt;
+uint16_t 		AutorecoveryCnt;
 
 uint16_t 		FFTCnt;
 
 float 			IR, UV;
 
-int16_t *FFTInputData  = (int16_t *)0x2007C000; /* AHB SRAM0 */
-int16_t *FFTOutputData = (int16_t *)0x20080000; /* AHB SRAM1 */
+int16_t 		*FFTInputData  = (int16_t *)0x2007C000; /* AHB SRAM0 */
+int16_t 		*FFTOutputData = (int16_t *)0x20080000; /* AHB SRAM1 */
+
+uint16_t		CriminalFFTChannelNumber;
+
+DeviceLEDState_t LEDState = FD2930_LED_YELLOW;
+
+uint8_t 		IRDA_Command_Rcvd;
+
+
+static inline void CheckFireStatus();
+static inline void SetFireStatus();
+static inline void ResetFireStatus();
 
 /**
   * @brief
@@ -58,7 +72,7 @@ void DeviceInit()
 void FunctionalTaskBG()
 {
 	if (DeviceData.StateFlags & FD2930_STATE_FLAG_UPDATE_CURRENT) {
-		//Set420(DeviceData.current);
+		//Set420(DeviceData.Current420);
 		DeviceData.StateFlags &= ~FD2930_STATE_FLAG_UPDATE_CURRENT;
     }
     if (DeviceData.StateFlags & FD2930_STATE_FLAG_FFT_START) {
@@ -116,7 +130,7 @@ void FunctionalTaskPeriodic()
 						GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST)); GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
 					} else {
 						DeviceState = FD2930_STATE_WORKING;
-						//push_flash_command(FLASH_WRITE_EVENT, EVENT_NORMAL_EVENT, MBS.buffer);
+						////push_flash_command(FLASH_WRITE_EVENT, EVENT_NORMAL_EVENT, MBS.buffer);
 					}
 				} else {
 					DeviceState = FD2930_STATE_BREAK;
@@ -221,13 +235,13 @@ void FunctionalTaskPeriodic()
 		        GPIO_SET_PIN(LPC_GPIO0, UV_TEST2);
 		        DeviceState = FD2930_STATE_WORKING;
 		        DeviceData.Status &= ~FD2930_DEVICE_STATUS_SELF_TEST;
-		        //push_flash_command(FLASH_WRITE_EVENT, EVENT_NORMAL_EVENT, MBS.buffer);
+		        ////push_flash_command(FLASH_WRITE_EVENT, EVENT_NORMAL_EVENT, MBS.buffer);
 		        CheckFireStatusCnt = 0; //счетчик для разрешения анализа пожара, после процессов калибровки и самотестирования
 			}
 		break;
 		case FD2930_STATE_WORKING:
-		    //if (CheckFireStatusCnt >= DELAY_CHECK_FIRE_STATUS) CheckFireStatus();          //анализ данных каналов, спустя задержку после процессов самотестирования и калибровки
-		    //SetFireStatus();	// else????????????
+		    if (CheckFireStatusCnt >= DELAY_CHECK_FIRE_STATUS) CheckFireStatus();          //анализ данных каналов, спустя задержку после процессов самотестирования и калибровки
+		    SetFireStatus();
 
 		    if (cnt < DELAY_1S) {
 		    	cnt++;
@@ -268,7 +282,7 @@ void FunctionalTaskPeriodic()
 		    	if (IRTroubleCnt == FD2930_W_TRL || IRTroubleCntPiece == FD2930_W_TRL_P) DeviceData.Flags |= FD2930_DEVICEFLAGS_IR_ERROR; //3600 10800
 
 		    	if ((DeviceData.Config & 0xf) <= 4) { // , только для двухканальных режимов
-		    		if(DeviceData.IRGain < 150 && postFireCnt == 0) { // если на ИК канале все спокойно то вычисляем уровень шума в УФ и прибавляем часть его к установленному порогу,
+		    		if (DeviceData.IRGain < 150 && postFireCnt == 0) { // если на ИК канале все спокойно то вычисляем уровень шума в УФ и прибавляем часть его к установленному порогу,
 		    			UVNoise = UVNoise + ((DeviceData.UVGain * 100) - (UVNoise * 100)) / 1000;// усредненное значение шума для плавающего порога
 		    			UVThresF = DeviceData.UVThres + 0.7 * UVNoise;
 		    		}
@@ -311,13 +325,13 @@ void FunctionalTaskPeriodic()
 		        if ((!GPIO_READ_PIN(LPC_GPIO4, HALL1)) || (!GPIO_READ_PIN(LPC_GPIO4, HALL2))) {
 		        	if (!(DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET)) {
 		        		DeviceData.Status |= FD2930_DEVICE_STATUS_MAGNET;
-		        		//push_flash_command(FLASH_WRITE_EVENT, EVENT_HALL_ON, MBS.buffer);
+		        		////push_flash_command(FLASH_WRITE_EVENT, EVENT_HALL_ON, MBS.buffer);
 		        	}
 		        	//ResetFireStatus(); //сброс зафиксированного состояния пожар
 		        } else {
 		        	if (DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET) {
 		        		DeviceData.Status &= ~FD2930_DEVICE_STATUS_MAGNET;
-		        		//push_flash_command(FLASH_WRITE_EVENT, EVENT_HALL_OFF, MBS.buffer);
+		        		////push_flash_command(FLASH_WRITE_EVENT, EVENT_HALL_OFF, MBS.buffer);
 		        	}
 		    	}
 		        GPIO_SET_PIN(LPC_GPIO2, (UV_TEST));
@@ -366,10 +380,984 @@ void FunctionalTaskPeriodic()
 		    	}
 		    }
 		break;
+		case FD2930_STATE_CHANNEL_CALIBR:
+			if (SelfTestCnt < 180000) {
+				SelfTestCnt++;
+			} else {
+				SelfTestCnt = 0;
+		        DeviceState = FD2930_STATE_WORKING;
+		        GPIO_SET_PIN(LPC_GPIO2, IR_TEST);
+		    }
+		break;
+		case FD2930_STATE_TEST_ZERO:
+		    if (SelfTestCnt < DELAY_05S) {
+		    	SelfTestCnt++;
+		    } else {
+		    	SelfTestCnt = 0;
+		    	IRNoiseTest = 100;//DeviceData.IRGain;
+		    	UVNoiseTest = 200;//DeviceData.UVGain;
+		    	if (!(DeviceData.Status & FD2930_DEVICE_STATUS_TEST_ZERO)) {
+		    		DeviceData.Status |= FD2930_DEVICE_STATUS_TEST_ZERO;
+		    		////push_flash_command(FLASH_WRITE_EVENT, EVENT_SET_ZERO, MBS.buffer);
+		    	}
+		    	//write_parameters();
+		    	DeviceState = FD2930_STATE_BREAK;
+		    	GPIO_SET_PIN(LPC_GPIO2, (UV_TEST));
+		    	GPIO_SET_PIN(LPC_GPIO0, (UV_TEST2)); //turn off UV test source
+		    	GPIO_SET_PIN(LPC_GPIO2, IR_TEST);
+		    }
+		break;
+		case FD2930_STATE_TEST_CALIBR:
+			if (SelfTestCnt < DELAY_5S) {
+				SelfTestCnt++;
+			} else {
+				SelfTestCnt = 0;
+				IRTestLevel = DeviceData.IRGain - IRNoiseTest;
+				UVTestLevel = DeviceData.UVGain - UVNoiseTest;
+				if (!(DeviceData.Status & FD2930_DEVICE_STATUS_TEST_CALIBR)) {
+					DeviceData.Status |= FD2930_DEVICE_STATUS_TEST_CALIBR;
+					////push_flash_command(FLASH_WRITE_EVENT, EVENT_CALIBR1, MBS.buffer);
+				}
+				//write_parameters();
+				DeviceState = FD2930_STATE_WORKING;
+				////push_flash_command(FLASH_WRITE_EVENT, EVENT_NORMAL_EVENT, MBS.buffer);
+				GPIO_SET_PIN(LPC_GPIO2, (UV_TEST));
+				GPIO_SET_PIN(LPC_GPIO0, (UV_TEST2)); //turn off UV test source
+				GPIO_SET_PIN(LPC_GPIO2, IR_TEST);
+				DeviceData.IRGain = 0;
+				IR = 0;
+				DeviceData.IRAv = 1250;
+				DeviceData.IRRaw = 1250;
+				CheckFireStatusCnt = 0;
+		    }
+		break;
+		case FD2930_STATE_TEST:
+			if (cnt < DELAY_1S) {
+				cnt++;
+			} else {
+				cnt = 0;
+				//AppRTCTaskGetTime(); //get current time
+				//AppFD2930Task();  //çàïîëíåíèå áóôåðà äëÿ êîíòðîëëåðà âûñîêîãî óðîâíÿ, óïðàâëåíèå ñâåòîäèîäàìè è ðåëå, óñòàíîâêà òîêà
+			}
+		    break;
+		case FD2930_STATE_BREAK:
+			/*
+		    if (cnt < DELAY_1S) {
+		    	cnt++;
+		    } else {
+		    	cnt = 0;
+		    	//AppRTCTaskGetTime(); //get current time
+		    	if (AutorecoveryCnt > 0 && AutorecoveryCnt < 30) AutorecoveryCnt++;
+		    	if (AutorecoveryCnt == 2) {
+		    		if (!(DeviceData.Status & FD2930_DEVICE_STATUS_IR_UV_SET)) {
+		    			////push_flash_command(FLASH_WRITE_EVENT, EVENT_CALIBR2, MBS.buffer);
+		    			DeviceData.Status |= FD2930_DEVICE_STATUS_IR_UV_SET;
+		    		}
+		    		//write_parameters();
+		    	}
+		    	if (AutorecoveryCnt == 10) {
+		            DeviceState = FD2930_STATE_TEST_ZERO;
+		            DeviceData.Status &= ~FD2930_DEVICE_STATUS_TEST_ZERO;
+		            DeviceData.Status &= ~FD2930_DEVICE_STATUS_TEST_CALIBR;
+		            GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
+		            GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
+		            //write_parameters();
+		    	}
+		    	if (AutorecoveryCnt == 20) {
+		    		DeviceState = FD2930_STATE_TEST_CALIBR;
+		            DeviceData.Status &= ~FD2930_DEVICE_STATUS_TEST_CALIBR;
+		            GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
+		            GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
+		            //write_parameters();
+		            //AutorecoveryCnt=0; ?? было так
+		    	}
+		    	//AppFD2930Task();
+		    }
+		    if (selfTestCnt < (3 * 60 * DELAY_1S)) {
+		    	selfTestCnt++;
+		    } else {
+		    	selfTestCnt = 0;
+		    	if ((DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_ALLOWED) && (DeviceData.Status & FD2930_DEVICE_STATUS_TEST_CALIBR)) {
+		    		GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
+		    		GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
+		    		DeviceState = FD2930_STATE_SELFTEST;
+		    		DeviceData.Status |= FD2930_DEVICE_STATUS_SELF_TEST;
+		    	}
+		    }
+		    */
+		break;
+	}
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+static inline void CheckFireStatus()
+{
+	const uint32_t channel_fire_delay = 3000;//750;//300;
+	const uint32_t between_channel_fire_delay = 23000;//5750;//2300;
+	static uint32_t between_channel_fire_counter = 0, between_channel_prefire_counter = 0;
+	uint8_t flag_IR_prefire = 0, flag_UV_prefire = 0, flag_UV_inv = 0;
+	static uint8_t flag_IR_fire_2ch = 0, flag_UV_fire_2ch = 0, flag_IR_prefire_2ch = 0, flag_UV_prefire_2ch = 0;
+	static uint32_t counter_IR_fire = 0, counter_UV_fire = 0;
+	static uint32_t counter_IR_prefire = 0, counter_UV_prefire = 0;
+	static uint32_t counter_UV_inv = 0;
+
+	if (DeviceData.Config & FD2930_DEVICECONFIG_LOW_SENS) {
+		if (DeviceData.IRGain > 1.7 * DeviceData.IRThres) {
+			flag_IR_prefire = 1;
+			if (!(DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR)) {
+				//push_flash_command(FLASH_WRITE_EVENT, EVENT_IR_HIGH, MBS.buffer);
+				DeviceData.Status |= FD2930_DEVICE_STATUS_ALARM_IR;
+			}
+		} else {
+			if (DeviceData.IRGain > 1.7 * 0.7 * DeviceData.IRThres) {
+				flag_IR_prefire = 1;
+				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR) {
+					//push_flash_command(FLASH_WRITE_EVENT, EVENT_IR_NORMAL, MBS.buffer);
+					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_IR;
+				}
+			} else {
+				flag_IR_prefire = 0;
+				flag_IR_fire_2ch = 0;
+				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR) {
+					//push_flash_command(FLASH_WRITE_EVENT, EVENT_IR_NORMAL, MBS.buffer);
+					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_IR;
+				}
+			}
+		}
+		if (DeviceData.UVGain > 1.7 * UVThresF) {
+			flag_UV_prefire = 1;
+			if (!(DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV)) {
+				DeviceData.Status |= FD2930_DEVICE_STATUS_ALARM_UV;
+				//push_flash_command(FLASH_WRITE_EVENT, EVENT_UV_HIGH, MBS.buffer);
+			}
+		} else {
+			if (DeviceData.UVGain > 1.7 * 0.7 * UVThresF) {
+				flag_UV_prefire = 1;
+				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV) {
+					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_UV;
+					//push_flash_command(FLASH_WRITE_EVENT, EVENT_UV_NORMAL, MBS.buffer);
+				}
+			} else {
+				flag_UV_prefire = 0;
+				flag_UV_fire_2ch = 0;
+				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV) {
+					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_UV;
+					//push_flash_command(FLASH_WRITE_EVENT, EVENT_UV_NORMAL, MBS.buffer);
+				}
+			}
+		}
+	} else {
+		if (DeviceData.IRGain > IRThresF) {
+			flag_IR_prefire = 1;
+			if (!(DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR)) {
+				//push_flash_command(FLASH_WRITE_EVENT, EVENT_IR_HIGH, MBS.buffer);
+				DeviceData.Status |= FD2930_DEVICE_STATUS_ALARM_IR;
+			}
+		} else {
+			if (DeviceData.IRGain > 0.7 * IRThresF) {
+				flag_IR_prefire = 1;
+				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR) {
+					//push_flash_command(FLASH_WRITE_EVENT, EVENT_IR_NORMAL, MBS.buffer);
+					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_IR;
+				}
+			} else {
+				flag_IR_prefire = 0;
+				flag_IR_fire_2ch = 0;
+				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR) {
+					//push_flash_command(FLASH_WRITE_EVENT, EVENT_IR_NORMAL, MBS.buffer);
+					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_IR;
+				}
+			}
+		}
+		if (DeviceData.UVGain > UVThresF) {
+			flag_UV_prefire = 1;
+			if (!(DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV)) {
+				DeviceData.Status |= FD2930_DEVICE_STATUS_ALARM_UV;
+				//push_flash_command(FLASH_WRITE_EVENT, EVENT_UV_HIGH, MBS.buffer);
+			}
+		} else {
+			if (DeviceData.UVGain > 0.7 * UVThresF) {
+				flag_UV_prefire = 1;
+				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV) {
+					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_UV;
+					//push_flash_command(FLASH_WRITE_EVENT, EVENT_UV_NORMAL, MBS.buffer);
+				}
+			} else {
+				flag_UV_prefire = 0;
+				flag_UV_fire_2ch = 0;
+				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV) {
+					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_UV;
+					//push_flash_command(FLASH_WRITE_EVENT, EVENT_UV_NORMAL, MBS.buffer);
+				}
+			}
+		}
+	}
+
+	if (DeviceData.UVGain < DeviceData.UVThres) flag_UV_inv = 1;
+	else flag_UV_inv = 0;
+
+	switch((DeviceFireConfig_t)(DeviceData.Config & 0xf)) {
+		case FD2930_CONFIG_1:
+			if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR) {
+				counter_IR_fire++;
+				counter_IR_prefire++;
+			} else {
+				if (flag_IR_prefire) {
+					counter_IR_fire = 0;
+					flag_IR_fire_2ch = 0;
+					counter_IR_prefire++;
+				} else {
+					counter_IR_fire = 0;
+					flag_IR_fire_2ch = 0;
+					flag_IR_prefire_2ch = 0;
+					counter_IR_prefire = 0;
+					between_channel_fire_counter = 0;
+				}
+			}
+			if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV) {
+				counter_UV_fire++;
+				counter_UV_prefire++;
+			} else {
+				if (flag_UV_prefire) {
+					counter_UV_fire = 0;
+					flag_UV_fire_2ch = 0;
+					counter_UV_prefire++;
+				} else {
+					counter_UV_fire = 0;
+					flag_UV_fire_2ch = 0;
+					flag_UV_prefire_2ch = 0;
+					counter_UV_prefire = 0;
+					between_channel_fire_counter = 0;
+				}
+			}
+
+			if (flag_IR_fire_2ch) {
+				if (between_channel_fire_counter < channel_fire_delay) {
+					if (counter_UV_fire >= channel_fire_delay) {
+						counter_UV_fire = channel_fire_delay;
+						if (CriminalFFTChannelNumber > FD2930_NUMBER_FFT_CRIM_CHANNEL) DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;    //âêëþ÷àåì ïîæàð
+						else DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
+						between_channel_fire_counter = 0;
+					} else {
+						between_channel_fire_counter++;
+					}
+				} else {
+					if (between_channel_fire_counter < between_channel_fire_delay) {
+						between_channel_fire_counter++;
+					} else {
+						if (counter_UV_fire >= channel_fire_delay) {
+							counter_UV_fire = channel_fire_delay;
+							if (CriminalFFTChannelNumber > FD2930_NUMBER_FFT_CRIM_CHANNEL) DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;    //âêëþ÷àåì ïîæàð
+							else DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
+						} else {
+							between_channel_fire_counter = channel_fire_delay;  //æäåì åùå 20 ñåêóíä
+						}
+					}
+				}
+			} else {
+				if (flag_UV_fire_2ch) {
+					if (between_channel_fire_counter < channel_fire_delay) {
+						if (counter_IR_fire >= channel_fire_delay) {
+							counter_IR_fire = channel_fire_delay;
+							if (CriminalFFTChannelNumber > FD2930_NUMBER_FFT_CRIM_CHANNEL) DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;    //âêëþ÷àåì ïîæàð
+							else DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
+							between_channel_fire_counter = 0;
+						} else {
+							between_channel_fire_counter++;
+						}
+					} else {
+						if (between_channel_fire_counter < between_channel_fire_delay) {
+							between_channel_fire_counter++;
+						} else {
+							if (counter_IR_fire >= channel_fire_delay) {
+								counter_IR_fire = channel_fire_delay;
+								if (CriminalFFTChannelNumber > FD2930_NUMBER_FFT_CRIM_CHANNEL) DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;    //âêëþ÷àåì ïîæàð
+								else DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
+							} else {
+								between_channel_fire_counter = channel_fire_delay;  //æäåì åùå 20 ñåêóíä
+							}
+						}
+					}
+				} else {
+					if ((!counter_IR_fire && !counter_UV_fire) || (CriminalFFTChannelNumber < FD2930_NUMBER_FFT_CRIM_CHANNEL)) DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
+					if (counter_IR_fire >= channel_fire_delay) {
+						counter_IR_fire = channel_fire_delay;
+						flag_IR_fire_2ch = 1;
+					}
+					if (counter_UV_fire >= channel_fire_delay) {
+						counter_UV_fire = channel_fire_delay;
+						flag_UV_fire_2ch = 1;
+					}
+				}
+			}
+
+			if (flag_IR_prefire_2ch) {
+				if (between_channel_prefire_counter < channel_fire_delay) {
+					if (counter_UV_prefire >= channel_fire_delay) {
+						counter_UV_prefire = channel_fire_delay;
+						DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;    //âêëþ÷àåì ïîæàð
+						between_channel_prefire_counter = 0;
+					} else {
+						between_channel_prefire_counter++;
+					}
+				} else {
+					if (between_channel_prefire_counter < between_channel_fire_delay) {
+						between_channel_prefire_counter++;
+					} else {
+						if (counter_UV_prefire >= channel_fire_delay) {
+							counter_UV_prefire = channel_fire_delay;
+							DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;    //âêëþ÷àåì ïîæàð
+						} else {
+							between_channel_prefire_counter = channel_fire_delay;  //æäåì åùå 20 ñåêóíä
+						}
+					}
+				}
+			} else
+				if (flag_UV_prefire_2ch) {
+					if (between_channel_prefire_counter < channel_fire_delay) {
+						if (counter_IR_prefire >= channel_fire_delay) {
+							counter_IR_prefire = channel_fire_delay;
+							DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;    //âêëþ÷àåì ïîæàð
+							between_channel_prefire_counter = 0;
+						} else {
+							between_channel_prefire_counter++;
+						}
+					} else {
+						if (between_channel_prefire_counter < between_channel_fire_delay) {
+							between_channel_prefire_counter++;        //æäåì åùå 20 ñåêóíä
+						} else {
+							if (counter_IR_prefire >= channel_fire_delay) {
+								counter_IR_prefire = channel_fire_delay;
+								DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;    //âêëþ÷àåì ïîæàð
+							} else {
+								between_channel_prefire_counter = channel_fire_delay;  //æäåì åùå 20 ñåêóíä
+							}
+						}
+					}
+				} else {
+					if (!counter_IR_prefire && !counter_UV_prefire) DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_PREFIRE;
+					if (counter_IR_prefire >= channel_fire_delay) {
+						counter_IR_prefire = channel_fire_delay;
+						flag_IR_prefire_2ch = 1;
+					}
+					if (counter_UV_prefire >= channel_fire_delay) {
+						counter_UV_prefire = channel_fire_delay;
+						flag_UV_prefire_2ch = 1;
+					}
+				}
+		break;
+		case FD2930_CONFIG_2:
+			if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR) {
+				counter_IR_fire++;
+				counter_IR_prefire++;
+			} else {
+				if (flag_IR_prefire) {
+					counter_IR_fire = 0;
+					flag_IR_fire_2ch = 0;
+					counter_IR_prefire++;
+				} else {
+					counter_IR_fire = 0;
+					flag_IR_fire_2ch = 0;
+					flag_IR_prefire_2ch = 0;
+					counter_IR_prefire = 0;
+					between_channel_fire_counter = 0;
+				}
+			}
+			if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV) {
+				counter_UV_fire++;
+				counter_UV_prefire++;
+			} else {
+				if (flag_UV_prefire) {
+					counter_UV_fire = 0;
+					flag_UV_fire_2ch = 0;
+					counter_UV_prefire++;
+				} else {
+					counter_UV_fire = 0;
+					flag_UV_fire_2ch = 0;
+					flag_UV_prefire_2ch = 0;
+					counter_UV_prefire = 0;
+					between_channel_fire_counter = 0;
+				}
+			}
+
+			if (flag_IR_fire_2ch) {
+				if (between_channel_fire_counter < channel_fire_delay) {
+					if (counter_UV_fire >= channel_fire_delay) {
+						counter_UV_fire = channel_fire_delay;
+						DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;    //âêëþ÷àåì ïîæàð
+						between_channel_fire_counter = 0;
+					} else {
+						between_channel_fire_counter++;
+					}
+				} else {
+					if (between_channel_fire_counter < between_channel_fire_delay) {
+						between_channel_fire_counter++;
+					} else {
+						if (counter_UV_fire >= channel_fire_delay) {
+							counter_UV_fire = channel_fire_delay;
+							DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;    //âêëþ÷àåì ïîæàð
+						} else {
+							between_channel_fire_counter = channel_fire_delay;  //æäåì åùå 20 ñåêóíä
+						}
+					}
+				}
+			} else
+				if (flag_UV_fire_2ch) {
+					if (between_channel_fire_counter < channel_fire_delay) {
+						if (counter_IR_fire >= channel_fire_delay) {
+							counter_IR_fire = channel_fire_delay;
+							DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;    //âêëþ÷àåì ïîæàð
+							between_channel_fire_counter = 0;
+						} else {
+							between_channel_fire_counter++;
+						}
+					} else {
+						if (between_channel_fire_counter < between_channel_fire_delay) {
+							between_channel_fire_counter++;
+						} else {
+							if (counter_IR_fire >= channel_fire_delay) {
+								counter_IR_fire = channel_fire_delay;
+								DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;    //âêëþ÷àåì ïîæàð
+							} else {
+								between_channel_fire_counter = channel_fire_delay;  //æäåì åùå 20 ñåêóíä
+							}
+						}
+					}
+				} else {
+					if (!counter_IR_fire && !counter_UV_fire) DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
+					if (counter_IR_fire >= channel_fire_delay) {
+						counter_IR_fire = channel_fire_delay;
+						flag_IR_fire_2ch = 1;
+					}
+					if (counter_UV_fire >= channel_fire_delay) {
+						counter_UV_fire = channel_fire_delay;
+						flag_UV_fire_2ch = 1;
+					}
+				}
+
+			if (flag_IR_prefire_2ch) {
+				if (between_channel_prefire_counter < channel_fire_delay) {
+					if (counter_UV_prefire >= channel_fire_delay) {
+						counter_UV_prefire = channel_fire_delay;
+						DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;
+						between_channel_prefire_counter = 0;
+					} else {
+						between_channel_prefire_counter++;
+					}
+				} else {
+					if (between_channel_prefire_counter < between_channel_fire_delay) {
+						between_channel_prefire_counter++;
+					} else {
+						if (counter_UV_prefire >= channel_fire_delay) {
+							counter_UV_prefire = channel_fire_delay;
+							DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;
+						} else {
+							between_channel_prefire_counter = channel_fire_delay;
+						}
+					}
+				}
+			} else {
+				if (flag_UV_prefire_2ch) {
+					if (between_channel_prefire_counter < channel_fire_delay) {
+						if (counter_IR_prefire >= channel_fire_delay) {
+							counter_IR_prefire = channel_fire_delay;
+							DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;    //âêëþ÷àåì ïîæàð
+							between_channel_prefire_counter = 0;
+						} else {
+							between_channel_prefire_counter++;
+						}
+					} else {
+						if (between_channel_prefire_counter < between_channel_fire_delay) {
+							between_channel_prefire_counter++;        //æäåì åùå 20 ñåêóíä
+						} else {
+							if (counter_IR_prefire >= channel_fire_delay) {
+								counter_IR_prefire = channel_fire_delay;
+								DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;    //âêëþ÷àåì ïîæàð
+							} else {
+								between_channel_prefire_counter = channel_fire_delay;  //æäåì åùå 20 ñåêóíä
+							}
+						}
+					}
+				} else {
+					if (!counter_IR_prefire && !counter_UV_prefire) DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_PREFIRE;
+					if (counter_IR_prefire >= channel_fire_delay) {
+						counter_IR_prefire = channel_fire_delay;
+						flag_IR_prefire_2ch = 1;
+					}
+					if (counter_UV_prefire >= channel_fire_delay) {
+						counter_UV_prefire = channel_fire_delay;
+						flag_UV_prefire_2ch = 1;
+					}
+				}
+			}
+		break;
+		case FD2930_CONFIG_3:
+			if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR) {
+				counter_IR_fire++;
+				counter_IR_prefire++;
+			} else {
+				if (flag_IR_prefire) {
+					counter_IR_fire = 0;
+					counter_IR_prefire++;
+				} else {
+					counter_IR_fire = 0;
+					counter_IR_prefire = 0;
+				}
+			}
+			if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV) {
+				counter_UV_fire++;
+				counter_UV_prefire++;
+			} else {
+				if (flag_UV_prefire) {
+					counter_UV_fire = 0;
+					counter_UV_prefire++;
+				} else {
+					counter_UV_fire = 0;
+					counter_UV_prefire = 0;
+				}
+			}
+			if ((!counter_IR_fire && !counter_UV_fire) || (CriminalFFTChannelNumber < FD2930_NUMBER_FFT_CRIM_CHANNEL)) DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
+			if (!counter_IR_prefire && !counter_UV_prefire) DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_PREFIRE;
+			if (counter_IR_fire >= channel_fire_delay) counter_IR_fire = channel_fire_delay;
+			if (counter_IR_prefire >= channel_fire_delay) counter_IR_prefire = channel_fire_delay;
+			if (counter_UV_fire >= channel_fire_delay) counter_UV_fire = channel_fire_delay;
+			if (counter_UV_prefire >= channel_fire_delay) counter_UV_prefire = channel_fire_delay;
+			if ((counter_IR_fire >= channel_fire_delay) && (counter_UV_fire >= channel_fire_delay)) {
+				if (CriminalFFTChannelNumber > FD2930_NUMBER_FFT_CRIM_CHANNEL) DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;
+			}
+			if ((counter_IR_prefire >= channel_fire_delay) && (counter_UV_prefire >= channel_fire_delay)) DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;
+		break;
+		case FD2930_CONFIG_4:
+			if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR) {
+				counter_IR_fire++;
+				counter_IR_prefire++;
+			} else {
+				if (flag_IR_prefire) {
+					counter_IR_fire = 0;
+					counter_IR_prefire++;
+				} else {
+					counter_IR_fire = 0;
+					counter_IR_prefire = 0;
+				}
+			}
+			if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV) {
+				counter_UV_fire++;
+				counter_UV_prefire++;
+			} else {
+				if (flag_UV_prefire) {
+					counter_UV_fire = 0;
+					counter_UV_prefire++;
+				} else {
+					counter_UV_fire = 0;
+					counter_UV_prefire = 0;
+				}
+			}
+			if (!counter_IR_fire && !counter_UV_fire) DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
+			if (!counter_IR_prefire && !counter_UV_prefire) DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_PREFIRE;
+			if (counter_IR_fire >= channel_fire_delay) counter_IR_fire = channel_fire_delay;
+			if (counter_IR_prefire >= channel_fire_delay) counter_IR_prefire = channel_fire_delay;
+			if (counter_UV_fire >= channel_fire_delay) counter_UV_fire = channel_fire_delay;
+			if (counter_UV_prefire >= channel_fire_delay) counter_UV_prefire = channel_fire_delay;
+			if ((counter_IR_fire >= channel_fire_delay) && (counter_UV_fire >= channel_fire_delay)) DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;
+			if ((counter_IR_prefire >= channel_fire_delay) && (counter_UV_prefire >= channel_fire_delay)) DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;
+		break;
+		case FD2930_CONFIG_5:
+			if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR) {
+				counter_IR_fire++;
+				counter_IR_prefire++;
+			} else {
+				if (flag_IR_prefire) {
+					counter_IR_fire = 0;
+					counter_IR_prefire++;
+				} else {
+					counter_IR_fire = 0;
+					counter_IR_prefire = 0;
+				}
+			}
+			if (!counter_IR_fire || (CriminalFFTChannelNumber < FD2930_NUMBER_FFT_CRIM_CHANNEL)) {
+				DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
+			} else {
+				if (counter_IR_fire >= channel_fire_delay) {
+					counter_IR_fire = channel_fire_delay;
+					if (CriminalFFTChannelNumber > FD2930_NUMBER_FFT_CRIM_CHANNEL) DeviceStatusTemp|= FD2930_DEVICE_STATUS_FIRE;
+				}
+			}
+			if (!counter_IR_prefire) {
+				DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_PREFIRE;
+			} else {
+				if (counter_IR_prefire >= channel_fire_delay) {
+					counter_IR_prefire = channel_fire_delay;
+					DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;
+				}
+			}
+		break;
+		case FD2930_CONFIG_6:
+			if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR) {
+				counter_IR_fire++;
+				counter_IR_prefire++;
+			} else {
+				if (flag_IR_prefire) {
+					counter_IR_fire = 0;
+					counter_IR_prefire++;
+				} else {
+					counter_IR_fire = 0;
+					counter_IR_prefire = 0;
+				}
+			}
+			if (!counter_IR_fire) {
+				DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
+			} else {
+				if (counter_IR_fire >= channel_fire_delay) {
+					counter_IR_fire = channel_fire_delay;
+					DeviceStatusTemp|= FD2930_DEVICE_STATUS_FIRE;
+				}
+			}
+			if (!counter_IR_prefire) {
+				DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_PREFIRE;
+			} else {
+				if (counter_IR_prefire >= channel_fire_delay) {
+					counter_IR_prefire = channel_fire_delay;
+					DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;
+				}
+			}
+			break;
+		case FD2930_CONFIG_7:
+			if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV) {
+				counter_UV_fire++;
+				counter_UV_prefire++;
+			} else {
+				if (flag_UV_prefire) {
+					counter_UV_fire = 0;
+					counter_UV_prefire++;
+				} else {
+					counter_UV_fire = 0;
+					counter_UV_prefire = 0;
+				}
+			}
+			if (!counter_UV_fire) {
+				DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
+			} else {
+				if (counter_UV_fire >= channel_fire_delay) {
+					counter_UV_fire = channel_fire_delay;
+					DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;
+				}
+			}
+			if (!counter_UV_prefire) {
+				DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_PREFIRE;
+			} else {
+				if (counter_UV_prefire >= channel_fire_delay) {
+					counter_UV_prefire = channel_fire_delay;
+					DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;
+				}
+			}
+			break;
+		case FD2930_CONFIG_8:
+			if (flag_UV_inv) {
+				counter_UV_inv++;
+				DeviceData.Status |= FD2930_DEVICE_STATUS_ALARM_UV;
+			} else {
+				counter_UV_inv = 0;
+				DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_UV;
+			}
+			if (!counter_UV_inv) {
+				DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
+				DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_PREFIRE;
+			} else {
+				if (counter_UV_inv >= channel_fire_delay) {
+					counter_UV_inv = channel_fire_delay;
+					DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;
+					DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;
+				}
+			}
+		break;
+	}
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+static inline void SetFireStatus()
+{
+	if (DeviceStatusTemp & FD2930_DEVICE_STATUS_FIRE) {
+		if (!(DeviceData.Status & FD2930_DEVICE_STATUS_FIRE)) {
+			DeviceData.Status |= FD2930_DEVICE_STATUS_FIRE;
+			//push_flash_command(FLASH_WRITE_EVENT, EVENT_FIRE_ON, MBS.buffer);
+		}
+	}
+	if (DeviceStatusTemp & FD2930_DEVICE_STATUS_PREFIRE) DeviceData.Status |= FD2930_DEVICE_STATUS_PREFIRE;
+	if (!(DeviceData.Config & FD2930_DEVICECONFIG_FIRE_FIXATION)) {
+		if (!(DeviceStatusTemp & FD2930_DEVICE_STATUS_FIRE)) {
+			if (DeviceData.Status & FD2930_DEVICE_STATUS_FIRE) {
+				DeviceData.Status &= ~FD2930_DEVICE_STATUS_FIRE;
+				//push_flash_command(FLASH_WRITE_EVENT, EVENT_FIRE_OFF, MBS.buffer);
+			}
+		}
+		if (!(DeviceStatusTemp & FD2930_DEVICE_STATUS_PREFIRE)) DeviceData.Status &= ~FD2930_DEVICE_STATUS_PREFIRE;
+	}
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+void ResetFireStatus()
+{
+	if (!(DeviceStatusTemp & FD2930_DEVICE_STATUS_FIRE)) {
+		if (DeviceData.Status & FD2930_DEVICE_STATUS_FIRE) {
+			DeviceData.Status &= ~FD2930_DEVICE_STATUS_FIRE;
+			//push_flash_command(FLASH_WRITE_EVENT, EVENT_FIRE_OFF, MBS.buffer);
+		}
+	}
+	if (!(DeviceStatusTemp & FD2930_DEVICE_STATUS_PREFIRE)) DeviceData.Status &= ~FD2930_DEVICE_STATUS_PREFIRE;
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+static inline void SetDeviceStatus()
+{
+	switch(DeviceState) {
+		case FD2930_STATE_TEST:
+			break;
+		default:
+			if (DeviceData.Config & DeviceData.Flags & 0xf000) {
+				if (!(DeviceData.Status & FD2930_DEVICE_STATUS_FAULT)) {
+					DeviceData.Status |= FD2930_DEVICE_STATUS_FAULT;
+					//push_flash_command(FLASH_WRITE_EVENT, EVENT_FAULT_ON, MBS.buffer);
+				}
+			} else
+				if (DeviceData.Status & FD2930_DEVICE_STATUS_FAULT) {
+					DeviceData.Status &= ~FD2930_DEVICE_STATUS_FAULT;
+					//push_flash_command(FLASH_WRITE_EVENT, EVENT_FAULT_OFF, MBS.buffer);
+				}
+			if (DeviceData.Status & FD2930_DEVICE_STATUS_TESTING || DeviceData.Flags & FD2930_DEVICEFLAGS_IR_ERROR || DeviceData.Flags & FD2930_DEVICEFLAGS_UV_ERROR \
+				|| !(DeviceData.Status & FD2930_DEVICE_STATUS_FLASH_OK) || !(DeviceData.Status & FD2930_DEVICE_STATUS_CRC_OK) \
+				|| !(DeviceData.Status & FD2930_DEVICE_STATUS_IR_UV_SET) || !(DeviceData.Status & FD2930_DEVICE_STATUS_TEST_CALIBR) \
+				|| !(DeviceData.Status & FD2930_DEVICE_STATUS_TEST_ZERO) || ((DeviceData.Config & FD2930_DEVICECONFIG_DUST_TO_RELAY) \
+				&& (DeviceData.Flags & FD2930_DEVICEFLAGS_BREAK_DUST)))  {
+				if (!(DeviceData.Status & FD2930_DEVICE_STATUS_BREAK)) {
+					DeviceData.Status |= FD2930_DEVICE_STATUS_BREAK;
+					//push_flash_command(FLASH_WRITE_EVENT, EVENT_BREAK_ON, MBS.buffer);
+				}
+			} else {
+				if (DeviceData.Status & FD2930_DEVICE_STATUS_BREAK) {
+					DeviceData.Status &= ~FD2930_DEVICE_STATUS_BREAK;
+					//push_flash_command(FLASH_WRITE_EVENT, EVENT_BREAK_OFF, MBS.buffer);
+				}
+			}
+			if (DeviceData.Status & FD2930_DEVICE_STATUS_BREAK) {
+				DeviceData.Current420 = 3200;
+			} else {
+				if (DeviceData.Status & FD2930_DEVICE_STATUS_FAULT) DeviceData.Current420 = 3200;
+				else DeviceData.Current420 = 4000;
+			}
+		break;
+	}
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+static inline void SetLED()
+{
+    if (IRDA_Command_Rcvd) {
+        return; // IRDA indication dominates over the others types. Indication state is in SYSTickHandler
+    }
+    if((DeviceData.Status & FD2930_DEVICE_STATUS_BREAK) || (DeviceData.Status & FD2930_DEVICE_STATUS_TESTING)) LEDState = FD2930_LED_YELLOW;
+    else if(DeviceData.Status & FD2930_DEVICE_STATUS_FIRE) LEDState = FD2930_LED_RED;
+    else if(DeviceData.Status & FD2930_DEVICE_STATUS_PREFIRE) LEDState = FD2930_LED_RED_BLINKING;
+    else if(DeviceData.Status & FD2930_DEVICE_STATUS_FAULT) LEDState = FD2930_LED_YELLOW_BLINKING;
+    else if(DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET) LEDState = FD2930_LED_BLUE;
+    else LEDState = FD2930_LED_GREEN;
+
+    switch(LEDState) {
+    	case FD2930_LED_RED_BLINKING:
+    	case FD2930_LED_YELLOW_BLINKING:
+    		DeviceData.Flags |= FD2930_DEVICEFLAGS_BLINK_LED;
+    	break;
+    	default:
+    		DeviceData.Flags &= ~FD2930_DEVICEFLAGS_BLINK_LED;
+    }
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+static inline void SetRelays()
+{
+	static uint16_t counter_relay_fire_delay = 0;
+	static uint16_t counter_relay_work_delay = 0;
+
+	switch (DeviceState) {
+		case FD2930_STATE_TEST:
+			if (DeviceData.Flags & FD2930_DEVICEFLAGS_DUST_RELAY_ON) {
+				GPIO_RESET_PIN(LPC_GPIO2, R_DUST);
+			} else {
+				GPIO_SET_PIN(LPC_GPIO2, R_DUST);
+			}
+			if (DeviceData.Flags & FD2930_DEVICEFLAGS_FIRE_RELAY_ON) {
+				GPIO_RESET_PIN(LPC_GPIO2, R_FIRE);
+			} else {
+				GPIO_SET_PIN(LPC_GPIO2, R_FIRE);
+			}
+		break;
+		default:
+			if ((DeviceData.Status & FD2930_DEVICE_STATUS_BREAK) || (DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET)) {
+				GPIO_SET_PIN(LPC_GPIO2, R_FIRE);
+				GPIO_SET_PIN(LPC_GPIO2, R_FIRE_MVES);
+			} else {
+				if(DeviceData.Status & FD2930_DEVICE_STATUS_FIRE) {
+					counter_relay_fire_delay++;
+					if (counter_relay_fire_delay >= DeviceData.FireDelay) {
+						if (DeviceData.Config & FD2930_DEVICECONFIG_RELAY_FIRE_ALLOWED) {GPIO_RESET_PIN(LPC_GPIO2, R_FIRE);};
+						DeviceData.Flags |= FD2930_DEVICEFLAGS_FIRE_RELAY_ON;
+						DeviceData.Current420 = 19990;
+						counter_relay_fire_delay = DeviceData.FireDelay;
+					}
+				} else {
+					counter_relay_fire_delay = 0;
+					GPIO_SET_PIN(LPC_GPIO2, R_FIRE);
+					GPIO_SET_PIN(LPC_GPIO2, R_FIRE_MVES);
+					DeviceData.Flags &= ~FD2930_DEVICEFLAGS_FIRE_RELAY_ON;
+				}
+			}
+			if ((DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET) || (DeviceData.Status & FD2930_DEVICE_STATUS_TESTING) || (DeviceData.Flags & FD2930_DEVICEFLAGS_IR_ERROR) || (DeviceData.Flags & FD2930_DEVICEFLAGS_UV_ERROR) \
+				|| !(DeviceData.Status & FD2930_DEVICE_STATUS_FLASH_OK) || !(DeviceData.Status & FD2930_DEVICE_STATUS_CRC_OK) || !(DeviceData.Status & FD2930_DEVICE_STATUS_IR_UV_SET) \
+				|| !(DeviceData.Status & FD2930_DEVICE_STATUS_TEST_CALIBR)|| !(DeviceData.Status & FD2930_DEVICE_STATUS_TEST_ZERO) || (DeviceData.Config & DeviceData.Flags & 0xf000)) {
+				counter_relay_work_delay++;
+				if (counter_relay_work_delay >= DeviceData.FaultDelay) {
+					DeviceData.Flags &= ~FD2930_DEVICEFLAGS_WORK_RELAY_ON;
+					counter_relay_work_delay = DeviceData.FaultDelay;
+				}
+			} else {
+				if (DeviceData.Config & FD2930_DEVICECONFIG_RELAY_FAULT_ALLOWED) {
+					DeviceData.Flags |= FD2930_DEVICEFLAGS_WORK_RELAY_ON;
+				} else {
+					DeviceData.Flags &= ~FD2930_DEVICEFLAGS_WORK_RELAY_ON;
+				}
+				counter_relay_work_delay = 0;
+			}
+		break;
+	}
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+static inline void HandleLEDs()
+{
+	static uint16_t l = 0, redtime = 0, greentime = 0, blink_counter = 0;
+
+	switch (LEDState) {
+		case FD2930_LED_OFF:
+			GPIO_SET_PIN(LPC_GPIO2, LED1);
+			GPIO_SET_PIN(LPC_GPIO2, LED2);
+			GPIO_SET_PIN(LPC_GPIO2, LED3);
+		break;
+		case FD2930_LED_YELLOW:
+			GPIO_SET_PIN(LPC_GPIO2, LED2);
+			GPIO_SET_PIN(LPC_GPIO2, LED3);
+			if (l) {
+				GPIO_RESET_PIN(LPC_GPIO2, LED1);
+				GPIO_SET_PIN(LPC_GPIO2, LED3);
+				if (!redtime) {
+					l = 0;
+					redtime = 13;
+				} else {
+					redtime--;
+				}
+			} else {
+				GPIO_RESET_PIN(LPC_GPIO2, LED3);
+				GPIO_SET_PIN(LPC_GPIO2, LED1);
+				if (!greentime) {
+					l = 1;
+					greentime = 1;
+				} else {
+					greentime--;
+				}
+			}
+	    break;
+		case FD2930_LED_YELLOW_BLINKING:
+			GPIO_SET_PIN(LPC_GPIO2, LED2);
+			if (blink_counter < 500) {
+				if (l) {
+					GPIO_RESET_PIN(LPC_GPIO2, LED1);
+					GPIO_SET_PIN(LPC_GPIO2, LED3);
+					if (!redtime) {
+						l = 0;
+						redtime = 13;
+					} else {
+						redtime--;
+					}
+				} else {
+					GPIO_RESET_PIN(LPC_GPIO2, LED3);
+					GPIO_SET_PIN(LPC_GPIO2, LED1);
+					if (!greentime) {
+						l = 1;
+						greentime = 1;
+					} else {
+						greentime--;
+					}
+				}
+				blink_counter++;
+			} else
+				if (blink_counter < 1000) {
+					GPIO_SET_PIN(LPC_GPIO2, LED1);
+					GPIO_SET_PIN(LPC_GPIO2, LED3);
+					blink_counter++;
+				} else {
+					blink_counter = 0;
+				}
+		break;
+		case FD2930_LED_RED:
+			GPIO_RESET_PIN(LPC_GPIO2, LED1);
+			GPIO_SET_PIN(LPC_GPIO2, LED2);
+			GPIO_SET_PIN(LPC_GPIO2, LED3);
+	    break;
+		case FD2930_LED_RED_BLINKING:
+			GPIO_SET_PIN(LPC_GPIO2, LED2);
+			GPIO_SET_PIN(LPC_GPIO2, LED3);
+			if (redtime >= 100) {
+				GPIO_TOGGLE_PIN(LPC_GPIO2, LED1);
+				redtime = 0;
+			} else {
+				redtime++;
+			}
+	    break;
+		case FD2930_LED_GREEN:
+			GPIO_RESET_PIN(LPC_GPIO2, LED3);
+			GPIO_SET_PIN(LPC_GPIO2, LED1);
+			GPIO_SET_PIN(LPC_GPIO2, LED2);
+	    break;
+		case FD2930_LED_BLUE:
+			GPIO_RESET_PIN(LPC_GPIO2, LED2);
+			GPIO_SET_PIN(LPC_GPIO2, LED1);
+			GPIO_SET_PIN(LPC_GPIO2, LED3);
+	    break;
 	}
 }
 
 
+/**
+  * @brief
+  * @param
+  * @retval
+  */
 #define EWMA_FILTER(_PREV_, _CURR_, _COEFF_)				(_COEFF_ * _CURR_ + (1 - _COEFF_) * _PREV_)
 
 /**
@@ -426,19 +1414,19 @@ void ADCTask()
 		if (DeviceData.Temperature > TEMPERATURE_MAXIMUM || DeviceData.Temperature < TEMPERATURE_MINIMUM) {
 		    if (CntTemperatureFault < TEMPERATURE_FAULT_DELAY) {CntTemperatureFault++;};
 		    if (CntTemperatureFault >= TEMPERATURE_FAULT_DELAY) {
-		    	if (!(DeviceData.Flags & FD2930_DEVICEFLAGS_ERROR_TEMPERATURE)) {;}//push_flash_command(FLASH_WRITE_EVENT, EVENT_T_FAULT, MBS.buffer);
+		    	if (!(DeviceData.Flags & FD2930_DEVICEFLAGS_ERROR_TEMPERATURE)) {;}////push_flash_command(FLASH_WRITE_EVENT, EVENT_T_FAULT, MBS.buffer);
 		    	DeviceData.Flags |= FD2930_DEVICEFLAGS_ERROR_TEMPERATURE;
 		    }
 		} else {
-		    if ((DeviceData.Flags & FD2930_DEVICEFLAGS_ERROR_TEMPERATURE)) {;}//push_flash_command(FLASH_WRITE_EVENT, EVENT_T_NORMAL, MBS.buffer);
+		    if ((DeviceData.Flags & FD2930_DEVICEFLAGS_ERROR_TEMPERATURE)) {;}////push_flash_command(FLASH_WRITE_EVENT, EVENT_T_NORMAL, MBS.buffer);
 		    DeviceData.Flags &= ~FD2930_DEVICEFLAGS_ERROR_TEMPERATURE;
 		    CntTemperatureFault = 0;
 		}
 		if (DeviceData.UVVoltage > VOLTAGE_UV_WORKING_MAXIMUM || DeviceData.UVVoltage < VOLTAGE_UV_WORKING_MINIMUM) {
-		    if (!(DeviceData.Flags & FD2930_DEVICEFLAGS_ERROR_UV_VOLTAGE)) {;}//push_flash_command(FLASH_WRITE_EVENT, EVENT_HV_FAULT, MBS.buffer);
+		    if (!(DeviceData.Flags & FD2930_DEVICEFLAGS_ERROR_UV_VOLTAGE)) {;}////push_flash_command(FLASH_WRITE_EVENT, EVENT_HV_FAULT, MBS.buffer);
 		    DeviceData.Flags |= FD2930_DEVICEFLAGS_ERROR_UV_VOLTAGE;
 		} else {
-		    if ((DeviceData.Flags & FD2930_DEVICEFLAGS_ERROR_UV_VOLTAGE)) {;}//push_flash_command(FLASH_WRITE_EVENT, EVENT_HV_NORMAL, MBS.buffer);
+		    if ((DeviceData.Flags & FD2930_DEVICEFLAGS_ERROR_UV_VOLTAGE)) {;}////push_flash_command(FLASH_WRITE_EVENT, EVENT_HV_NORMAL, MBS.buffer);
 		    DeviceData.Flags &= ~FD2930_DEVICEFLAGS_ERROR_UV_VOLTAGE;
 		}
 	}
