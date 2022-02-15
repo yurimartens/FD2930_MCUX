@@ -9,6 +9,7 @@
 
 #include <adc_al.h>
 #include <max11040.h>
+#include <eeprom.h>
 
 
 DeviceData_t	DeviceData;
@@ -52,6 +53,8 @@ static inline void CheckFireStatus();
 static inline void SetFireStatus();
 static inline void ResetFireStatus();
 
+void SetDefaultParameters();
+
 /**
   * @brief
   * @param
@@ -59,6 +62,47 @@ static inline void ResetFireStatus();
   */
 void DeviceInit()
 {
+	uint8_t write = 0;
+	EEPROMInit();
+
+	AutorecoveryCnt = 0;
+	DeviceData.Status = 0;
+
+	if (EEPROM_ERROR_EMPTY == EEPROMRead((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE)) {
+		SetDefaultParameters();
+		AutorecoveryCnt = 1; //здесь же запустим счетчик автовосстановления
+		write = 1;
+	} else {
+		if (DeviceData.Config == 0 || (DeviceData.MBId < 1 || DeviceData.MBId > 247) || \
+			(DeviceData.HeatPower > FD2930_MAX_HEATPOWER || DeviceData.HeatPower < FD2930_MIN_HEATPOWER) || \
+		    (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 8 && DeviceData.Baudrate != 12 && DeviceData.Baudrate != 16 && DeviceData.Baudrate != 24)) {
+			SetDefaultParameters();
+			write = 1;
+		}
+
+		if (DeviceData.Config & FD2930_DEVICECONFIG_IPES_MB_HEADER) {
+			if (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 8 && DeviceData.Baudrate != 16) {
+				DeviceData.Baudrate = IPES_DEF_MBS_BAUD;
+				write = 1;
+			}
+		} else {
+			if (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 12 && DeviceData.Baudrate != 24) {
+				DeviceData.Baudrate = FD2930_DEF_MBS_BAUD;
+				write = 1;
+			}
+		}
+
+		if (DeviceData.FFTThres > FD2930_MAX_GAIN_FFT || DeviceData.FFTThres < FD2930_MIN_GAIN_FFT) {DeviceData.FFTThres = FD2930_DEFAULT_GAIN_FFT; write = 1;}
+		if (DeviceData.IRThres > FD2930_MAX_THRES_IR || DeviceData.IRThres < FD2930_MIN_THRES_IR) {DeviceData.IRThres = FD2930_DEFAULT_THRES_IR; write = 1;}
+		if (DeviceData.UVThres > FD2930_MAX_THRES_UV || DeviceData.UVThres < FD2930_MIN_THRES_UV) {DeviceData.UVThres = FD2930_DEFAULT_THRES_UV; write = 1;}
+		if (DeviceData.IRCoeff > FD2930_MAX_K_IR || DeviceData.IRCoeff < FD2930_MIN_K_IR) {DeviceData.IRCoeff = FD2930_DEFAULT_K_IR; write = 1;}
+		if (DeviceData.UVCoeff > FD2930_MAX_K_UV || DeviceData.UVCoeff < FD2930_MIN_K_UV) {DeviceData.UVCoeff = FD2930_DEFAULT_K_UV; write = 1;}
+		if (DeviceData.FaultDelay > FD2930_MAX_WAIT_FAULT || DeviceData.FaultDelay < FD2930_MIN_WAIT_FAULT) {DeviceData.FaultDelay = FD2930_DEFAULT_WAIT_FAULT; write = 1;}
+		if (DeviceData.FireDelay > FD2930_MAX_WAIT_FIRE || DeviceData.FireDelay < FD2930_MIN_WAIT_FIRE) {DeviceData.FireDelay = FD2930_DEFAULT_WAIT_FIRE; write = 1;}
+	}
+
+	if (write) EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+
 	TimerInit(&MeasurmentTimer, 0);
 	TimerReset(&MeasurmentTimer, ADC_SAMPLING_PERIOD);
 }
@@ -1174,11 +1218,11 @@ static inline void SetLED()
     if (IRDA_Command_Rcvd) {
         return; // IRDA indication dominates over the others types. Indication state is in SYSTickHandler
     }
-    if((DeviceData.Status & FD2930_DEVICE_STATUS_BREAK) || (DeviceData.Status & FD2930_DEVICE_STATUS_TESTING)) LEDState = FD2930_LED_YELLOW;
-    else if(DeviceData.Status & FD2930_DEVICE_STATUS_FIRE) LEDState = FD2930_LED_RED;
-    else if(DeviceData.Status & FD2930_DEVICE_STATUS_PREFIRE) LEDState = FD2930_LED_RED_BLINKING;
-    else if(DeviceData.Status & FD2930_DEVICE_STATUS_FAULT) LEDState = FD2930_LED_YELLOW_BLINKING;
-    else if(DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET) LEDState = FD2930_LED_BLUE;
+    if ((DeviceData.Status & FD2930_DEVICE_STATUS_BREAK) || (DeviceData.Status & FD2930_DEVICE_STATUS_TESTING)) LEDState = FD2930_LED_YELLOW;
+    else if (DeviceData.Status & FD2930_DEVICE_STATUS_FIRE) LEDState = FD2930_LED_RED;
+    else if (DeviceData.Status & FD2930_DEVICE_STATUS_PREFIRE) LEDState = FD2930_LED_RED_BLINKING;
+    else if (DeviceData.Status & FD2930_DEVICE_STATUS_FAULT) LEDState = FD2930_LED_YELLOW_BLINKING;
+    else if (DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET) LEDState = FD2930_LED_BLUE;
     else LEDState = FD2930_LED_GREEN;
 
     switch(LEDState) {
@@ -1219,7 +1263,7 @@ static inline void SetRelays()
 				GPIO_SET_PIN(LPC_GPIO2, R_FIRE);
 				GPIO_SET_PIN(LPC_GPIO2, R_FIRE_MVES);
 			} else {
-				if(DeviceData.Status & FD2930_DEVICE_STATUS_FIRE) {
+				if (DeviceData.Status & FD2930_DEVICE_STATUS_FIRE) {
 					counter_relay_fire_delay++;
 					if (counter_relay_fire_delay >= DeviceData.FireDelay) {
 						if (DeviceData.Config & FD2930_DEVICECONFIG_RELAY_FIRE_ALLOWED) {GPIO_RESET_PIN(LPC_GPIO2, R_FIRE);};
@@ -1430,6 +1474,24 @@ void ADCTask()
 		    DeviceData.Flags &= ~FD2930_DEVICEFLAGS_ERROR_UV_VOLTAGE;
 		}
 	}
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+void SetDefaultParameters()
+{
+	DeviceData.Config = FD2930_DEFAULT_DEVICE_CONFIG;
+	DeviceData.BlockService = 5813;
+	DeviceData.SerialNumber = 0;
+	DeviceData.Status |= FD2930_DEVICE_STATUS_BREAK;
+	DeviceData.MBId = FD2930_DEF_MBS_ADR;
+	DeviceData.Baudrate = FD2930_DEF_MBS_BAUD;
+	DeviceData.WorkedTime = 0;
+	DeviceData.HeatPower = FD2930_DEFAULT_HEATPOWER;
+	DeviceData.HeaterThres = FD2930_DEFAULT_THRES_HEATER;
 }
 
     

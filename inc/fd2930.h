@@ -100,16 +100,16 @@ extern "C" {
 #define FD2930_NUMBER_FFT_CRIM_CHANNEL  20
 
 
-#define DEF_MBID						3
-#define DEF_BAUDRATE					1152
-#define DEF_SERIAL						1
+#define FD2930_DEF_MBS_ADR         		3
+#define FD2930_DEF_MBS_BAUD        		2
+#define IPES_DEF_MBS_BAUD           	8
 
-#define FD2930_DEFAULT_TRES_IR          400
-#define FD2930_MIN_TRES_IR              100
-#define FD2930_MAX_TRES_IR              2000
-#define FD2930_DEFAULT_TRES_UV          400
-#define FD2930_MIN_TRES_UV              100
-#define FD2930_MAX_TRES_UV              2000
+#define FD2930_DEFAULT_THRES_IR         400
+#define FD2930_MIN_THRES_IR              100
+#define FD2930_MAX_THRES_IR              2000
+#define FD2930_DEFAULT_THRES_UV          400
+#define FD2930_MIN_THRES_UV              100
+#define FD2930_MAX_THRES_UV              2000
 #define FD2930_DEFAULT_K_IR             40
 #define FD2930_MIN_K_IR                 1
 #define FD2930_MAX_K_IR                 100
@@ -122,9 +122,9 @@ extern "C" {
 #define FD2930_DEFAULT_WAIT_FAULT       3
 #define FD2930_MIN_WAIT_FAULT           1
 #define FD2930_MAX_WAIT_FAULT           20
-#define FD2930_DEFAULT_TRES_HEATER      20
-#define FD2930_MIN_TRES_HEATER          0
-#define FD2930_MAX_TRES_HEATER          50
+#define FD2930_DEFAULT_THRES_HEATER      20
+#define FD2930_MIN_THRES_HEATER          0
+#define FD2930_MAX_THRES_HEATER          50
 #define FD2930_DEFAULT_HEATPOWER        50
 #define FD2930_MIN_HEATPOWER            1
 #define FD2930_MAX_HEATPOWER            100

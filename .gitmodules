@@ -4,3 +4,6 @@
 [submodule "lpcdrivers"]
 	path = lpcdrivers
 	url = https://gitlab.pozhgazpribor.ru/firmware/submodules/lpcdrivers.git
+[submodule "eeprom"]
+	path = eeprom
+	url = https://gitlab.pozhgazpribor.ru/firmware/submodules/eeprom.git

@@ -11,6 +11,7 @@ RM := rm -rf
 -include src/subdir.mk
 -include modbus/subdir.mk
 -include lpcdrivers/subdir.mk
+-include eeprom/subdir.mk
 -include Drivers/subdir.mk
 -include BSP/subdir.mk
 -include subdir.mk
@@ -59,7 +60,7 @@ clean:
 
 post-build:
 	-@echo 'Performing post-build steps'
-	-arm-none-eabi-size "FD2930_MCUX.axf"; # arm-none-eabi-objcopy -v -O binary "FD2930_MCUX.axf" "FD2930_MCUX.bin" ; # checksum -p LPC1768 -d "FD2930_MCUX.bin";
+	-arm-none-eabi-size "FD2930_MCUX.axf" ; arm-none-eabi-objcopy -v -O binary "FD2930_MCUX.axf" "FD2930_MCUX.bin" ; # checksum -p LPC1768 -d "FD2930_MCUX.bin"
 	-@echo ' '
 
 .PHONY: all clean dependents post-build

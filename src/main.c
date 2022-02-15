@@ -90,21 +90,7 @@ int main(void) {
 	SSPInitTxBuf(&SSPSD420, SD420OutBuf, sizeof(SD420OutBuf));
 	SSPInitRxBuf(&SSPSD420, SD420InBuf, sizeof(SD420InBuf));
 
-	uint32_t op = 0;
 
-	for (uint32_t i = 0; i < sizeof(arr); i++) arr[i] = i;
-
-	if (op) {
-		FlashPageEraseUnlockLock(0x1d);
-
-		FlashProgramHalfWord(0x00078000, (uint16_t *)arr, 128);
-	}
-
-	if (op) {
-
-
-			FlashProgramHalfWord(0x00078100, (uint16_t *)&arr[256], 128);
-	}
 
 	//IRPortInit();
 
