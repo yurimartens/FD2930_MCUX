@@ -95,8 +95,7 @@ Max11040ChannelData_t *Max11040GetData(uint8_t chNum)
 {       
     uint32_t temp;
     MOSIData[0] = (MAX11040_REG_ADC_DATA | MAX11040_READ);
-    MOSIData[1] = 0xE0;	// ? but it works
-    SSPTransmitReceive(SSPAlInst, CS, MOSIData, (uint8_t *)&RawData, 2, chNum * 3 + 1);
+    SSPTransmitReceive(SSPAlInst, CS, MOSIData, (uint8_t *)&RawData, 1, chNum * 3 + 1);
     
     for (uint8_t i = 0; i < chNum; i++) {
         temp = (RawData[i * 3 + 1] << 16) | (RawData[i * 3 + 2] << 8) | RawData[i * 3 + 1];
