@@ -420,12 +420,17 @@ __STATIC_INLINE void MCUPinsConfiguration(void)
   */
 __STATIC_INLINE void Uart1AndProtocolInit()
 {
-	UARTInit(&Uart, (LPC_UART_TypeDef *)LPC_UART1, 9600, UART_PARITY_NONE, UART_STOPBIT_1, UART_FLAG_RS485_MODE_ENABLED);
+	if (Protocol == PROTOCOL_IPES) {
+		UARTInit(&Uart, (LPC_UART_TypeDef *)LPC_UART1, (DeviceData.MBId & 0xFF) * IPES_MBS_BAUD_MULT, UART_PARITY_NONE, UART_STOPBIT_1, UART_FLAG_RS485_MODE_ENABLED);
+		ModbusInit(&Modbus, &Uart, (DeviceData.MBId >> 8) & 0xFF, (uint16_t *)&DeviceData, (uint16_t *)&DeviceData, sizeof(DeviceData_t) / 2, sizeof(DeviceData_t) / 2, MBCallBack, MBPassCallBack);
+	} else {
+		UARTInit(&Uart, (LPC_UART_TypeDef *)LPC_UART1, DeviceData.Baudrate * FD2930_MBS_BAUD_MULT, UART_PARITY_NONE, UART_STOPBIT_1, UART_FLAG_RS485_MODE_ENABLED);
+		ModbusInit(&Modbus, &Uart, DeviceData.MBId, (uint16_t *)&DeviceData, (uint16_t *)&DeviceData, sizeof(DeviceData_t) / 2, sizeof(DeviceData_t) / 2, MBCallBack, MBPassCallBack);
+	}
 	UARTInitDMA(&Uart, LPC_GPDMA, -1, 1);
 	UARTInitTxBuf(&Uart, TxBuf, sizeof(TxBuf));
 	UARTInitRxBuf(&Uart, RxBuf, sizeof(RxBuf));
 
-	ModbusInit(&Modbus, &Uart, 3, (uint16_t *)&DeviceData, (uint16_t *)&DeviceData, sizeof(DeviceData_t) / 2, sizeof(DeviceData_t) / 2, 0, 0);
 }
 //------------------------------------------------------------------------------
 // end

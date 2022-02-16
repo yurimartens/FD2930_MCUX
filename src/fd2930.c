@@ -10,6 +10,7 @@
 #include <adc_al.h>
 #include <max11040.h>
 #include <eeprom.h>
+#include <Modbus.h>
 
 
 DeviceData_t	DeviceData;
@@ -48,6 +49,11 @@ DeviceLEDState_t LEDState = FD2930_LED_YELLOW;
 
 uint8_t 		IRDA_Command_Rcvd;
 
+uint8_t			Protocol;
+uint8_t 		ChangeConnectionSettings;
+
+extern Modbus_t Modbus;
+
 
 static inline void CheckFireStatus();
 static inline void SetFireStatus();
@@ -80,7 +86,7 @@ void DeviceInit()
 			write = 1;
 		}
 
-		if (DeviceData.Config & FD2930_DEVICECONFIG_IPES_MB_HEADER) {
+		if (Protocol == PROTOCOL_IPES) {
 			if (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 8 && DeviceData.Baudrate != 16) {
 				DeviceData.Baudrate = IPES_DEF_MBS_BAUD;
 				write = 1;
@@ -1396,6 +1402,119 @@ static inline void HandleLEDs()
 	}
 }
 
+static uint8_t MBRegModified;
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+uint8_t MBPassCallBack(uint16_t addr, uint16_t valQty)
+{
+	uint16_t storVal, setVal;
+	if (Modbus.Uart->RxBuf[1] == MODBUS_WRITE_MULT_REG)	{
+		if ((addr >= Modbus.HoldRegSize) || (valQty > 1)) return 0;
+		setVal = (Modbus.Uart->RxBuf[7] << 8) | Modbus.Uart->RxBuf[8];
+	} else {
+		setVal = valQty;
+	}
+	storVal = *(((uint16_t *)&DeviceData) + addr);
+
+	if (setVal != storVal) MBRegModified = 1;
+	else MBRegModified = 0;
+	return 1;
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+uint8_t MBCallBack(uint16_t addr, uint16_t qty)
+{
+	if ((addr == MB_REG_ADDR(DeviceData, MBId)) && (qty == 1)) {
+		if (Protocol == PROTOCOL_IPES) {
+			uint8_t mbId = (DeviceData.MBId >> 8) & 0xFF;
+			uint8_t baud = DeviceData.MBId & 0xFF;
+			if ((mbId > 0) && (mbId < 248) && ((baud == 1) || (baud == 2) || (baud == 4) || (baud == 8) || (baud == 16))) {
+				ChangeConnectionSettings = 1;
+				EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+			}
+		} else {
+			if ((DeviceData.MBId > 0) && (DeviceData.MBId < 248)) {
+				ChangeConnectionSettings = 1;
+				EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+			}
+		}
+		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, Baudrate)) && (qty == 1)) {
+		if (Protocol == PROTOCOL_IPES) {
+			uint8_t config = (DeviceData.Baudrate >> 8) & 0xFF;
+			if (config & (1 << 2)) DeviceData.Config |= FD2930_DEVICECONFIG_FIRE_FIXATION;
+			else DeviceData.Config &= ~FD2930_DEVICECONFIG_FIRE_FIXATION;
+			if (config & (1 << 1)) DeviceData.Config &= ~FD2930_DEVICECONFIG_LOW_SENS;
+			else DeviceData.Config |= FD2930_DEVICECONFIG_LOW_SENS;
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		} else {
+			if (DeviceData.Baudrate == 1 || DeviceData.Baudrate == 2 || DeviceData.Baudrate == 4 || DeviceData.Baudrate == 12 || DeviceData.Baudrate == 24) {
+				ChangeConnectionSettings = 1;
+				EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+			}
+		}
+		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, SerialNumber)) && (qty == 1)) {
+		EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, Config)) && (qty == 1)) {
+		if (((DeviceData.Config & 0x0F) <= 8) && ((DeviceData.Config & 0x0F) > 0)) {
+			if ((DeviceData.Config & FD2930_DEVICECONFIG_IPES_MB_HEADER) != Protocol) {
+				if (DeviceData.Config & FD2930_DEVICECONFIG_IPES_MB_HEADER) {
+					DeviceData.Baudrate *= 4;
+					DeviceData.MBId <<= 8;
+					DeviceData.MBId |= DeviceData.Baudrate;
+					uint8_t config = 0;
+					if (DeviceData.Config & FD2930_DEVICECONFIG_FIRE_FIXATION) config |= (1 << 2);
+					if ((DeviceData.Config & FD2930_DEVICECONFIG_LOW_SENS) == 0) config |= (1 << 1);
+					DeviceData.Baudrate = config << 8;
+				} else {
+					uint8_t mbId = (DeviceData.MBId >> 8) & 0xFF;
+					uint8_t baud = DeviceData.MBId & 0xFF;
+					DeviceData.MBId = mbId;
+					DeviceData.Baudrate = baud;
+				}
+			}
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, UVThres)) && (qty == 1)) {
+		if ((DeviceData.UVThres >= FD2930_MIN_THRES_UV) && (DeviceData.UVThres <= FD2930_MAX_THRES_UV)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, IRThres)) && (qty == 1)) {
+		if ((DeviceData.IRThres >= FD2930_MIN_THRES_IR) && (DeviceData.IRThres <= FD2930_MAX_THRES_IR)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, UVCoeff)) && (qty == 1)) {
+		if ((DeviceData.UVCoeff >= FD2930_MIN_K_UV) && (DeviceData.UVCoeff <= FD2930_MAX_K_UV)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, IRCoeff)) && (qty == 1)) {
+		if ((DeviceData.IRCoeff >= FD2930_MIN_K_IR) && (DeviceData.IRCoeff <= FD2930_MAX_K_IR)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
+	return 0;
+}
 
 /**
   * @brief

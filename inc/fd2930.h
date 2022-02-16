@@ -93,7 +93,8 @@ extern "C" {
 #define PARITY_ODD              		1
 #define PARITY_EVEN             		2
 
-
+#define PROTOCOL_FD2930					0
+#define PROTOCOL_IPES					1
 
 #define BAUDRATE_SCALE					100
 
@@ -103,6 +104,9 @@ extern "C" {
 #define FD2930_DEF_MBS_ADR         		3
 #define FD2930_DEF_MBS_BAUD        		2
 #define IPES_DEF_MBS_BAUD           	8
+
+#define FD2930_MBS_BAUD_MULT   			4800
+#define IPES_MBS_BAUD_MULT             	1200
 
 #define FD2930_DEFAULT_THRES_IR         400
 #define FD2930_MIN_THRES_IR              100
@@ -215,6 +219,8 @@ extern "C" {
 #define UV_PICK_WORK_AREA						500
 #define IR_GAIN_UV_PICK							150
 
+#define MB_REG_ADDR(_STR_, _REG_)      			((uint16_t *)&_STR_._REG_ - (uint16_t *)&_STR_)
+
 
 typedef enum
 {
@@ -315,6 +321,7 @@ typedef struct
 extern DeviceData_t	DeviceData;
 extern RTC_TIME_Type DeviceTime;
 extern uint8_t		ChangeConnectionSettings;
+extern uint8_t			Protocol;
 
 
 
@@ -328,6 +335,8 @@ void ADCTask();
 void SDADCTask(float avCoeffIR, float avCoeffUV);
 void FunctionalTaskBG();
 void FunctionalTaskPeriodic();
+uint8_t MBCallBack(uint16_t addr, uint16_t qty);
+uint8_t MBPassCallBack(uint16_t addr, uint16_t qty);
 
 
 
