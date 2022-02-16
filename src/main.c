@@ -61,21 +61,17 @@ __STATIC_INLINE void MCUPinsConfiguration(void);
 __STATIC_INLINE void MCUPeriphConfiguration(void);
 __STATIC_INLINE void Uart1AndProtocolInit();
 
-uint8_t arr[1024];
-
+/**
+  * @brief
+  * @param
+  * @retval
+  */
 int main(void) {
 
 	SystemInit();
 	NVIC_SetPriorityGrouping(0x00);
 
 	MCUPinsConfiguration();
-	MCUPeriphConfiguration();
-
-	DeviceInit();
-
-	ADCInit(LPC_ADC, ADC_RATE, ADC_REFERENCE_mV);
-
-	Uart1AndProtocolInit();
 
 	SSPInit(&SSPADC, LPC_SSP1, 1000000, SSP_CPHA_FIRST, SSP_CPOL_LO);
 	SSPInitCSPin(&SSPADC, 0, LPC_GPIO0, SSEL1);
@@ -90,7 +86,12 @@ int main(void) {
 	SSPInitTxBuf(&SSPSD420, SD420OutBuf, sizeof(SD420OutBuf));
 	SSPInitRxBuf(&SSPSD420, SD420InBuf, sizeof(SD420InBuf));
 
+	MCUPeriphConfiguration();	// interrupts and timers. Must be call after SSP init due to SDADC activity in RIT ISR
+	DeviceInit();
 
+	ADCInit(LPC_ADC, ADC_RATE, ADC_REFERENCE_mV);
+
+	Uart1AndProtocolInit();
 
 	//IRPortInit();
 

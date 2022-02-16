@@ -94,11 +94,12 @@ uint8_t *Max11040GetReg(uint8_t addr, uint8_t nBytes)
 Max11040ChannelData_t *Max11040GetData(uint8_t chNum)
 {       
     uint32_t temp;
+    if (chNum > 4) return 0;
     MOSIData[0] = (MAX11040_REG_ADC_DATA | MAX11040_READ);
     SSPTransmitReceive(SSPAlInst, CS, MOSIData, (uint8_t *)&RawData, 1, chNum * 3 + 1);
     
     for (uint8_t i = 0; i < chNum; i++) {
-        temp = (RawData[i * 3 + 1] << 16) | (RawData[i * 3 + 2] << 8) | RawData[i * 3 + 1];
+        temp = (RawData[i * 3 + 1] << 16) | (RawData[i * 3 + 2] << 8) | RawData[i * 3 + 3];
         if (En24Bit == 0) temp &= 0xFFFFE0;
         if (RawData[i * 3 + 1] & 0x80) {
             temp = ~temp; temp &= 0x007fffff;
