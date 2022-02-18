@@ -35,6 +35,7 @@
 #include <adc_al.h>
 #include <max11040.h>
 #include <modbus.h>
+#include <ad5421.h>
 
 #include <sys_utils.h>
 #include <flash_al.h>
@@ -59,6 +60,7 @@ uint8_t     SD420InBuf[16];
 
 __STATIC_INLINE void MCUPinsConfiguration(void);
 __STATIC_INLINE void MCUPeriphConfiguration(void);
+__STATIC_INLINE void RUNPeriodicTasks();
 __STATIC_INLINE void Uart1AndProtocolInit();
 
 /**
@@ -72,22 +74,26 @@ int main(void) {
 	NVIC_SetPriorityGrouping(0x00);
 
 	MCUPinsConfiguration();
+	MCUPeriphConfiguration();
 
-	SSPInit(&SSPADC, LPC_SSP1, 1000000, SSP_CPHA_FIRST, SSP_CPOL_LO);
+	SSPInit(&SSPADC, LPC_SSP1, 5000000, SSP_CPHA_FIRST, SSP_CPOL_LO);
 	SSPInitCSPin(&SSPADC, 0, LPC_GPIO0, SSEL1);
 	SSPInitTxBuf(&SSPADC, ADCOutBuf, sizeof(ADCOutBuf));
 	SSPInitRxBuf(&SSPADC, ADCInBuf, sizeof(ADCInBuf));
 
 	Max11040Init(&SSPADC, 0, MAX_REFERENCE_mV);	// ref in mV
 
-	SSPInit(&SSPSD420, LPC_SSP1, 1000000, SSP_CPHA_SECOND, SSP_CPOL_HI);
+	SSPInit(&SSPSD420, LPC_SSP0, 12000000, SSP_CPHA_SECOND, SSP_CPOL_HI);
 	SSPInitCSPin(&SSPSD420, 0, LPC_GPIO1, SYNC);
 	SSPInitCSPin(&SSPSD420, 1, LPC_GPIO1, SSEL0);
 	SSPInitTxBuf(&SSPSD420, SD420OutBuf, sizeof(SD420OutBuf));
 	SSPInitRxBuf(&SSPSD420, SD420InBuf, sizeof(SD420InBuf));
 
-	MCUPeriphConfiguration();	// interrupts and timers. Must be call after SSP init due to SDADC activity in RIT ISR
+	AD5421Init(&SSPSD420, 0);
+
 	DeviceInit();
+
+	//RUNPeriodicTasks();	// Must be call after SSP init due to SDADC activity in RIT ISR
 
 	ADCInit(LPC_ADC, ADC_RATE, ADC_REFERENCE_mV);
 
@@ -100,13 +106,22 @@ int main(void) {
 
 
 	TimerInit(&IndicationTimer, 0);
-	TimerReset(&IndicationTimer, 20000);
+	TimerReset(&IndicationTimer, 1000);
+
+	GPIO_RESET_PIN(LPC_GPIO2, LED1;)
 
 	while (1) {
 
 		ModbusIdle(&Modbus);
+
+		/*
 		ADCTask();
 		FunctionalTaskBG();
+		if (TimerIsOverflow(&IndicationTimer)) {
+			TimerReset(&IndicationTimer, 1000);
+			AD5421SetCurrent(4000);
+		}
+		*/
 
 	}
 	return 0;
@@ -165,8 +180,14 @@ __STATIC_INLINE void MCUPeriphConfiguration(void)
 
     NVIC_SetPriority(SysTick_IRQn, 20); //NVIC_EnableIRQ(SysTick_IRQn); already enabled
 
+    LPC_SC->PCLKSEL1 &= ~(3 << SSP0_PCLK_OFFSET);
+    LPC_SC->PCLKSEL1 |= PCLCK_SSP0_CLK_1;
+
+    LPC_SC->PCLKSEL0 &= ~(3 << SSP1_PCLK_OFFSET);
+    LPC_SC->PCLKSEL0 |= PCLCK_SSP1_CLK_1;
+
     LPC_SC->PCLKSEL0 &= ~(3 << UART1_PCLK_OFFSET);
-    LPC_SC->PCLKSEL0 |= PCLCK_U1_CLK_1;
+    LPC_SC->PCLKSEL0 |= PCLCK_U1_CLK_8;
     LPC_SC->PCONP |= (PCONP_PCUART1 | PCONP_PCGPDMA);
     NVIC_SetPriority(UART1_IRQn, 18);
     NVIC_EnableIRQ(UART1_IRQn);
@@ -178,7 +199,6 @@ __STATIC_INLINE void MCUPeriphConfiguration(void)
     RIT_Init(LPC_RIT);
     RIT_TimerConfig(LPC_RIT, RIT_INTERVAL_mS);
     NVIC_SetPriority(RIT_IRQn, 19);
-    NVIC_EnableIRQ(RIT_IRQn);
     NVIC_ClearPendingIRQ(RIT_IRQn);
 
     RTC_Init(LPC_RTC);
@@ -186,6 +206,11 @@ __STATIC_INLINE void MCUPeriphConfiguration(void)
     RTC_ResetClockTickCounter(LPC_RTC);
     RTC_Cmd(LPC_RTC, ENABLE);
     RTC_CalibCounterCmd(LPC_RTC, DISABLE);
+}
+
+__STATIC_INLINE void RUNPeriodicTasks()
+{
+	NVIC_EnableIRQ(RIT_IRQn);
 }
 
 /**

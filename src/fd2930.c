@@ -11,6 +11,7 @@
 #include <max11040.h>
 #include <eeprom.h>
 #include <Modbus.h>
+#include <ad5421.h>
 
 
 DeviceData_t	DeviceData;

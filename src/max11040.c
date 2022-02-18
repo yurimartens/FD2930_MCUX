@@ -15,7 +15,7 @@ static uint8_t                  En24Bit;
 
 static MAX_RESULT_TYPE          Ref;
 static uint8_t                  MOSIData[13];
-static uint8_t                  RawData[13];    // 0th byte is a dummy one, 12 / 4ch = 3bytes per channel
+static uint8_t                  MISOData[13];    // 0th byte is a dummy one, 12 / 4ch = 3bytes per channel
 static Max11040ChannelData_t    Data;
 
 
@@ -80,9 +80,9 @@ void Max11040Config(uint8_t en24bit, uint8_t pdbuf)
 uint8_t *Max11040GetReg(uint8_t addr, uint8_t nBytes)
 {       
 	MOSIData[0] = (addr | MAX11040_READ);
-    SSPTransmitReceive(SSPAlInst, CS, MOSIData, (uint8_t *)&RawData, 1, nBytes + 1);
+    SSPTransmitReceive(SSPAlInst, CS, MOSIData, (uint8_t *)&MISOData, 1, nBytes + 1);
     
-    return RawData;
+    return MISOData;
 }
 
 
@@ -96,12 +96,12 @@ Max11040ChannelData_t *Max11040GetData(uint8_t chNum)
     uint32_t temp;
     if (chNum > 4) return 0;
     MOSIData[0] = (MAX11040_REG_ADC_DATA | MAX11040_READ);
-    SSPTransmitReceive(SSPAlInst, CS, MOSIData, (uint8_t *)&RawData, 1, chNum * 3 + 1);
+    SSPTransmitReceive(SSPAlInst, CS, MOSIData, (uint8_t *)&MISOData, 1, chNum * 3 + 1);
     
     for (uint8_t i = 0; i < chNum; i++) {
-        temp = (RawData[i * 3 + 1] << 16) | (RawData[i * 3 + 2] << 8) | RawData[i * 3 + 3];
+        temp = (MISOData[i * 3 + 1] << 16) | (MISOData[i * 3 + 2] << 8) | MISOData[i * 3 + 3];
         if (En24Bit == 0) temp &= 0xFFFFE0;
-        if (RawData[i * 3 + 1] & 0x80) {
+        if (MISOData[i * 3 + 1] & 0x80) {
             temp = ~temp; temp &= 0x007fffff;
         }
         Data.ch[i] = temp * Ref / (MAX11040_MAX_CODE / 2);
