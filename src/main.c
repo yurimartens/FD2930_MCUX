@@ -93,7 +93,7 @@ int main(void) {
 
 	DeviceInit();
 
-	//RUNPeriodicTasks();	// Must be call after SSP init due to SDADC activity in RIT ISR
+	RUNPeriodicTasks();	// Must be called after SSP init due to SDADC activity in RIT ISR
 
 	ADCInit(LPC_ADC, ADC_RATE, ADC_REFERENCE_mV);
 
@@ -114,14 +114,14 @@ int main(void) {
 
 		ModbusIdle(&Modbus);
 
-		/*
+
 		ADCTask();
 		FunctionalTaskBG();
 		if (TimerIsOverflow(&IndicationTimer)) {
 			TimerReset(&IndicationTimer, 1000);
 			AD5421SetCurrent(4000);
 		}
-		*/
+
 
 	}
 	return 0;
@@ -187,8 +187,8 @@ __STATIC_INLINE void MCUPeriphConfiguration(void)
     LPC_SC->PCLKSEL0 |= PCLCK_SSP1_CLK_1;
 
     LPC_SC->PCLKSEL0 &= ~(3 << UART1_PCLK_OFFSET);
-    LPC_SC->PCLKSEL0 |= PCLCK_U1_CLK_8;
-    LPC_SC->PCONP |= (PCONP_PCUART1 | PCONP_PCGPDMA);
+    LPC_SC->PCLKSEL0 |= PCLCK_U1_CLK_1;
+
     NVIC_SetPriority(UART1_IRQn, 18);
     NVIC_EnableIRQ(UART1_IRQn);
     NVIC_ClearPendingIRQ(UART1_IRQn);
@@ -452,6 +452,7 @@ __STATIC_INLINE void Uart1AndProtocolInit()
 		UARTInit(&Uart, (LPC_UART_TypeDef *)LPC_UART1, DeviceData.Baudrate * FD2930_MBS_BAUD_MULT, UART_PARITY_NONE, UART_STOPBIT_1, UART_FLAG_RS485_MODE_ENABLED);
 		ModbusInit(&Modbus, &Uart, DeviceData.MBId, (uint16_t *)&DeviceData, (uint16_t *)&DeviceData, sizeof(DeviceData_t) / 2, sizeof(DeviceData_t) / 2, MBCallBack, MBPassCallBack);
 	}
+
 	UARTInitDMA(&Uart, LPC_GPDMA, -1, 1);
 	UARTInitTxBuf(&Uart, TxBuf, sizeof(TxBuf));
 	UARTInitRxBuf(&Uart, RxBuf, sizeof(RxBuf));

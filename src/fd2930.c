@@ -62,6 +62,7 @@ static inline void ResetFireStatus();
 
 void SetDefaultParameters();
 
+
 /**
   * @brief
   * @param
