@@ -23,6 +23,7 @@
 #include <lpc17xx_pinsel.h>
 
 
+
 #include <lpc_types.h>
 
 #include <fd2930.h>
@@ -39,6 +40,7 @@
 
 #include <sys_utils.h>
 #include <flash_al.h>
+#include <pwm_al.h>
 
 
 
@@ -62,6 +64,8 @@ __STATIC_INLINE void MCUPinsConfiguration(void);
 __STATIC_INLINE void MCUPeriphConfiguration(void);
 __STATIC_INLINE void RUNPeriodicTasks();
 __STATIC_INLINE void Uart1AndProtocolInit();
+__STATIC_INLINE void SSP0AndModulesInit();
+__STATIC_INLINE void SSP1AndModulesInit();
 
 /**
   * @brief
@@ -76,28 +80,17 @@ int main(void) {
 	MCUPinsConfiguration();
 	MCUPeriphConfiguration();
 
-	SSPInit(&SSPADC, LPC_SSP1, 5000000, SSP_CPHA_FIRST, SSP_CPOL_LO);
-	SSPInitCSPin(&SSPADC, 0, LPC_GPIO0, SSEL1);
-	SSPInitTxBuf(&SSPADC, ADCOutBuf, sizeof(ADCOutBuf));
-	SSPInitRxBuf(&SSPADC, ADCInBuf, sizeof(ADCInBuf));
-
-	Max11040Init(&SSPADC, 0, MAX_REFERENCE_mV);	// ref in mV
-
-	SSPInit(&SSPSD420, LPC_SSP0, 12000000, SSP_CPHA_SECOND, SSP_CPOL_HI);
-	SSPInitCSPin(&SSPSD420, 0, LPC_GPIO1, SYNC);
-	SSPInitCSPin(&SSPSD420, 1, LPC_GPIO1, SSEL0);
-	SSPInitTxBuf(&SSPSD420, SD420OutBuf, sizeof(SD420OutBuf));
-	SSPInitRxBuf(&SSPSD420, SD420InBuf, sizeof(SD420InBuf));
-
-	AD5421Init(&SSPSD420, 0);
-
 	DeviceInit();
 
-	RUNPeriodicTasks();	// Must be called after SSP init due to SDADC activity in RIT ISR
+	Uart1AndProtocolInit();
+	SSP0AndModulesInit();
+	SSP1AndModulesInit();
+
+	RUNPeriodicTasks();	// Must be called after SSP1 init due to SDADC activity in RIT ISR
 
 	ADCInit(LPC_ADC, ADC_RATE, ADC_REFERENCE_mV);
 
-	Uart1AndProtocolInit();
+	PWM1Init(1000); // 1kHz
 
 	//IRPortInit();
 
@@ -119,7 +112,7 @@ int main(void) {
 		FunctionalTaskBG();
 		if (TimerIsOverflow(&IndicationTimer)) {
 			TimerReset(&IndicationTimer, 1000);
-			AD5421SetCurrent(4000);
+
 		}
 
 
@@ -159,7 +152,6 @@ void SysTick_Handler(void)
 void RIT_IRQHandler(void)
 {
 	RIT_GetIntStatus(LPC_RIT);
-	RTC_GetFullTime(LPC_RTC, &DeviceTime);
     NVIC_ClearPendingIRQ(RIT_IRQn);
 
     FunctionalTaskPeriodic();
@@ -208,6 +200,11 @@ __STATIC_INLINE void MCUPeriphConfiguration(void)
     RTC_CalibCounterCmd(LPC_RTC, DISABLE);
 }
 
+/**
+  * @brief
+  * @param
+  * @retval
+  */
 __STATIC_INLINE void RUNPeriodicTasks()
 {
 	NVIC_EnableIRQ(RIT_IRQn);
@@ -341,12 +338,10 @@ __STATIC_INLINE void MCUPinsConfiguration(void)
 
     PinCfg.Portnum = 2;
     PinCfg.Pinnum = PINSEL_PIN_0;
-    PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
-    PinCfg.Funcnum = PINSEL_FUNC_0;
-    PinCfg.Pinmode = PINSEL_PINMODE_PULLUP;
+    PinCfg.OpenDrain = PINSEL_PINMODE_OPENDRAIN;
+    PinCfg.Funcnum = PINSEL_FUNC_1;
+    PinCfg.Pinmode = PINSEL_PINMODE_TRISTATE;
     PINSEL_ConfigPin(&PinCfg);  //heaton
-    GPIO_SetDir(2, 1 << PINSEL_PIN_0, 1);
-    GPIO_SetValue(2, 1 << PINSEL_PIN_0);
 
     PinCfg.Portnum = 2;
     PinCfg.Pinnum = PINSEL_PIN_1;
@@ -457,6 +452,37 @@ __STATIC_INLINE void Uart1AndProtocolInit()
 	UARTInitTxBuf(&Uart, TxBuf, sizeof(TxBuf));
 	UARTInitRxBuf(&Uart, RxBuf, sizeof(RxBuf));
 
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+__STATIC_INLINE void SSP0AndModulesInit()
+{
+	SSPInit(&SSPSD420, LPC_SSP0, 12000000, SSP_CPHA_SECOND, SSP_CPOL_HI);
+	SSPInitCSPin(&SSPSD420, 0, LPC_GPIO1, SYNC);
+	SSPInitCSPin(&SSPSD420, 1, LPC_GPIO1, SSEL0);
+	SSPInitTxBuf(&SSPSD420, SD420OutBuf, sizeof(SD420OutBuf));
+	SSPInitRxBuf(&SSPSD420, SD420InBuf, sizeof(SD420InBuf));
+
+	AD5421Init(&SSPSD420, 0);
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+__STATIC_INLINE void SSP1AndModulesInit()
+{
+	SSPInit(&SSPADC, LPC_SSP1, 5000000, SSP_CPHA_FIRST, SSP_CPOL_LO);
+	SSPInitCSPin(&SSPADC, 0, LPC_GPIO0, SSEL1);
+	SSPInitTxBuf(&SSPADC, ADCOutBuf, sizeof(ADCOutBuf));
+	SSPInitRxBuf(&SSPADC, ADCInBuf, sizeof(ADCInBuf));
+
+	Max11040Init(&SSPADC, 0, MAX_REFERENCE_mV);	// ref in mV
 }
 //------------------------------------------------------------------------------
 // end

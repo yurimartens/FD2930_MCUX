@@ -8,6 +8,7 @@
 #include <fd2930.h>
 
 #include <adc_al.h>
+#include <pwm_al.h>
 #include <max11040.h>
 #include <eeprom.h>
 #include <Modbus.h>
@@ -53,14 +54,21 @@ uint8_t 		IRDA_Command_Rcvd;
 uint8_t			Protocol;
 uint8_t 		ChangeConnectionSettings;
 
+float 			HeatPowerInst = 1.0;
+
 extern Modbus_t Modbus;
 
 
-static inline void CheckFireStatus();
-static inline void SetFireStatus();
-static inline void ResetFireStatus();
+__STATIC_INLINE void CheckFireStatus();
+__STATIC_INLINE void SetFireStatus();
+__STATIC_INLINE void ResetFireStatus();
+__STATIC_INLINE void SetDeviceStatus();
+__STATIC_INLINE void SetLEDs();
+__STATIC_INLINE void SetRelays();
+__STATIC_INLINE void SetHeater();
 
 void SetDefaultParameters();
+void UpdateOutputs();
 
 
 /**
@@ -124,7 +132,7 @@ void DeviceInit()
 void FunctionalTaskBG()
 {
 	if (DeviceData.StateFlags & FD2930_STATE_FLAG_UPDATE_CURRENT) {
-		//Set420(DeviceData.Current420);
+		AD5421SetCurrent(DeviceData.Current420);
 		DeviceData.StateFlags &= ~FD2930_STATE_FLAG_UPDATE_CURRENT;
     }
     if (DeviceData.StateFlags & FD2930_STATE_FLAG_FFT_START) {
@@ -147,7 +155,7 @@ void FunctionalTaskPeriodic()
 	SDADCTask(0.0014, 0.001);
 	switch (DeviceState) {
 		case FD2930_STATE_START1:
-			if (cnt < START_DELAY) {
+			if (cnt < TIME_mS_TO_TICK(START_DELAY)) {
 				cnt++;
 				if ((!GPIO_READ_PIN(LPC_GPIO4, HALL1)) || (!GPIO_READ_PIN(LPC_GPIO4, HALL2))) {
 					cnt = 0;
@@ -162,7 +170,7 @@ void FunctionalTaskPeriodic()
 			}
 		break;
 		case FD2930_STATE_START2:
-			if (cnt < AFTER_START_DELAY) {
+			if (cnt < TIME_mS_TO_TICK(AFTER_START_DELAY)) {
 				cnt++;
 			} else {
 				cnt = 0;
@@ -171,7 +179,7 @@ void FunctionalTaskPeriodic()
 			}
 		break;
 		case FD2930_STATE_START3:
-			if (cnt < (DELAY_10S + (DELAY_1S * (DeviceData.MBId % 16)))) {
+			if (cnt < (TIME_mS_TO_TICK(DELAY_10S) + TIME_mS_TO_TICK(DELAY_1S * (DeviceData.MBId % 16)))) {
 				cnt++;
 			} else {
 				cnt = 0;
@@ -179,7 +187,8 @@ void FunctionalTaskPeriodic()
 					if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_ALLOWED) {
 						DeviceState = FD2930_STATE_SELFTEST;
 						SelfTest++;
-						GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST)); GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
+						GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
+						GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
 					} else {
 						DeviceState = FD2930_STATE_WORKING;
 						////push_flash_command(FLASH_WRITE_EVENT, EVENT_NORMAL_EVENT, MBS.buffer);
@@ -187,12 +196,12 @@ void FunctionalTaskPeriodic()
 				} else {
 					DeviceState = FD2930_STATE_BREAK;
 				}
-				//AppFD2930Task();  //обновим статус, может прибор не работает
+				UpdateOutputs();
 			}
 		break;
 		case FD2930_STATE_SELFTEST:
 			DeviceData.Status |= FD2930_DEVICE_STATUS_SELF_TEST;
-			if (SelfTestCnt < DELAY_5S) {
+			if (SelfTestCnt < TIME_mS_TO_TICK(DELAY_5S)) {
 				SelfTestCnt++; // время свмотестирования //на 5-ой секунде выносим вердикт, выходим в деж режим
 			} else {
 				SelfTestCnt = 0;
@@ -292,10 +301,10 @@ void FunctionalTaskPeriodic()
 			}
 		break;
 		case FD2930_STATE_WORKING:
-		    if (CheckFireStatusCnt >= DELAY_CHECK_FIRE_STATUS) CheckFireStatus();          //анализ данных каналов, спустя задержку после процессов самотестирования и калибровки
+		    if (CheckFireStatusCnt >= TIME_mS_TO_TICK(DELAY_CHECK_FIRE_STATUS)) CheckFireStatus();          //анализ данных каналов, спустя задержку после процессов самотестирования и калибровки
 		    SetFireStatus();
 
-		    if (cnt < DELAY_1S) {
+		    if (cnt < TIME_mS_TO_TICK(DELAY_1S)) {
 		    	cnt++;
 		    } else {
 		    	cnt = 0;
@@ -371,15 +380,15 @@ void FunctionalTaskPeriodic()
 		        	DeviceData.Flags &= ~FD2930_DEVICEFLAGS_UV_ERROR;
 		        }
 
-		        //AppRTCTaskGetTime(); //get current time
-		        //AppFD2930Task();  //заполнение буфера для контроллера высокого уровня, управление светодиодами и реле, установка тока
+		        RTC_GetFullTime(LPC_RTC, &DeviceTime);
+		        UpdateOutputs();
 
 		        if ((!GPIO_READ_PIN(LPC_GPIO4, HALL1)) || (!GPIO_READ_PIN(LPC_GPIO4, HALL2))) {
 		        	if (!(DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET)) {
 		        		DeviceData.Status |= FD2930_DEVICE_STATUS_MAGNET;
 		        		////push_flash_command(FLASH_WRITE_EVENT, EVENT_HALL_ON, MBS.buffer);
 		        	}
-		        	//ResetFireStatus(); //сброс зафиксированного состояния пожар
+		        	ResetFireStatus(); //сброс зафиксированного состояния пожар
 		        } else {
 		        	if (DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET) {
 		        		DeviceData.Status &= ~FD2930_DEVICE_STATUS_MAGNET;
@@ -392,7 +401,7 @@ void FunctionalTaskPeriodic()
 		    }
 
 		    if (DeviceData.Flags & FD2930_DEVICEFLAGS_DUST) { // если запыленность неаварийная тестируемся  чаще
-		    	if (selfTestCnt < (3 * 60 * DELAY_1S)) {
+		    	if (selfTestCnt < TIME_mS_TO_TICK((3 * 60 * DELAY_1S))) {
 		    		selfTestCnt++;//яя// тестируемся каждые три минуты
 		    	} else {
 		    		selfTestCnt = 0;
@@ -411,7 +420,7 @@ void FunctionalTaskPeriodic()
 		    		}
 		    	}
 		    } else {// иначе в дежурном режиме когда все хорошо, тестируемся каждые 10 мин. Требует Транснефть
-		    	if (selfTestCnt < (10 * 60 * DELAY_1S)) {
+		    	if (selfTestCnt < TIME_mS_TO_TICK((10 * 60 * DELAY_1S))) {
 		    		selfTestCnt++;//яя
 		    	} else {
 		    		selfTestCnt = 0;
@@ -433,7 +442,7 @@ void FunctionalTaskPeriodic()
 		    }
 		break;
 		case FD2930_STATE_CHANNEL_CALIBR:
-			if (SelfTestCnt < 180000) {
+			if (SelfTestCnt < TIME_mS_TO_TICK(DELAY_CHANNEL_CALIB)) {
 				SelfTestCnt++;
 			} else {
 				SelfTestCnt = 0;
@@ -442,7 +451,7 @@ void FunctionalTaskPeriodic()
 		    }
 		break;
 		case FD2930_STATE_TEST_ZERO:
-		    if (SelfTestCnt < DELAY_05S) {
+		    if (SelfTestCnt < TIME_mS_TO_TICK(DELAY_05S)) {
 		    	SelfTestCnt++;
 		    } else {
 		    	SelfTestCnt = 0;
@@ -460,7 +469,7 @@ void FunctionalTaskPeriodic()
 		    }
 		break;
 		case FD2930_STATE_TEST_CALIBR:
-			if (SelfTestCnt < DELAY_5S) {
+			if (SelfTestCnt < TIME_mS_TO_TICK(DELAY_5S)) {
 				SelfTestCnt++;
 			} else {
 				SelfTestCnt = 0;
@@ -484,12 +493,12 @@ void FunctionalTaskPeriodic()
 		    }
 		break;
 		case FD2930_STATE_TEST:
-			if (cnt < DELAY_1S) {
+			if (cnt < TIME_mS_TO_TICK(DELAY_1S)) {
 				cnt++;
 			} else {
 				cnt = 0;
-				//AppRTCTaskGetTime(); //get current time
-				//AppFD2930Task();  //çàïîëíåíèå áóôåðà äëÿ êîíòðîëëåðà âûñîêîãî óðîâíÿ, óïðàâëåíèå ñâåòîäèîäàìè è ðåëå, óñòàíîâêà òîêà
+				RTC_GetFullTime(LPC_RTC, &DeviceTime);
+				UpdateOutputs();
 			}
 		    break;
 		case FD2930_STATE_BREAK:
@@ -546,7 +555,21 @@ void FunctionalTaskPeriodic()
   * @param
   * @retval
   */
-static inline void CheckFireStatus()
+void UpdateOutputs()
+{
+	DeviceData.StateFlags |= FD2930_STATE_FLAG_UPDATE_CURRENT;
+	SetDeviceStatus();
+	SetLEDs();
+	SetRelays();
+	SetHeater();
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+__STATIC_INLINE void CheckFireStatus()
 {
 	const uint32_t channel_fire_delay = 3000;//750;//300;
 	const uint32_t between_channel_fire_delay = 23000;//5750;//2300;
@@ -1134,7 +1157,7 @@ static inline void CheckFireStatus()
   * @param
   * @retval
   */
-static inline void SetFireStatus()
+__STATIC_INLINE void SetFireStatus()
 {
 	if (DeviceStatusTemp & FD2930_DEVICE_STATUS_FIRE) {
 		if (!(DeviceData.Status & FD2930_DEVICE_STATUS_FIRE)) {
@@ -1159,7 +1182,7 @@ static inline void SetFireStatus()
   * @param
   * @retval
   */
-void ResetFireStatus()
+__STATIC_INLINE void ResetFireStatus()
 {
 	if (!(DeviceStatusTemp & FD2930_DEVICE_STATUS_FIRE)) {
 		if (DeviceData.Status & FD2930_DEVICE_STATUS_FIRE) {
@@ -1175,7 +1198,7 @@ void ResetFireStatus()
   * @param
   * @retval
   */
-static inline void SetDeviceStatus()
+__STATIC_INLINE void SetDeviceStatus()
 {
 	switch(DeviceState) {
 		case FD2930_STATE_TEST:
@@ -1221,7 +1244,7 @@ static inline void SetDeviceStatus()
   * @param
   * @retval
   */
-static inline void SetLED()
+__STATIC_INLINE void SetLEDs()
 {
     if (IRDA_Command_Rcvd) {
         return; // IRDA indication dominates over the others types. Indication state is in SYSTickHandler
@@ -1248,70 +1271,7 @@ static inline void SetLED()
   * @param
   * @retval
   */
-static inline void SetRelays()
-{
-	static uint16_t counter_relay_fire_delay = 0;
-	static uint16_t counter_relay_work_delay = 0;
-
-	switch (DeviceState) {
-		case FD2930_STATE_TEST:
-			if (DeviceData.Flags & FD2930_DEVICEFLAGS_DUST_RELAY_ON) {
-				GPIO_RESET_PIN(LPC_GPIO2, R_DUST);
-			} else {
-				GPIO_SET_PIN(LPC_GPIO2, R_DUST);
-			}
-			if (DeviceData.Flags & FD2930_DEVICEFLAGS_FIRE_RELAY_ON) {
-				GPIO_RESET_PIN(LPC_GPIO2, R_FIRE);
-			} else {
-				GPIO_SET_PIN(LPC_GPIO2, R_FIRE);
-			}
-		break;
-		default:
-			if ((DeviceData.Status & FD2930_DEVICE_STATUS_BREAK) || (DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET)) {
-				GPIO_SET_PIN(LPC_GPIO2, R_FIRE);
-				GPIO_SET_PIN(LPC_GPIO2, R_FIRE_MVES);
-			} else {
-				if (DeviceData.Status & FD2930_DEVICE_STATUS_FIRE) {
-					counter_relay_fire_delay++;
-					if (counter_relay_fire_delay >= DeviceData.FireDelay) {
-						if (DeviceData.Config & FD2930_DEVICECONFIG_RELAY_FIRE_ALLOWED) {GPIO_RESET_PIN(LPC_GPIO2, R_FIRE);};
-						DeviceData.Flags |= FD2930_DEVICEFLAGS_FIRE_RELAY_ON;
-						DeviceData.Current420 = 19990;
-						counter_relay_fire_delay = DeviceData.FireDelay;
-					}
-				} else {
-					counter_relay_fire_delay = 0;
-					GPIO_SET_PIN(LPC_GPIO2, R_FIRE);
-					GPIO_SET_PIN(LPC_GPIO2, R_FIRE_MVES);
-					DeviceData.Flags &= ~FD2930_DEVICEFLAGS_FIRE_RELAY_ON;
-				}
-			}
-			if ((DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET) || (DeviceData.Status & FD2930_DEVICE_STATUS_TESTING) || (DeviceData.Flags & FD2930_DEVICEFLAGS_IR_ERROR) || (DeviceData.Flags & FD2930_DEVICEFLAGS_UV_ERROR) \
-				|| !(DeviceData.Status & FD2930_DEVICE_STATUS_FLASH_OK) || !(DeviceData.Status & FD2930_DEVICE_STATUS_CRC_OK) || !(DeviceData.Status & FD2930_DEVICE_STATUS_IR_UV_SET) \
-				|| !(DeviceData.Status & FD2930_DEVICE_STATUS_TEST_CALIBR)|| !(DeviceData.Status & FD2930_DEVICE_STATUS_TEST_ZERO) || (DeviceData.Config & DeviceData.Flags & 0xf000)) {
-				counter_relay_work_delay++;
-				if (counter_relay_work_delay >= DeviceData.FaultDelay) {
-					DeviceData.Flags &= ~FD2930_DEVICEFLAGS_WORK_RELAY_ON;
-					counter_relay_work_delay = DeviceData.FaultDelay;
-				}
-			} else {
-				if (DeviceData.Config & FD2930_DEVICECONFIG_RELAY_FAULT_ALLOWED) {
-					DeviceData.Flags |= FD2930_DEVICEFLAGS_WORK_RELAY_ON;
-				} else {
-					DeviceData.Flags &= ~FD2930_DEVICEFLAGS_WORK_RELAY_ON;
-				}
-				counter_relay_work_delay = 0;
-			}
-		break;
-	}
-}
-
-/**
-  * @brief
-  * @param
-  * @retval
-  */
-static inline void HandleLEDs()
+__STATIC_INLINE void HandleLEDs()
 {
 	static uint16_t l = 0, redtime = 0, greentime = 0, blink_counter = 0;
 
@@ -1402,6 +1362,97 @@ static inline void HandleLEDs()
 			GPIO_SET_PIN(LPC_GPIO2, LED3);
 	    break;
 	}
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+__STATIC_INLINE void SetRelays()
+{
+	static uint16_t counter_relay_fire_delay = 0;
+	static uint16_t counter_relay_work_delay = 0;
+
+	switch (DeviceState) {
+		case FD2930_STATE_TEST:
+			if (DeviceData.Flags & FD2930_DEVICEFLAGS_DUST_RELAY_ON) {
+				GPIO_RESET_PIN(LPC_GPIO2, R_DUST);
+			} else {
+				GPIO_SET_PIN(LPC_GPIO2, R_DUST);
+			}
+			if (DeviceData.Flags & FD2930_DEVICEFLAGS_FIRE_RELAY_ON) {
+				GPIO_RESET_PIN(LPC_GPIO2, R_FIRE);
+			} else {
+				GPIO_SET_PIN(LPC_GPIO2, R_FIRE);
+			}
+		break;
+		default:
+			if ((DeviceData.Status & FD2930_DEVICE_STATUS_BREAK) || (DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET)) {
+				GPIO_SET_PIN(LPC_GPIO2, R_FIRE);
+				GPIO_SET_PIN(LPC_GPIO2, R_FIRE_MVES);
+			} else {
+				if (DeviceData.Status & FD2930_DEVICE_STATUS_FIRE) {
+					counter_relay_fire_delay++;
+					if (counter_relay_fire_delay >= DeviceData.FireDelay) {
+						if (DeviceData.Config & FD2930_DEVICECONFIG_RELAY_FIRE_ALLOWED) {GPIO_RESET_PIN(LPC_GPIO2, R_FIRE);};
+						DeviceData.Flags |= FD2930_DEVICEFLAGS_FIRE_RELAY_ON;
+						DeviceData.Current420 = 19990;
+						counter_relay_fire_delay = DeviceData.FireDelay;
+					}
+				} else {
+					counter_relay_fire_delay = 0;
+					GPIO_SET_PIN(LPC_GPIO2, R_FIRE);
+					GPIO_SET_PIN(LPC_GPIO2, R_FIRE_MVES);
+					DeviceData.Flags &= ~FD2930_DEVICEFLAGS_FIRE_RELAY_ON;
+				}
+			}
+			if ((DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET) || (DeviceData.Status & FD2930_DEVICE_STATUS_TESTING) || (DeviceData.Flags & FD2930_DEVICEFLAGS_IR_ERROR) || (DeviceData.Flags & FD2930_DEVICEFLAGS_UV_ERROR) \
+				|| !(DeviceData.Status & FD2930_DEVICE_STATUS_FLASH_OK) || !(DeviceData.Status & FD2930_DEVICE_STATUS_CRC_OK) || !(DeviceData.Status & FD2930_DEVICE_STATUS_IR_UV_SET) \
+				|| !(DeviceData.Status & FD2930_DEVICE_STATUS_TEST_CALIBR)|| !(DeviceData.Status & FD2930_DEVICE_STATUS_TEST_ZERO) || (DeviceData.Config & DeviceData.Flags & 0xf000)) {
+				counter_relay_work_delay++;
+				if (counter_relay_work_delay >= DeviceData.FaultDelay) {
+					DeviceData.Flags &= ~FD2930_DEVICEFLAGS_WORK_RELAY_ON;
+					counter_relay_work_delay = DeviceData.FaultDelay;
+				}
+			} else {
+				if (DeviceData.Config & FD2930_DEVICECONFIG_RELAY_FAULT_ALLOWED) {
+					DeviceData.Flags |= FD2930_DEVICEFLAGS_WORK_RELAY_ON;
+				} else {
+					DeviceData.Flags &= ~FD2930_DEVICEFLAGS_WORK_RELAY_ON;
+				}
+				counter_relay_work_delay = 0;
+			}
+		break;
+	}
+}
+
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+__STATIC_INLINE void SetHeater()
+{
+	static int flag_increase = 0;
+
+	if ((DeviceData.Temperature < DeviceData.HeaterThres) && !flag_increase) {
+		flag_increase = 1;
+	} else {
+		if (DeviceData.Temperature >= DeviceData.HeaterThres) {
+		    flag_increase = 0;
+		}
+	}
+	if (flag_increase) {  //нагрев
+		if (HeatPowerInst < DeviceData.HeatPower) HeatPowerInst += 0.1;
+		if (HeatPowerInst > 99 ) HeatPowerInst = 100;
+	} else { 				//охлаждение
+		if (HeatPowerInst) HeatPowerInst -= 0.1;
+		if (HeatPowerInst < 1) HeatPowerInst = 1;
+    }
+	if (DeviceData.Config & FD2930_DEVICECONFIG_HEAT_ALLOWED) PWM1MatchUpdate(HeatPowerInst);
+	else PWM1MatchUpdate(0);
 }
 
 static uint8_t MBRegModified;

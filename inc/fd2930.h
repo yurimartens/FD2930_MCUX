@@ -32,8 +32,6 @@ extern "C" {
 
 #define MB_REG_ADDR(_STR_, _REG_)      	((uint16_t *)&_STR_._REG_ - (uint16_t *)&_STR_)
 
-#define RIT_INTERVAL_mS					1
-
 #define MAX_REFERENCE_mV				2200
 
 #define ADC_REFERENCE_mV				3300
@@ -51,6 +49,9 @@ extern "C" {
 
 #define FFT_POINTS						1024
 
+#define RIT_INTERVAL_mS					1
+
+#define TIME_mS_TO_TICK(_T_)			(_T_ / RIT_INTERVAL_mS)
 #define START_DELAY           			100//25//10   //стартовая задержка, в 100мс для установки дефолтных настроек модбас
 #define AFTER_START_DELAY     			1000//250//100    //задержка перед инициализацией DAC 1000мс
 #define DELAY_05S             			500//250//100    //задержка 1 секунда
@@ -63,6 +64,7 @@ extern "C" {
 #define DELAY_CHECK_FIRE_STATUS         10000//2500//1000    //задержка 10 секунда
 #define DELAY_15S             			15000//2500//1000    //задержка 15 секунд
 #define DELAY_20S             			20000//2500//1000    //задержка 20 секунд
+#define DELAY_CHANNEL_CALIB   			180000
 
 
 // STATUS BITS
@@ -172,10 +174,6 @@ extern "C" {
 #define FD2930_DEVICEFLAGS_20mA_ON                 (1 << 4)
 #define FD2930_DEVICEFLAGS_IR_ERROR                (1 << 5)
 #define FD2930_DEVICEFLAGS_UV_ERROR                (1 << 6)
-//#define FD2930_DEVICEFLAGS                       (1 << 7)
-//#define FD2930_DEVICEFLAGS                       (1 << 8)
-//#define FD2930_DEVICEFLAGS                       (1 << 9)
-//#define FD2930_DEVICEFLAGS                       (1 << 10)
 #define FD2930_DEVICEFLAGS_BREAK_DUST              (1 << 11)
 #define FD2930_DEVICEFLAGS_DUST                    (1 << 12)
 #define FD2930_DEVICEFLAGS_ERROR_TEMPERATURE       (1 << 13)
@@ -212,8 +210,6 @@ extern "C" {
 #define FD2930_STATE_FLAG_ERASE_ARCHIVE         (1 << 3)
 #define FD2930_STATE_FLAG_FFT_START             (1 << 4)
 #define FD2930_STATE_FLAG_FFT_ACTIVE            (1 << 5)
-#define FD2930_STATE_FLAG_MODBUS_SEND           (1 << 6)
-#define FD2930_STATE_FLAG_MODBUS_SEND_READY     (1 << 7)
 
 #define UV_PICK_LIMIT							10000
 #define UV_PICK_WORK_AREA						500
@@ -323,12 +319,7 @@ extern RTC_TIME_Type DeviceTime;
 extern uint8_t		ChangeConnectionSettings;
 extern uint8_t			Protocol;
 
-
-
 extern Timer_t		IndicationTimer, MeasurmentTimer;
-
-
-
 
 void DeviceInit();
 void ADCTask();
