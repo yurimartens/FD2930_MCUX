@@ -57,6 +57,7 @@ uint8_t 		ChangeConnectionSettings;
 float 			HeatPowerInst = 1.0;
 
 extern Modbus_t Modbus;
+extern SSPAl_t  SSPSD420;
 
 
 __STATIC_INLINE void CheckFireStatus();
@@ -66,8 +67,10 @@ __STATIC_INLINE void SetDeviceStatus();
 __STATIC_INLINE void SetLEDs();
 __STATIC_INLINE void SetRelays();
 __STATIC_INLINE void SetHeater();
+__STATIC_INLINE void HandleLEDs();
 
 void SetDefaultParameters();
+void SetDefaultMBParameters();
 void UpdateOutputs();
 
 
@@ -152,6 +155,8 @@ void FunctionalTaskPeriodic()
 	static uint32_t cnt = 0, cnt24 = 0, postFireCnt = 0;
 	static uint64_t selfTestCnt = 0;
 
+	HandleLEDs();
+
 	SDADCTask(0.0014, 0.001);
 	switch (DeviceState) {
 		case FD2930_STATE_START1:
@@ -159,13 +164,11 @@ void FunctionalTaskPeriodic()
 				cnt++;
 				if ((!GPIO_READ_PIN(LPC_GPIO4, HALL1)) || (!GPIO_READ_PIN(LPC_GPIO4, HALL2))) {
 					cnt = 0;
-					// SetDefault
-					// Init device
+					SetDefaultMBParameters();
 					DeviceState++;
 				}
 			} else {
 				cnt = 0;
-				// Init device
 				DeviceState++;
 			}
 		break;
@@ -174,7 +177,9 @@ void FunctionalTaskPeriodic()
 				cnt++;
 			} else {
 				cnt = 0;
-				// DAC4-20 Init
+				AD5421Init(&SSPSD420, 0);
+				DeviceData.Current420 = FD2930_TASK_STARTUP_CUR_UA;
+				AD5421SetCurrent(FD2930_TASK_STARTUP_CUR_UA);
 				DeviceState++;
 			}
 		break;
@@ -202,7 +207,7 @@ void FunctionalTaskPeriodic()
 		case FD2930_STATE_SELFTEST:
 			DeviceData.Status |= FD2930_DEVICE_STATUS_SELF_TEST;
 			if (SelfTestCnt < TIME_mS_TO_TICK(DELAY_5S)) {
-				SelfTestCnt++; // время свмотестирования //на 5-ой секунде выносим вердикт, выходим в деж режим
+				SelfTestCnt++; // время самотестирования //на 5-ой секунде выносим вердикт, выходим в деж режим
 			} else {
 				SelfTestCnt = 0;
 		        switch ((DeviceFireConfig_t)(DeviceData.Config & 0x000F)) {
@@ -1659,13 +1664,28 @@ void SetDefaultParameters()
 	DeviceData.BlockService = 5813;
 	DeviceData.SerialNumber = 0;
 	DeviceData.Status |= FD2930_DEVICE_STATUS_BREAK;
-	DeviceData.MBId = FD2930_DEF_MBS_ADR;
+	DeviceData.MBId = FD2930_DEF_MBS_ADDR;
 	DeviceData.Baudrate = FD2930_DEF_MBS_BAUD;
 	DeviceData.WorkedTime = 0;
 	DeviceData.HeatPower = FD2930_DEFAULT_HEATPOWER;
 	DeviceData.HeaterThres = FD2930_DEFAULT_THRES_HEATER;
 }
 
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+void SetDefaultMBParameters()
+{
+	if (Protocol == PROTOCOL_IPES) {
+		DeviceData.MBId = (FD2930_DEF_MBS_ADDR << 8) | IPES_DEF_MBS_BAUD;
+	} else {
+		DeviceData.MBId = FD2930_DEF_MBS_ADDR;
+		DeviceData.Baudrate = FD2930_DEF_MBS_BAUD;
+	}
+	EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+}
     
 //------------------------------------------------------------------------------
 // end

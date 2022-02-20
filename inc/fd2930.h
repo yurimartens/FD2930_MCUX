@@ -103,7 +103,7 @@ extern "C" {
 #define FD2930_NUMBER_FFT_CRIM_CHANNEL  20
 
 
-#define FD2930_DEF_MBS_ADR         		3
+#define FD2930_DEF_MBS_ADDR        		3
 #define FD2930_DEF_MBS_BAUD        		2
 #define IPES_DEF_MBS_BAUD           	8
 

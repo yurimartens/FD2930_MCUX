@@ -101,8 +101,6 @@ int main(void) {
 	TimerInit(&IndicationTimer, 0);
 	TimerReset(&IndicationTimer, 1000);
 
-	GPIO_RESET_PIN(LPC_GPIO2, LED1;)
-
 	while (1) {
 
 		ModbusIdle(&Modbus);
@@ -466,8 +464,9 @@ __STATIC_INLINE void SSP0AndModulesInit()
 	SSPInitCSPin(&SSPSD420, 1, LPC_GPIO1, SSEL0);
 	SSPInitTxBuf(&SSPSD420, SD420OutBuf, sizeof(SD420OutBuf));
 	SSPInitRxBuf(&SSPSD420, SD420InBuf, sizeof(SD420InBuf));
-
-	AD5421Init(&SSPSD420, 0);
+	/*
+	 * Init of ad5421 is in RIT state machine
+	 */
 }
 
 /**
