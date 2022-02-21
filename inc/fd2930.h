@@ -22,9 +22,9 @@ extern "C" {
 
 #include <board.h>
 
-#define DEVICE_TYPE                     (10 << 8)
-
-#define FW_VERSION                     	101
+#define DEVICE_TYPE         			1
+#define FW_VERSION                     	301
+#define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
 #define FW_VERSION_LO                  	209
@@ -65,6 +65,9 @@ extern "C" {
 #define DELAY_15S             			15000//2500//1000    //задержка 15 секунд
 #define DELAY_20S             			20000//2500//1000    //задержка 20 секунд
 #define DELAY_CHANNEL_CALIB   			180000
+#define DELAY_RELAY_WORK				10
+#define IR_CHANNEL_TIMING1				90
+#define IR_CHANNEL_TIMING2				140
 
 
 // STATUS BITS
@@ -319,11 +322,11 @@ extern RTC_TIME_Type DeviceTime;
 extern uint8_t		ChangeConnectionSettings;
 extern uint8_t			Protocol;
 
-extern Timer_t		IndicationTimer, MeasurmentTimer;
+extern Timer_t		MeasurmentTimer;
 
 void DeviceInit();
 void ADCTask();
-void SDADCTask(float avCoeffIR, float avCoeffUV);
+void SDADCTask(double avCoeffIR, double avCoeffUV);
 void FunctionalTaskBG();
 void FunctionalTaskPeriodic();
 uint8_t MBCallBack(uint16_t addr, uint16_t qty);

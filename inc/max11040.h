@@ -15,7 +15,7 @@ extern "C" {
 #include <stdint.h>
 #include <ssp_al.h>
     
-#define MAX11040_OUTPUT_TYPE_DOUBLE                     0
+#define MAX11040_OUTPUT_TYPE_DOUBLE                     1
 
 
 #define MAX11040_CHANNEL_NUM                            4    

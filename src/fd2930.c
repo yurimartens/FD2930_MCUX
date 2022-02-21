@@ -21,7 +21,7 @@ DeviceState_t	DeviceState;
 uint16_t		DeviceStatusTemp;
 
 RTC_TIME_Type 	DeviceTime;
-Timer_t			IndicationTimer, MeasurmentTimer;
+Timer_t			MeasurmentTimer;
 
 uint16_t		CntTemperatureFault;
 
@@ -40,7 +40,7 @@ uint16_t 		AutorecoveryCnt;
 
 uint16_t 		FFTCnt;
 
-float 			IR, UV;
+double 			IR, UV, IRRaw, UVRaw, IRAv, IRRect;
 
 int16_t 		*FFTInputData  = (int16_t *)0x2007C000; /* AHB SRAM0 */
 int16_t 		*FFTOutputData = (int16_t *)0x20080000; /* AHB SRAM1 */
@@ -68,6 +68,8 @@ __STATIC_INLINE void SetLEDs();
 __STATIC_INLINE void SetRelays();
 __STATIC_INLINE void SetHeater();
 __STATIC_INLINE void HandleLEDs();
+__STATIC_INLINE void HandleRelayWork();
+__STATIC_INLINE void HandleIRTestChannel();
 
 void SetDefaultParameters();
 void SetDefaultMBParameters();
@@ -86,41 +88,44 @@ void DeviceInit()
 
 	AutorecoveryCnt = 0;
 	DeviceData.Status = 0;
+	DeviceData.FWVersion = FW_VERSION;
+	DeviceData.HWVersion = HW_VERSION;
+	DeviceData.DeviceType = DEVICE_TYPE;
 
 	if (EEPROM_ERROR_EMPTY == EEPROMRead((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE)) {
 		SetDefaultParameters();
 		AutorecoveryCnt = 1; //здесь же запустим счетчик автовосстановления
 		write = 1;
-	} else {
-		if (DeviceData.Config == 0 || (DeviceData.MBId < 1 || DeviceData.MBId > 247) || \
-			(DeviceData.HeatPower > FD2930_MAX_HEATPOWER || DeviceData.HeatPower < FD2930_MIN_HEATPOWER) || \
-		    (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 8 && DeviceData.Baudrate != 12 && DeviceData.Baudrate != 16 && DeviceData.Baudrate != 24)) {
-			SetDefaultParameters();
-			write = 1;
-		}
-
-		if (Protocol == PROTOCOL_IPES) {
-			if (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 8 && DeviceData.Baudrate != 16) {
-				DeviceData.Baudrate = IPES_DEF_MBS_BAUD;
-				write = 1;
-			}
-		} else {
-			if (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 12 && DeviceData.Baudrate != 24) {
-				DeviceData.Baudrate = FD2930_DEF_MBS_BAUD;
-				write = 1;
-			}
-		}
-
-		if (DeviceData.FFTThres > FD2930_MAX_GAIN_FFT || DeviceData.FFTThres < FD2930_MIN_GAIN_FFT) {DeviceData.FFTThres = FD2930_DEFAULT_GAIN_FFT; write = 1;}
-		if (DeviceData.IRThres > FD2930_MAX_THRES_IR || DeviceData.IRThres < FD2930_MIN_THRES_IR) {DeviceData.IRThres = FD2930_DEFAULT_THRES_IR; write = 1;}
-		if (DeviceData.UVThres > FD2930_MAX_THRES_UV || DeviceData.UVThres < FD2930_MIN_THRES_UV) {DeviceData.UVThres = FD2930_DEFAULT_THRES_UV; write = 1;}
-		if (DeviceData.IRCoeff > FD2930_MAX_K_IR || DeviceData.IRCoeff < FD2930_MIN_K_IR) {DeviceData.IRCoeff = FD2930_DEFAULT_K_IR; write = 1;}
-		if (DeviceData.UVCoeff > FD2930_MAX_K_UV || DeviceData.UVCoeff < FD2930_MIN_K_UV) {DeviceData.UVCoeff = FD2930_DEFAULT_K_UV; write = 1;}
-		if (DeviceData.FaultDelay > FD2930_MAX_WAIT_FAULT || DeviceData.FaultDelay < FD2930_MIN_WAIT_FAULT) {DeviceData.FaultDelay = FD2930_DEFAULT_WAIT_FAULT; write = 1;}
-		if (DeviceData.FireDelay > FD2930_MAX_WAIT_FIRE || DeviceData.FireDelay < FD2930_MIN_WAIT_FIRE) {DeviceData.FireDelay = FD2930_DEFAULT_WAIT_FIRE; write = 1;}
 	}
 
+	if (DeviceData.Config == 0 || (DeviceData.MBId < 1 || DeviceData.MBId > 247) || \
+		(DeviceData.HeatPower > FD2930_MAX_HEATPOWER || DeviceData.HeatPower < FD2930_MIN_HEATPOWER) || \
+		(DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 8 && DeviceData.Baudrate != 12 && DeviceData.Baudrate != 16 && DeviceData.Baudrate != 24)) {
+		SetDefaultParameters();
+		write = 1;
+	}
+	if (Protocol == PROTOCOL_IPES) {
+		if (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 8 && DeviceData.Baudrate != 16) {
+			DeviceData.Baudrate = IPES_DEF_MBS_BAUD;
+			write = 1;
+		}
+	} else {
+		if (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 12 && DeviceData.Baudrate != 24) {
+			DeviceData.Baudrate = FD2930_DEF_MBS_BAUD;
+			write = 1;
+		}
+	}
+	if (DeviceData.FFTThres > FD2930_MAX_GAIN_FFT || DeviceData.FFTThres < FD2930_MIN_GAIN_FFT) {DeviceData.FFTThres = FD2930_DEFAULT_GAIN_FFT; write = 1;}
+	if (DeviceData.IRThres > FD2930_MAX_THRES_IR || DeviceData.IRThres < FD2930_MIN_THRES_IR) {DeviceData.IRThres = FD2930_DEFAULT_THRES_IR; write = 1;}
+	if (DeviceData.UVThres > FD2930_MAX_THRES_UV || DeviceData.UVThres < FD2930_MIN_THRES_UV) {DeviceData.UVThres = FD2930_DEFAULT_THRES_UV; write = 1;}
+	if (DeviceData.IRCoeff > FD2930_MAX_K_IR || DeviceData.IRCoeff < FD2930_MIN_K_IR) {DeviceData.IRCoeff = FD2930_DEFAULT_K_IR; write = 1;}
+	if (DeviceData.UVCoeff > FD2930_MAX_K_UV || DeviceData.UVCoeff < FD2930_MIN_K_UV) {DeviceData.UVCoeff = FD2930_DEFAULT_K_UV; write = 1;}
+	if (DeviceData.FaultDelay > FD2930_MAX_WAIT_FAULT || DeviceData.FaultDelay < FD2930_MIN_WAIT_FAULT) {DeviceData.FaultDelay = FD2930_DEFAULT_WAIT_FAULT; write = 1;}
+	if (DeviceData.FireDelay > FD2930_MAX_WAIT_FIRE || DeviceData.FireDelay < FD2930_MIN_WAIT_FIRE) {DeviceData.FireDelay = FD2930_DEFAULT_WAIT_FIRE; write = 1;}
+
 	if (write) EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+
+	DeviceData.Status |= (FD2930_DEVICE_STATUS_CRC_OK | FD2930_DEVICE_STATUS_FLASH_OK);// | FD2930_DEVICE_STATUS_TESTING);
 
 	TimerInit(&MeasurmentTimer, 0);
 	TimerReset(&MeasurmentTimer, ADC_SAMPLING_PERIOD);
@@ -154,10 +159,26 @@ void FunctionalTaskPeriodic()
 {
 	static uint32_t cnt = 0, cnt24 = 0, postFireCnt = 0;
 	static uint64_t selfTestCnt = 0;
+	double avCoeffIR = 0.05, avCoeffUV = 0.05;
 
 	HandleLEDs();
+	HandleRelayWork();
+	HandleIRTestChannel();
 
-	SDADCTask(0.0014, 0.001);
+	if (CheckFireStatusCnt < TIME_mS_TO_TICK(DELAY_CHECK_FIRE_STATUS)) {
+		CheckFireStatusCnt++;
+		GPIO_SET_PIN(LPC_GPIO2, IR_TEST);
+		GPIO_SET_PIN(LPC_GPIO2, UV_TEST);
+		GPIO_SET_PIN(LPC_GPIO0, UV_TEST2);
+		avCoeffIR = 0.05, avCoeffUV = 0.05;
+	} else {
+		avCoeffIR = 0.0014, avCoeffUV = 0.001;
+	}
+	if (DeviceState & FD2930_STATE_SELFTEST) {
+		avCoeffIR = 0.002, avCoeffUV = 0.002;
+	}
+	SDADCTask(avCoeffIR, avCoeffUV);
+
 	switch (DeviceState) {
 		case FD2930_STATE_START1:
 			if (cnt < TIME_mS_TO_TICK(START_DELAY)) {
@@ -219,7 +240,7 @@ void FunctionalTaskPeriodic()
 			        	if ((DeviceData.IRGain - IRNoiseTest) < 0.7 * IRTestLevel) IRTestFaultCnt++;
 
 			        	if (((DeviceData.IRGain - IRNoiseTest) < 0.5 * IRTestLevel) || ((DeviceData.UVGain - UVNoiseTest) < 3000)) { // если чувствительность ИК меньше 40% и УФ меньше 40% то ставим флаг аварийной запыленности запыленности
-			        		if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 70) && (DeviceData.HeatPower < 20)) {// если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
+			        		if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 70) && (HeatPowerInst < 20)) {// если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
 			        			if (SelfTest < 14) {//если не прошло 14 тестов - 2 часа с включения
 			        				DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
 			        				DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;// этот флаг тоже поставим , потому что если уж не прошли очень плохие тесты, то плохие тоже не прошли. что бы выключалось реле неисправность
@@ -232,7 +253,7 @@ void FunctionalTaskPeriodic()
 			        		}
 			        	}
 			        	if (((DeviceData.IRGain - IRNoiseTest) < 0.7 * IRTestLevel) || ((DeviceData.UVGain - UVNoiseTest) < 3000)) { // если чувствительность ИК меньше 70% и УФ меньше 70% и  && (DeviceData.temperature < 60) то ставим флаг запыленности
-			        		if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 70) && (DeviceData.HeatPower < 20)) { // если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
+			        		if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 70) && (HeatPowerInst < 20)) { // если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
 			        			if (BadSelfTest < 10) BadSelfTest++;
 			        			if (SelfTest < 14) { //если не прошло 14 тестов - 2 часа с включения
 			        				DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
@@ -255,13 +276,13 @@ void FunctionalTaskPeriodic()
 			       case FD2930_CONFIG_5:// в одноканальных ИК режимах не проверяем УФ канал
 			       case FD2930_CONFIG_6:// в одноканальных ИК режимах не проверяем УФ канал
 			    	   if (((DeviceData.IRGain - IRNoiseTest) < 0.5 * IRTestLevel)) { // если чувствительность ИК меньше 40% то ставим флаг аварийной запыленности запыленности
-			    		   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50) && (DeviceData.HeatPower < 20)) { // если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
+			    		   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50) && (HeatPowerInst < 20)) { // если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
 			    			   DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
 			    			   DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;// этот флаг тоже поставим , потому что если уж не прошли очень плохие тесты, то плохие тоже не прошли. что бы выключалось реле неисправность
 			    		   }
 			    	   }
 			    	   if (((DeviceData.IRGain - IRNoiseTest) < 0.7 * IRTestLevel)) { // если чувствительность ИК меньше 70% и  && (DeviceData.temperature < 60) то ставим флаг запыленности
-			    		   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50) && (DeviceData.HeatPower < 20)) { //дублируем запыленность в регистре состояния// если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг
+			    		   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50) && (HeatPowerInst < 20)) { //дублируем запыленность в регистре состояния// если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг
 			    			   DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
 			    			   DeviceData.Status |= FD2930_DEVICEFLAGS_DUST_DUBL;
 			    		   }                                  // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
@@ -273,13 +294,13 @@ void FunctionalTaskPeriodic()
 			       break;
 			       case FD2930_CONFIG_7:// в одноканальном УФ режиме не проверяем ИК канал
 			    	   if ((DeviceData.UVGain - UVNoiseTest) < 3000) { // если чувствительность УФ меньше 40% то ставим флаг аварийной запыленности запыленности
-			    		   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50) && (DeviceData.HeatPower < 20)) { // если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
+			    		   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50) && (HeatPowerInst < 20)) { // если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
 			    			   DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
 			    			   DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;// этот флаг тоже поставим , потому что если уж не прошли очень плохие тесты, то плохие тоже не прошли. что бы выключалось реле неисправность
 			    		   }
 			    	   }
 			    	   if ((DeviceData.UVGain - UVNoiseTest) < 0.7 * UVTestLevel) { // если чувствительность УФ меньше 70% и  && (DeviceData.temperature < 60) то ставим флаг запыленности
-			    		   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50) && (DeviceData.HeatPower < 20)) {
+			    		   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50) && (HeatPowerInst < 20)) {
 			    			   DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
 			    			   DeviceData.Status |= FD2930_DEVICEFLAGS_DUST_DUBL;
 			    		   }//дублируем запыленность в регистре состояния// если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг
@@ -507,12 +528,11 @@ void FunctionalTaskPeriodic()
 			}
 		    break;
 		case FD2930_STATE_BREAK:
-			/*
-		    if (cnt < DELAY_1S) {
+		    if (cnt < TIME_mS_TO_TICK(DELAY_1S)) {
 		    	cnt++;
 		    } else {
 		    	cnt = 0;
-		    	//AppRTCTaskGetTime(); //get current time
+		    	RTC_GetFullTime(LPC_RTC, &DeviceTime);
 		    	if (AutorecoveryCnt > 0 && AutorecoveryCnt < 30) AutorecoveryCnt++;
 		    	if (AutorecoveryCnt == 2) {
 		    		if (!(DeviceData.Status & FD2930_DEVICE_STATUS_IR_UV_SET)) {
@@ -537,9 +557,9 @@ void FunctionalTaskPeriodic()
 		            //write_parameters();
 		            //AutorecoveryCnt=0; ?? было так
 		    	}
-		    	//AppFD2930Task();
+		    	UpdateOutputs();
 		    }
-		    if (selfTestCnt < (3 * 60 * DELAY_1S)) {
+		    if (selfTestCnt < TIME_mS_TO_TICK(3 * 60 * DELAY_1S)) {
 		    	selfTestCnt++;
 		    } else {
 		    	selfTestCnt = 0;
@@ -550,7 +570,6 @@ void FunctionalTaskPeriodic()
 		    		DeviceData.Status |= FD2930_DEVICE_STATUS_SELF_TEST;
 		    	}
 		    }
-		    */
 		break;
 	}
 }
@@ -719,7 +738,7 @@ __STATIC_INLINE void CheckFireStatus()
 				if (between_channel_fire_counter < channel_fire_delay) {
 					if (counter_UV_fire >= channel_fire_delay) {
 						counter_UV_fire = channel_fire_delay;
-						if (CriminalFFTChannelNumber > FD2930_NUMBER_FFT_CRIM_CHANNEL) DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;    //âêëþ÷àåì ïîæàð
+						if (CriminalFFTChannelNumber > FD2930_NUMBER_FFT_CRIM_CHANNEL) DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;
 						else DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
 						between_channel_fire_counter = 0;
 					} else {
@@ -731,10 +750,10 @@ __STATIC_INLINE void CheckFireStatus()
 					} else {
 						if (counter_UV_fire >= channel_fire_delay) {
 							counter_UV_fire = channel_fire_delay;
-							if (CriminalFFTChannelNumber > FD2930_NUMBER_FFT_CRIM_CHANNEL) DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;    //âêëþ÷àåì ïîæàð
+							if (CriminalFFTChannelNumber > FD2930_NUMBER_FFT_CRIM_CHANNEL) DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;
 							else DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
 						} else {
-							between_channel_fire_counter = channel_fire_delay;  //æäåì åùå 20 ñåêóíä
+							between_channel_fire_counter = channel_fire_delay;
 						}
 					}
 				}
@@ -779,7 +798,7 @@ __STATIC_INLINE void CheckFireStatus()
 				if (between_channel_prefire_counter < channel_fire_delay) {
 					if (counter_UV_prefire >= channel_fire_delay) {
 						counter_UV_prefire = channel_fire_delay;
-						DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;    //âêëþ÷àåì ïîæàð
+						DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;
 						between_channel_prefire_counter = 0;
 					} else {
 						between_channel_prefire_counter++;
@@ -790,9 +809,9 @@ __STATIC_INLINE void CheckFireStatus()
 					} else {
 						if (counter_UV_prefire >= channel_fire_delay) {
 							counter_UV_prefire = channel_fire_delay;
-							DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;    //âêëþ÷àåì ïîæàð
+							DeviceStatusTemp |= FD2930_DEVICE_STATUS_PREFIRE;
 						} else {
-							between_channel_prefire_counter = channel_fire_delay;  //æäåì åùå 20 ñåêóíä
+							between_channel_prefire_counter = channel_fire_delay;
 						}
 					}
 				}
@@ -1374,6 +1393,53 @@ __STATIC_INLINE void HandleLEDs()
   * @param
   * @retval
   */
+__STATIC_INLINE void HandleRelayWork()
+{
+	static uint16_t cnt = 0;
+
+	if (cnt < TIME_mS_TO_TICK(DELAY_RELAY_WORK)) {
+		cnt++;
+	} else {
+		cnt = 0;
+		if (DeviceData.Flags & FD2930_DEVICEFLAGS_WORK_RELAY_ON) {
+			GPIO_TOGGLE_PIN(LPC_GPIO2, R_WORK);
+		}
+	}
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+__STATIC_INLINE void HandleIRTestChannel()
+{
+	static uint16_t cnt = 0;
+
+	if (DeviceState == FD2930_STATE_CHANNEL_CALIBR) {
+		if (cnt < TIME_mS_TO_TICK(IR_CHANNEL_TIMING1)) {
+			cnt++;
+		} else {
+			cnt = 0;
+			GPIO_TOGGLE_PIN(LPC_GPIO2, IR_TEST);
+		}
+	} else {
+		if ((DeviceState == FD2930_STATE_TEST_CALIBR) || (DeviceState == FD2930_STATE_SELFTEST) || (DeviceState == FD2930_STATE_TEST_ZERO)) {
+			if (cnt < TIME_mS_TO_TICK(IR_CHANNEL_TIMING2)) {
+				cnt++;
+			} else {
+				cnt = 0;
+				GPIO_TOGGLE_PIN(LPC_GPIO2, IR_TEST);
+			}
+		}
+	}
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
 __STATIC_INLINE void SetRelays()
 {
 	static uint16_t counter_relay_fire_delay = 0;
@@ -1571,6 +1637,187 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 		}
 		return 0;
 	}
+	if ((addr == MB_REG_ADDR(DeviceData, FireDelay)) && (qty == 1)) {
+		if ((DeviceData.FireDelay >= FD2930_MIN_WAIT_FIRE) && (DeviceData.FireDelay <= FD2930_MAX_WAIT_FIRE)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, FaultDelay)) && (qty == 1)) {
+		if ((DeviceData.FaultDelay >= FD2930_MIN_WAIT_FAULT) && (DeviceData.FaultDelay <= FD2930_MAX_WAIT_FAULT)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, Command)) && (qty == 1)) {
+		switch (DeviceData.Command) {
+			case 0:
+				ResetFireStatus();
+				///push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			break;
+			case 1:
+				DeviceState = FD2930_STATE_SELFTEST;
+				DeviceData.Status |= FD2930_DEVICE_STATUS_SELF_TEST;
+				GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST)); GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
+				//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			break;
+			case 2:
+				DeviceData.Config &= ~FD2930_DEVICECONFIG_FIRE_FIXATION;
+				//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			break;
+			case 3:
+				SetDefaultParameters();
+				//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			break;
+					/*
+					case 4:
+			          //erase_parameters();
+			          eraseFlash();         //erase internal flash memory
+			          fd2930.device_status &= ~FD2930_DEVICE_STATUS_FLASH_OK;//ñáðîñèì ôëàã èñïðàâíîñòè ôëýø, ïðîâåðêà èñïðàâíîñòè ïðè ñòàðòå, äëÿ ýòîãî ïîòðåáóåòñÿ ñáðîñ ïèòàíèÿ
+			          push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			          for(;;);
+			          break;
+			        case 5:
+			          erase_archive();
+			          push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			          break;
+			        case 6:
+			          if(fd2930.device_state != FD2930_STATE_TEST) MBS.err = MBS_ERROR_ILLEGAL_DATA_VALUE;
+			          else {
+			            fd2930.device_flags |= FD2930_DEVICEFLAGS_FIRE_RELAY_ON;
+			            push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			          }
+			          break;
+			        case 7:
+			          if(fd2930.device_state != FD2930_STATE_TEST) MBS.err = MBS_ERROR_ILLEGAL_DATA_VALUE;
+			          else {
+			            fd2930.device_flags &= ~FD2930_DEVICEFLAGS_FIRE_RELAY_ON;
+			            push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			          }
+			          break;
+			        case 8:
+			          if(fd2930.device_state != FD2930_STATE_TEST) MBS.err = MBS_ERROR_ILLEGAL_DATA_VALUE;
+			          else {
+			            fd2930.device_flags |= FD2930_DEVICEFLAGS_WORK_RELAY_ON;
+			            push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			          }
+			          break;
+			        case 9:
+			          if(fd2930.device_state != FD2930_STATE_TEST) MBS.err = MBS_ERROR_ILLEGAL_DATA_VALUE;
+			          else {
+			            fd2930.device_flags &= ~FD2930_DEVICEFLAGS_WORK_RELAY_ON;
+			            push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			          }
+			          break;
+			        case 10:
+			          if(fd2930.device_state != FD2930_STATE_TEST) MBS.err = MBS_ERROR_ILLEGAL_DATA_VALUE;
+			          else {
+			            fd2930.device_flags |= FD2930_DEVICEFLAGS_DUST_RELAY_ON;
+			            push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			          }
+			          break;
+			        case 11:
+			          if(fd2930.device_state != FD2930_STATE_TEST) MBS.err = MBS_ERROR_ILLEGAL_DATA_VALUE;
+			          else {
+			            fd2930.device_flags &= ~FD2930_DEVICEFLAGS_DUST_RELAY_ON;
+			            push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			          }
+			          break;
+			        case 12:
+			          if(fd2930.device_state != FD2930_STATE_TEST) MBS.err = MBS_ERROR_ILLEGAL_DATA_VALUE;
+			          else {
+			            fd2930.current = 19990;
+			            push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			          }
+			          break;
+			        case 13:
+			          fd2930.device_state = FD2930_STATE_CHANNEL_CALIBR;
+			          //fd2930.device_status &= ~FD2930_DEVICE_STATUS_IR_UV_SET;      //reset calibration
+			          //fd2930.device_status &= ~FD2930_DEVICE_STATUS_TEST_CALIBR;
+			          //fd2930.device_status &= ~FD2930_DEVICE_STATUS_TEST_ZERO;
+			          //write_parameters();
+			          //push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			          break;
+			        case 14:
+			          if(!(fd2930.device_status & FD2930_DEVICE_STATUS_TEST_ZERO)) MBS.err = MBS_ERROR_ILLEGAL_DATA_VALUE;
+			          else
+			          {
+			            fd2930.device_state = FD2930_STATE_TEST_CALIBR;
+			            fd2930.device_status &= ~FD2930_DEVICE_STATUS_TEST_CALIBR;
+			            GPIO_CLR(GPIO2, (UV_TEST)); GPIO_CLR(GPIO0, (UV_TEST2));
+			            write_parameters();
+			            push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			          }
+			          break;
+			        case 15:
+			          //restore_parameters_from_SD();
+			          //push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			          break;
+			        case 16:
+			          MBS.err = MBS_ERROR_ILLEGAL_DATA_VALUE;
+			          break;
+			        case 17:
+			          if(fd2930.device_status & FD2930_DEVICE_STATUS_SD_CARD)
+			          {
+			            if((fd2930.chosen_archive_page) >= fd2930.archive_last_page) fd2930.chosen_archive_page = 0;
+			            else fd2930.chosen_archive_page++;
+			            push_flash_command(FLASH_READ_ARCHIVE, fd2930.chosen_archive_page, MBS.buffer);
+			          }
+			          MBS.err = MBS_ERROR_ILLEGAL_DATA_VALUE;
+			          break;
+			        case 18:
+			          if(fd2930.device_status & FD2930_DEVICE_STATUS_SD_CARD)
+			          {
+			            if(fd2930.chosen_archive_page == 0) fd2930.chosen_archive_page = fd2930.archive_last_page - 1;
+			            else fd2930.chosen_archive_page--;
+			            push_flash_command(FLASH_READ_ARCHIVE, fd2930.chosen_archive_page, MBS.buffer);
+			          }
+			          MBS.err = MBS_ERROR_ILLEGAL_DATA_VALUE;
+			          break;
+			        case 19:
+			          MBS.err = MBS_ERROR_ILLEGAL_DATA_VALUE;
+			          break;
+			        case 20:
+			          fd2930.device_state = FD2930_STATE_TEST;
+			          fd2930.device_status |= FD2930_DEVICE_STATUS_TESTING;
+			          push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			          break;
+			        case 21:
+			          fd2930.device_state = FD2930_STATE_WORKING;
+			          push_flash_command(FLASH_WRITE_EVENT, EVENT_NORMAL_EVENT, MBS.buffer);
+			          fd2930.device_status &= ~FD2930_DEVICE_STATUS_TESTING;
+			          push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			          break;
+			        case 22:
+			          fd2930.K_IR = fd2930_K_IR;
+			          fd2930.K_UV = fd2930_K_UV;
+			          if(!(fd2930.device_status & FD2930_DEVICE_STATUS_IR_UV_SET))
+			          {
+			            push_flash_command(FLASH_WRITE_EVENT, EVENT_CALIBR2, MBS.buffer);
+			            fd2930.device_status |= FD2930_DEVICE_STATUS_IR_UV_SET;
+			            push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			          }
+			          write_parameters();
+			          break;
+			        case 23:        //set test zero
+			          if(!(fd2930.device_status & FD2930_DEVICE_STATUS_IR_UV_SET)) MBS.err = MBS_ERROR_ILLEGAL_DATA_VALUE;
+			          else
+			          {
+			            fd2930.device_state = FD2930_STATE_TEST_ZERO;
+			            fd2930.device_status &= ~FD2930_DEVICE_STATUS_TEST_ZERO;
+			            fd2930.device_status &= ~FD2930_DEVICE_STATUS_TEST_CALIBR;
+			            GPIO_CLR(GPIO2, (UV_TEST)); GPIO_CLR(GPIO0, (UV_TEST2));
+			            write_parameters();
+			            push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+			          }
+			          break;
+			        default:
+			          MBS.err = MBS_ERROR_ILLEGAL_DATA_VALUE;*/
+
+
+		}
+		return 0;
+	}
 	return 0;
 }
 
@@ -1586,28 +1833,33 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
   * @param
   * @retval
   */
-void SDADCTask(float avCoeffIR, float avCoeffUV)
+void SDADCTask(double avCoeffIR, double avCoeffUV)
 {
 	Max11040ChannelData_t *res = Max11040GetData(2);
-	DeviceData.IRRaw = res->ch[0];
-	DeviceData.UVRaw = res->ch[1];
+	IRRaw = res->ch[0];
+	UVRaw = res->ch[1];
 
-	if (DeviceData.UVRaw < UVNoise / 10) {
+	if (UVRaw < UVNoise / 10) {
 		if (UVPickCnt < UV_PICK_LIMIT) UVPickCnt++;
 		else UVPickCnt = 0;
 	}
 
 	if ((UVPickCnt > UV_PICK_WORK_AREA) || (UVPickCnt == 0) || (DeviceData.IRGain > IR_GAIN_UV_PICK)) {
-		UV = EWMA_FILTER(UV, DeviceData.UVRaw, avCoeffUV);
+		UV = EWMA_FILTER(UV, UVRaw, avCoeffUV);
 	}
-	DeviceData.IRAv = EWMA_FILTER(DeviceData.IRAv, DeviceData.IRRaw, avCoeffIR);
+	IRAv = EWMA_FILTER(IRAv, IRRaw, avCoeffIR);
 
-	if (DeviceData.IRRaw > DeviceData.IRAv) DeviceData.IRRect = DeviceData.IRRaw - DeviceData.IRAv;
-	else DeviceData.IRRect = DeviceData.IRAv - DeviceData.IRRaw;
-	IR = EWMA_FILTER(IR, DeviceData.IRRect, avCoeffIR);
+	if (IRRaw > IRAv) IRRect = IRRaw - IRAv;
+	else IRRect = IRAv - IRRaw;
+	IR = EWMA_FILTER(IR, IRRect, avCoeffIR);
 
 	DeviceData.UVGain = UV * 4 * DeviceData.UVCoeff / 10;
 	DeviceData.IRGain = IR * 4 * DeviceData.IRCoeff / 10;
+
+	DeviceData.IRRaw = IRRaw;
+	DeviceData.UVRaw = UVRaw;
+	DeviceData.IRAv = IRAv;
+	DeviceData.IRRect = IRRect;
 
 	if (!(DeviceData.StateFlags & FD2930_STATE_FLAG_FFT_ACTIVE)) {
 		if (FFTCnt < FFT_POINTS * 2) {
@@ -1663,7 +1915,7 @@ void SetDefaultParameters()
 	DeviceData.Config = FD2930_DEFAULT_DEVICE_CONFIG;
 	DeviceData.BlockService = 5813;
 	DeviceData.SerialNumber = 0;
-	DeviceData.Status |= FD2930_DEVICE_STATUS_BREAK;
+	DeviceData.Status = FD2930_DEVICE_STATUS_BREAK;
 	DeviceData.MBId = FD2930_DEF_MBS_ADDR;
 	DeviceData.Baudrate = FD2930_DEF_MBS_BAUD;
 	DeviceData.WorkedTime = 0;

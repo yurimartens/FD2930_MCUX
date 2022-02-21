@@ -94,26 +94,12 @@ int main(void) {
 
 	//IRPortInit();
 
-	//AppTimerInit();  //запуск по таймеру рабочего цикла
-
-
-
-	TimerInit(&IndicationTimer, 0);
-	TimerReset(&IndicationTimer, 1000);
-
 	while (1) {
 
 		ModbusIdle(&Modbus);
 
-
 		ADCTask();
 		FunctionalTaskBG();
-		if (TimerIsOverflow(&IndicationTimer)) {
-			TimerReset(&IndicationTimer, 1000);
-
-		}
-
-
 	}
 	return 0;
 }
@@ -138,8 +124,9 @@ void UART1_IRQHandler(void)
 void SysTick_Handler(void)
 {
 	TimerDispatch(&Modbus.Timer);
-	TimerDispatch(&IndicationTimer);
 	TimerDispatch(&MeasurmentTimer);
+
+	//disk_timerproc();   //for SD card
 }
 
 /**
