@@ -27,7 +27,7 @@ extern "C" {
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	209
+#define FW_VERSION_LO                  	301
 
 
 #define MB_REG_ADDR(_STR_, _REG_)      	((uint16_t *)&_STR_._REG_ - (uint16_t *)&_STR_)
@@ -292,8 +292,7 @@ typedef struct
     uint16_t Days;
     uint16_t Months;
     uint16_t Years;
-    uint16_t ArchiveLastPageHi;
-    uint16_t ArchiveLastPageLo;
+    uint32_t ArchLastPage;
     uint16_t BlockService;
     uint16_t Current420;
     uint16_t FWCheckSumm;
@@ -302,14 +301,12 @@ typedef struct
     uint16_t IRRaw;
     uint16_t IRAv;
     uint16_t IRRect;
-    uint16_t ArchPageHi;
-    uint16_t ArchPageLo;
+    uint32_t ArchPageIdx;
     uint16_t CntFaultIR;
     uint16_t CntFaultUV;
-    uint16_t Reserved0[10];
     uint16_t StateFlags;
-
     uint16_t UVRaw;
+    uint16_t Reserved0[10];
 
     uint16_t Reserved1[142];
 

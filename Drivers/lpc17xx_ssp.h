@@ -430,7 +430,7 @@ void SSP_DeInit(LPC_SSP_TypeDef* SSPx);
 
 /* SSP configure functions ----------------------------------------------------*/
 void SSP_ConfigStructInit(SSP_CFG_Type *SSP_InitStruct);
-
+void SSP_SetSSPclock (LPC_SSP_TypeDef *SSPx, uint32_t target_clock);
 /* SSP enable/disable functions -----------------------------------------------*/
 void SSP_Cmd(LPC_SSP_TypeDef* SSPx, FunctionalState NewState);
 void SSP_LoopBackCmd(LPC_SSP_TypeDef* SSPx, FunctionalState NewState);

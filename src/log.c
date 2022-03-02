@@ -192,7 +192,7 @@ LogError_t LogWriteEvent(uint8_t *buf, uint16_t bufSize, RTC_TIME_Type *time, ch
         f_puts(str, &f);	
         f_puts(LOG_COL_DELIMITER, &f);	
         
-        sprintf(str, STRINGIZE(FORMAT_STRING(LOG_EVENT_REASON_LEN, s)), reason);
+        sprintf(str, LOG_EVENT_REASON_LEN_Q, reason);
         f_puts(str, &f);	
         f_puts(LOG_COL_DELIMITER, &f);	        
         
@@ -203,18 +203,18 @@ LogError_t LogWriteEvent(uint8_t *buf, uint16_t bufSize, RTC_TIME_Type *time, ch
             {
                 case LOG_COL_DT_UINT16:
                     value = (uint16_t)(buf[LogEventColumn[i].MBAddr * 2] << 8) | buf[LogEventColumn[i].MBAddr * 2 + 1];
-                    sprintf(str, STRINGIZE(FORMAT_STRING(LOG_EVENT_ITEM_LEN, d)), value);   
+                    sprintf(str, LOG_EVENT_ITEM_LEN_Q, (int)value);
                 break;
                 case LOG_COL_DT_INT16:
                     value = (int16_t)(buf[LogEventColumn[i].MBAddr * 2] << 8) | buf[LogEventColumn[i].MBAddr * 2 + 1];
-                    sprintf(str, STRINGIZE(FORMAT_STRING(LOG_EVENT_ITEM_LEN, d)), value);   
+                    sprintf(str, LOG_EVENT_ITEM_LEN_Q, (int)value);
                 break;
                 case LOG_COL_DT_UINT32:
                     value = (buf[LogEventColumn[i].MBAddr * 2] << 24) | (buf[LogEventColumn[i].MBAddr * 2 + 1] << 16) | (buf[LogEventColumn[i].MBAddr * 2 + 2] << 8) | buf[LogEventColumn[i].MBAddr * 2 + 3];
-                    sprintf(str, STRINGIZE(FORMAT_STRING(LOG_EVENT_ITEM_LEN, d)), value);   
+                    sprintf(str, LOG_EVENT_ITEM_LEN_Q, (int)value);
                 break;
                 default:
-                    sprintf(str, STRINGIZE(FORMAT_STRING(LOG_EVENT_ITEM_LEN, s)), "-");
+                    sprintf(str, LOG_EVENT_EMPTY_LEN_Q, "-");
             }
             f_puts(str, &f);	
             f_puts(LOG_COL_DELIMITER, &f);	
@@ -295,7 +295,7 @@ LogError_t LogReadEvent(uint32_t entryNum, uint8_t *buf, uint16_t bufSize)
 LogError_t LogParseEvent(uint8_t *outBuf, uint8_t *inBuf, uint16_t bufSize)
 { 
     uint16_t mbSize = bufSize / 2;
-    uint32_t value;
+    int value;
     uint32_t offset = LOG_EVENT_TIME_LEN + strlen(LOG_COL_DELIMITER) + LOG_EVENT_REASON_LEN + strlen(LOG_COL_DELIMITER);            
         
     for (uint8_t i = 0; i < LogEventColumns; i++)
@@ -305,12 +305,12 @@ LogError_t LogParseEvent(uint8_t *outBuf, uint8_t *inBuf, uint16_t bufSize)
         {            
             case LOG_COL_DT_UINT16:
             case LOG_COL_DT_INT16:
-                sscanf((const char *)&inBuf[offset], STRINGIZE(FORMAT_STRING(LOG_EVENT_ITEM_LEN, d)), &value);
+                sscanf((const char *)&inBuf[offset], LOG_EVENT_ITEM_LEN_Q, &value);
                 outBuf[LogEventColumn[i].MBAddr * 2] = (value >> 8);
                 outBuf[LogEventColumn[i].MBAddr * 2 + 1] = value;  
             break;
             case LOG_COL_DT_UINT32:
-                sscanf((const char *)&inBuf[offset], STRINGIZE(FORMAT_STRING(LOG_EVENT_ITEM_LEN, d)), &value);
+                sscanf((const char *)&inBuf[offset], LOG_EVENT_ITEM_LEN_Q, &value);
                 outBuf[LogEventColumn[i].MBAddr * 2] = (value >> 24);
                 outBuf[LogEventColumn[i].MBAddr * 2 + 1] = (value >> 16);    
                 outBuf[LogEventColumn[i].MBAddr * 2 + 2] = (value >> 8);
@@ -394,17 +394,17 @@ static LogError_t CreateFileEventAndHeader(uint16_t sn)
         f_puts(str, &f);    
         f_puts("\r\n", &f);	
         // put a log-file header of the table
-        sprintf(str, STRINGIZE(FORMAT_STRING(LOG_EVENT_TIME_LEN, s)), LOG_EVENT_TIME_HEADER);
+        sprintf(str, LOG_EVENT_TIME_LEN_Q, LOG_EVENT_TIME_HEADER);
         f_puts(str, &f);	
         f_puts(LOG_COL_DELIMITER, &f);
         
-        sprintf(str, STRINGIZE(FORMAT_STRING(LOG_EVENT_REASON_LEN, s)), LOG_EVENT_REASON_HEADER);
+        sprintf(str, LOG_EVENT_REASON_LEN_Q, LOG_EVENT_REASON_HEADER);
         f_puts(str, &f);	
         f_puts(LOG_COL_DELIMITER, &f);
         
         for (uint8_t i = 0; i < LogEventColumns; i++)
         {
-            sprintf(str, STRINGIZE(FORMAT_STRING(LOG_EVENT_ITEM_LEN, s)), LogEventColumn[i].Header);
+            sprintf(str, LOG_EVENT_ITEM_LEN_H_Q, LogEventColumn[i].Header);
             f_puts(str, &f);	
             f_puts(LOG_COL_DELIMITER, &f);	
         }

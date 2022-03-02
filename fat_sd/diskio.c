@@ -48,8 +48,8 @@
 #define	CS_HIGH()	GPIO_SetValue(SSP_CS_PORT, (1 << SSP_CS_PIN))
 
 
-#define FCLK_FAST() setSSPclock(LPC_SSP0, SCLK_FAST)
-#define FCLK_SLOW() setSSPclock(LPC_SSP0, SCLK_SLOW)
+#define FCLK_FAST() SSP_SetSSPclock(LPC_SSP0, SCLK_FAST)
+#define FCLK_SLOW() SSP_SetSSPclock(LPC_SSP0, SCLK_SLOW)
 
 #define	_BV(bit) (1<<(bit))
 

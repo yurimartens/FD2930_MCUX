@@ -8,24 +8,29 @@
 #ifndef __LOG_H
 #define __LOG_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #include <stdint.h>
 #include "lpc17xx_rtc.h"
 
 
-#define PPCAT_NX(A, B) A ## B
+//#define PPCAT_NX(A, B) A ## B
 
 /*
  * Concatenate preprocessor tokens A and B after macro-expanding them.
  */
-#define PPCAT(A, B) PPCAT_NX(A, B)
+//#define PPCAT(A, B) PPCAT_NX(A, B)
 
-#define STRINGIZE_NX(A) #A
+//#define STRINGIZE_NX(A) #A
 /*
  * Turn A into a string literal after macro-expanding it.
  */
-#define STRINGIZE(A) STRINGIZE_NX(A)
+//#define STRINGIZE(A) STRINGIZE_NX(A)
 
-#define FORMAT_STRING(WIDTH, TYPE)  % ## PPCAT_NX(WIDTH, TYPE)
+//#define FORMAT_STRING(WIDTH, TYPE)  % ## PPCAT_NX(WIDTH, TYPE)
 
 #define FILEPATH_MAX_LEN        30
 #define LOG_LOGICAL_DRIVE       "0:"
@@ -36,8 +41,13 @@
 //#define LOG_PARAMETER_FILE_PATH PPCAT(LOG_LOGICAL_DRIVE, LOG_PARAMETER_FILE_NAME)
      
 #define LOG_EVENT_TIME_LEN      17     // see the actual size of time format in write proc
+#define LOG_EVENT_TIME_LEN_Q    "%17s"
 #define LOG_EVENT_REASON_LEN    8     
-#define LOG_EVENT_ITEM_LEN      8   
+#define LOG_EVENT_REASON_LEN_Q  "%8s"
+#define LOG_EVENT_ITEM_LEN      8
+#define LOG_EVENT_ITEM_LEN_Q    "%8d"
+#define LOG_EVENT_ITEM_LEN_H_Q  "%8s"
+#define LOG_EVENT_EMPTY_LEN_Q   "%8s"
 
 #define LOG_EVENT_TIME_HEADER   "Date/Time"
 #define LOG_EVENT_REASON_HEADER "Reason"
@@ -85,5 +95,9 @@ LogError_t LogParseEvent(uint8_t *, uint8_t *, uint16_t);
 LogError_t LogErase(void);
 
 uint32_t LogGetEntriesNum(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //LOG_H

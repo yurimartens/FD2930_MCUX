@@ -56,17 +56,16 @@
 /** @addtogroup SSP_Public_Functions
  * @{
  */
-static void setSSPclock (LPC_SSP_TypeDef *SSPx, uint32_t target_clock);
 
 /*********************************************************************//**
- * @brief 		Setup clock rate for SSP device
+ * @brief 		Setup clock rate for SSP device, YM - set function as nonstatic!!!!!!!!!!!!!!!!!!
  * @param[in] 	SSPx	SSP peripheral definition, should be:
  * 						- LPC_SSP0: SSP0 peripheral
  * 						- LPC_SSP1: SSP1 peripheral
  * @param[in]	target_clock : clock of SSP (Hz)
  * @return 		None
  ***********************************************************************/
-static void setSSPclock (LPC_SSP_TypeDef *SSPx, uint32_t target_clock)
+void SSP_SetSSPclock (LPC_SSP_TypeDef *SSPx, uint32_t target_clock)
 {
     uint32_t prescale, cr0_div, cmp_clk, ssp_clk;
 
@@ -158,7 +157,7 @@ void SSP_Init(LPC_SSP_TypeDef *SSPx, SSP_CFG_Type *SSP_ConfigStruct)
 	SSPx->CR1 = tmp;
 
 	// Set clock rate for SSP peripheral
-	setSSPclock(SSPx, SSP_ConfigStruct->ClockRate);
+	SSP_SetSSPclock(SSPx, SSP_ConfigStruct->ClockRate);
 }
 
 /*********************************************************************//**

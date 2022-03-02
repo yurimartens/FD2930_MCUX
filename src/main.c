@@ -42,6 +42,8 @@
 #include <flash_al.h>
 #include <pwm_al.h>
 
+#include <log_app.h>
+
 
 
 UartAl_t    Uart;
@@ -93,6 +95,8 @@ int main(void) {
 	PWM1Init(1000); // 1kHz
 
 	//IRPortInit();
+
+	LogAppInit();
 
 	while (1) {
 
