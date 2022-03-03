@@ -96,7 +96,7 @@ int main(void) {
 
 	//IRPortInit();
 
-	//LogAppInit();
+	LogAppInit();
 
 	while (1) {
 

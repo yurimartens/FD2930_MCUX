@@ -87,10 +87,6 @@ void DeviceInit()
 	EEPROMInit();
 
 	AutorecoveryCnt = 0;
-	DeviceData.Status = 0;
-	DeviceData.FWVersion = FW_VERSION;
-	DeviceData.HWVersion = HW_VERSION;
-	DeviceData.DeviceType = DEVICE_TYPE;
 
 	if (EEPROM_ERROR_EMPTY == EEPROMRead((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE)) {
 		SetDefaultParameters();
@@ -122,6 +118,9 @@ void DeviceInit()
 		if (DeviceData.FaultDelay > FD2930_MAX_WAIT_FAULT || DeviceData.FaultDelay < FD2930_MIN_WAIT_FAULT) {DeviceData.FaultDelay = FD2930_DEFAULT_WAIT_FAULT; write = 1;}
 		if (DeviceData.FireDelay > FD2930_MAX_WAIT_FIRE || DeviceData.FireDelay < FD2930_MIN_WAIT_FIRE) {DeviceData.FireDelay = FD2930_DEFAULT_WAIT_FIRE; write = 1;}
 	}
+	DeviceData.FWVersion = FW_VERSION;
+	DeviceData.HWVersion = HW_VERSION;
+	DeviceData.DeviceType = DEVICE_TYPE;
 
 	if (write) EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 
@@ -139,7 +138,7 @@ void DeviceInit()
   */
 void FunctionalTaskBG()
 {
-	if (DeviceData.StateFlags & FD2930_STATE_FLAG_UPDATE_CURRENT) {
+	if ((DeviceData.StateFlags & FD2930_STATE_FLAG_UPDATE_CURRENT) && (DeviceState > FD2930_STATE_START3)){
 		AD5421SetCurrent(DeviceData.Current420);
 		DeviceData.StateFlags &= ~FD2930_STATE_FLAG_UPDATE_CURRENT;
     }
