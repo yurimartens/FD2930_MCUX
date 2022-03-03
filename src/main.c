@@ -96,7 +96,7 @@ int main(void) {
 
 	//IRPortInit();
 
-	LogAppInit();
+	//LogAppInit();
 
 	while (1) {
 
@@ -130,7 +130,7 @@ void SysTick_Handler(void)
 	TimerDispatch(&Modbus.Timer);
 	TimerDispatch(&MeasurmentTimer);
 
-	//disk_timerproc();   //for SD card
+	disk_timerproc();   //for SD card
 }
 
 /**

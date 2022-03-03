@@ -259,6 +259,10 @@ typedef enum
   FD2930_CONFIG_8,
 } DeviceFireConfig_t;
 
+typedef struct {
+	uint16_t Page[100];
+} Archive_t;
+
 typedef struct
 {
     uint16_t MBId;                      //modbus address
@@ -310,7 +314,7 @@ typedef struct
 
     uint16_t Reserved1[142];
 
-    uint16_t ArchivePage[100];
+    Archive_t Archive;		// 200th MB addr
     uint16_t FFTData[100];
 } DeviceData_t;
 
