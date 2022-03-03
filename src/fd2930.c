@@ -14,6 +14,8 @@
 #include <Modbus.h>
 #include <ad5421.h>
 
+#include <dsplib_app.h>
+
 
 DeviceData_t	DeviceData;
 DeviceState_t	DeviceState;
@@ -42,9 +44,6 @@ uint16_t 		FFTCnt;
 
 double 			IR, UV, IRRaw, UVRaw, IRAv, IRRect;
 
-int16_t 		*FFTInputData  = (int16_t *)0x2007C000; /* AHB SRAM0 */
-int16_t 		*FFTOutputData = (int16_t *)0x20080000; /* AHB SRAM1 */
-
 uint16_t		CriminalFFTChannelNumber;
 
 DeviceLEDState_t LEDState = FD2930_LED_YELLOW;
@@ -55,6 +54,9 @@ uint8_t			Protocol;
 uint8_t 		ChangeConnectionSettings;
 
 float 			HeatPowerInst = 1.0;
+
+#define 		SSP0_420_MODE()			LPC_SSP0->CR0 &= ~(SSP_CPOL_LO);
+#define 		SSP0_SD_CARD_MODE()		LPC_SSP0->CR0 |= (SSP_CPOL_LO);
 
 extern Modbus_t Modbus;
 extern SSPAl_t  SSPSD420;
@@ -74,6 +76,7 @@ __STATIC_INLINE void HandleIRTestChannel();
 void SetDefaultParameters();
 void SetDefaultMBParameters();
 void UpdateOutputs();
+__STATIC_INLINE void UpdateTime();
 
 
 /**
@@ -124,10 +127,13 @@ void DeviceInit()
 
 	if (write) EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 
-	DeviceData.Status |= (FD2930_DEVICE_STATUS_CRC_OK | FD2930_DEVICE_STATUS_FLASH_OK);// | FD2930_DEVICE_STATUS_TESTING);
+	DeviceData.Status |= (FD2930_DEVICE_STATUS_CRC_OK | FD2930_DEVICE_STATUS_FLASH_OK);
 
 	TimerInit(&MeasurmentTimer, 0);
 	TimerReset(&MeasurmentTimer, ADC_SAMPLING_PERIOD);
+
+	RTC_GetFullTime(LPC_RTC, &DeviceTime);
+	UpdateTime();
 }
 
 
@@ -139,13 +145,16 @@ void DeviceInit()
 void FunctionalTaskBG()
 {
 	if ((DeviceData.StateFlags & FD2930_STATE_FLAG_UPDATE_CURRENT) && (DeviceState > FD2930_STATE_START3)){
+		SSP0_420_MODE();
 		AD5421SetCurrent(DeviceData.Current420);
+		SSP0_SD_CARD_MODE();
 		DeviceData.StateFlags &= ~FD2930_STATE_FLAG_UPDATE_CURRENT;
     }
     if (DeviceData.StateFlags & FD2930_STATE_FLAG_FFT_START) {
     	DeviceData.StateFlags &= ~FD2930_STATE_FLAG_FFT_START;
     	DeviceData.StateFlags |= FD2930_STATE_FLAG_FFT_ACTIVE;
-    	//iTest_SinusoidInput();
+    	DeviceData.FFTExceeded = FFTCalculate(1, 1, (uint8_t *)DeviceData.FFTData);
+    	DeviceData.StateFlags &= ~FD2930_STATE_FLAG_FFT_ACTIVE;
     }
 }
 
@@ -197,9 +206,11 @@ void FunctionalTaskPeriodic()
 				cnt++;
 			} else {
 				cnt = 0;
+				SSP0_420_MODE();
 				AD5421Init(&SSPSD420, 0);
 				DeviceData.Current420 = FD2930_TASK_STARTUP_CUR_UA;
 				AD5421SetCurrent(FD2930_TASK_STARTUP_CUR_UA);
+				SSP0_SD_CARD_MODE();
 				DeviceState++;
 			}
 		break;
@@ -406,6 +417,7 @@ void FunctionalTaskPeriodic()
 		        }
 
 		        RTC_GetFullTime(LPC_RTC, &DeviceTime);
+		        UpdateTime();
 		        UpdateOutputs();
 
 		        if ((!GPIO_READ_PIN(LPC_GPIO4, HALL1)) || (!GPIO_READ_PIN(LPC_GPIO4, HALL2))) {
@@ -523,6 +535,7 @@ void FunctionalTaskPeriodic()
 			} else {
 				cnt = 0;
 				RTC_GetFullTime(LPC_RTC, &DeviceTime);
+				UpdateTime();
 				UpdateOutputs();
 			}
 		    break;
@@ -532,6 +545,7 @@ void FunctionalTaskPeriodic()
 		    } else {
 		    	cnt = 0;
 		    	RTC_GetFullTime(LPC_RTC, &DeviceTime);
+		    	UpdateTime();
 		    	if (AutorecoveryCnt > 0 && AutorecoveryCnt < 30) AutorecoveryCnt++;
 		    	if (AutorecoveryCnt == 2) {
 		    		if (!(DeviceData.Status & FD2930_DEVICE_STATUS_IR_UV_SET)) {
@@ -585,6 +599,21 @@ void UpdateOutputs()
 	SetLEDs();
 	SetRelays();
 	SetHeater();
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+__STATIC_INLINE void UpdateTime()
+{
+	DeviceData.Seconds = DeviceTime.SEC;
+	DeviceData.Minutes = DeviceTime.MIN;
+	DeviceData.Hours = DeviceTime.HOUR;
+	DeviceData.Days = DeviceTime.DOM;
+	DeviceData.Months = DeviceTime.MONTH;
+	DeviceData.Years = DeviceTime.YEAR;
 }
 
 /**

@@ -32,12 +32,14 @@
 #define	MMC_WP		0						/* Write protected (yes:true, no:false, default:false) */
 
 #if SSP_CH == 0
+#define SSPx		LPC_SSP0
 #define	SSPxDR		LPC_SSP0->DR
 #define	SSPxSR		LPC_SSP0->SR
 #define	SSPxCR0		LPC_SSP0->CR0
 #define	SSPxCR1		LPC_SSP0->CR1
 
 #elif SSP_CH == 1
+#define SSPx		LPC_SSP1
 #define	SSPxDR		LPC_SSP1->DR
 #define	SSPxSR		LPC_SSP1->SR
 #define	SSPxCR0		LPC_SSP1->CR0
@@ -48,8 +50,8 @@
 #define	CS_HIGH()	GPIO_SetValue(SSP_CS_PORT, (1 << SSP_CS_PIN))
 
 
-#define FCLK_FAST() SSP_SetSSPclock(LPC_SSP0, SCLK_FAST)
-#define FCLK_SLOW() SSP_SetSSPclock(LPC_SSP0, SCLK_SLOW)
+#define FCLK_FAST() SSP_SetSSPclock(SSPx, SCLK_FAST)
+#define FCLK_SLOW() SSP_SetSSPclock(SSPx, SCLK_SLOW)
 
 #define	_BV(bit) (1<<(bit))
 
@@ -247,6 +249,7 @@ static int select (void)	/* 1:OK, 0:Timeout */
 
 static void power_on (void)	/* Enable SSP module and attach it to I/O pads */
 {
+	/*
 	PINSEL_CFG_Type PinCfg;
 	SSP_CFG_Type SSP_ConfigStruct;
 
@@ -271,18 +274,18 @@ static void power_on (void)	/* Enable SSP module and attach it to I/O pads */
 	PINSEL_ConfigPin(&PinCfg);
 
 	SSP_ConfigStructInit(&SSP_ConfigStruct);
-	SSP_Init(LPC_SSP0, &SSP_ConfigStruct);
+	SSP_Init(SSPx, &SSP_ConfigStruct);
 
 	CLKPWR_SetPCLKDiv(CLKPWR_PCLKSEL_SSP0, CLKPWR_PCLKSEL_CCLK_DIV_2);
 
-	SSP_Cmd(LPC_SSP0, ENABLE);
+	SSP_Cmd(SSPx, ENABLE);
 
-	/* wait for busy gone */
-	while(LPC_SSP0->SR & SSP_SR_BSY ) { ; }
+	*/
+	while(SSPx->SR & SSP_SR_BSY ) { ; }
 
 	/* drain SPI RX FIFO */
-	while (LPC_SSP0->SR & SSP_SR_RNE ) {
-		volatile uint32_t dummy = LPC_SSP0->DR;
+	while (SSPx->SR & SSP_SR_RNE ) {
+		volatile uint32_t dummy = SSPx->DR;
 		(void)dummy;
 	}
 

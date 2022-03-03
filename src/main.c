@@ -311,9 +311,11 @@ __STATIC_INLINE void MCUPinsConfiguration(void)
     PinCfg.Portnum = 1;
     PinCfg.Pinnum = PINSEL_PIN_21;
     PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
-    PinCfg.Funcnum = PINSEL_FUNC_3;
+    PinCfg.Funcnum = PINSEL_FUNC_0;
     PinCfg.Pinmode = PINSEL_PINMODE_PULLUP;
     PINSEL_ConfigPin(&PinCfg);      //SSEL0
+    GPIO_SetDir(1, 1 << PINSEL_PIN_21, 1);
+    GPIO_SetValue(1, 1 << PINSEL_PIN_21);
 
     PinCfg.Portnum = 1;
     PinCfg.Pinnum = PINSEL_PIN_22;
@@ -450,7 +452,7 @@ __STATIC_INLINE void Uart1AndProtocolInit()
   */
 __STATIC_INLINE void SSP0AndModulesInit()
 {
-	SSPInit(&SSPSD420, LPC_SSP0, 12000000, SSP_CPHA_SECOND, SSP_CPOL_HI);
+	SSPInit(&SSPSD420, LPC_SSP0, 12000000, SSP_CPHA_SECOND, SSP_CPOL_LO);
 	SSPInitCSPin(&SSPSD420, 0, LPC_GPIO1, SYNC);
 	SSPInitCSPin(&SSPSD420, 1, LPC_GPIO1, SSEL0);
 	SSPInitTxBuf(&SSPSD420, SD420OutBuf, sizeof(SD420OutBuf));

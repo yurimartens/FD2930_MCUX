@@ -276,7 +276,7 @@ typedef struct
     uint16_t Config;
     uint16_t UVGain;   //отфильтрованное значение с учетом масштабирования
     uint16_t IRGain;   //отфильтрованное значение с учетом масштабирования
-    uint16_t FFTLimit;
+    uint16_t FFTExceeded;
     uint16_t UVThres;
     uint16_t IRThres;
     uint16_t UVCoeff;
