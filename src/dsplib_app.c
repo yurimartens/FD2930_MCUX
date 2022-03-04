@@ -27,7 +27,7 @@ static void vTest_PerformFFT(void);
   */
 uint16_t FFTCalculate(float coeff, uint16_t gain, uint8_t *out)
 {	
-	vTest_PerformFFT();
+	//vTest_PerformFFT();
   
   	uint16_t FFTExceeded = 0;
   

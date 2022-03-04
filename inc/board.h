@@ -34,7 +34,7 @@
 #define LED3            (1UL << 3)     //P2.3 LED 3, 0 - ON, 1 - OFF
 #define IR_TEST         (1UL << 4)     //P2.4 Switch IR test light, 0 - ON, 1 - OFF
 #define UV_TEST         (1UL << 5)      //P2.5 Switch UV test light, 0 - ON, 1 - OFF
-#define UV_TEST2        (1UL << 11)    //P0.11 Switch UV test light, 0 - ON, 1 - OFF// дубляж порта, на плате установочной перемычка на UV_TEST P2.5 и P0.11, для увелмчения мощности управления реле теста уф
+//#define UV_TEST2        (1UL << 11)    //P0.11 Switch UV test light, 0 - ON, 1 - OFF// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ UV_TEST P2.5 пїЅ P0.11, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ
 #define R_FIRE          (1UL << 6)     //P2.6 Relay FIRE, 0 - ON, 1 - OFF
 #define R_WORK          (1UL << 7)     //P2.7 Relay WORK, 0 - ON, 1 - OFF
 #define R_DUST          (1UL << 8)     //P2.8 Relay DUST, 0 - ON, 1 - OFF
@@ -180,7 +180,7 @@
 
 #define RX_FIFO_SIZE        14
 
-//-------------определения для контроля питания LPC1768------------
+//-------------пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ LPC1768------------
 #define PCONP_PCTIM0    0x00000002
 #define PCONP_PCTIM1    0x00000004
 #define PCONP_PCUART0   0x00000008

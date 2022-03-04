@@ -30,8 +30,6 @@ uint16_t		CntTemperatureFault;
 uint16_t		UVNoise, UVNoiseTest, IRNoise, IRNoiseTest;
 uint16_t		UVTestLevel, IRTestLevel, UVTestFaultCnt, IRTestFaultCnt;
 
-uint16_t		IRThresF, UVThresF;
-
 uint16_t		IRTroubleCnt, IRTroubleCntPiece, UVTroubleCnt, UVTroubleCntPiece;
 
 uint16_t 		UVPickCnt;
@@ -113,7 +111,7 @@ void DeviceInit()
 				write = 1;
 			}
 		}
-		if (DeviceData.FFTThres > FD2930_MAX_GAIN_FFT || DeviceData.FFTThres < FD2930_MIN_GAIN_FFT) {DeviceData.FFTThres = FD2930_DEFAULT_GAIN_FFT; write = 1;}
+		if (DeviceData.FFTGain > FD2930_MAX_GAIN_FFT || DeviceData.FFTGain < FD2930_MIN_GAIN_FFT) {DeviceData.FFTGain = FD2930_DEFAULT_GAIN_FFT; write = 1;}
 		if (DeviceData.IRThres > FD2930_MAX_THRES_IR || DeviceData.IRThres < FD2930_MIN_THRES_IR) {DeviceData.IRThres = FD2930_DEFAULT_THRES_IR; write = 1;}
 		if (DeviceData.UVThres > FD2930_MAX_THRES_UV || DeviceData.UVThres < FD2930_MIN_THRES_UV) {DeviceData.UVThres = FD2930_DEFAULT_THRES_UV; write = 1;}
 		if (DeviceData.IRCoeff > FD2930_MAX_K_IR || DeviceData.IRCoeff < FD2930_MIN_K_IR) {DeviceData.IRCoeff = FD2930_DEFAULT_K_IR; write = 1;}
@@ -153,7 +151,7 @@ void FunctionalTaskBG()
     if (DeviceData.StateFlags & FD2930_STATE_FLAG_FFT_START) {
     	DeviceData.StateFlags &= ~FD2930_STATE_FLAG_FFT_START;
     	DeviceData.StateFlags |= FD2930_STATE_FLAG_FFT_ACTIVE;
-    	DeviceData.FFTExceeded = FFTCalculate(1, 1, (uint8_t *)DeviceData.FFTData);
+    	//DeviceData.FFTExceeded = FFTCalculate(1, DeviceData.FFTGain, (uint8_t *)DeviceData.FFTData);
     	DeviceData.StateFlags &= ~FD2930_STATE_FLAG_FFT_ACTIVE;
     }
 }
@@ -177,7 +175,6 @@ void FunctionalTaskPeriodic()
 		CheckFireStatusCnt++;
 		GPIO_SET_PIN(LPC_GPIO2, IR_TEST);
 		GPIO_SET_PIN(LPC_GPIO2, UV_TEST);
-		GPIO_SET_PIN(LPC_GPIO0, UV_TEST2);
 		avCoeffIR = 0.05, avCoeffUV = 0.05;
 	} else {
 		avCoeffIR = 0.0014, avCoeffUV = 0.001;
@@ -224,7 +221,6 @@ void FunctionalTaskPeriodic()
 						DeviceState = FD2930_STATE_SELFTEST;
 						SelfTest++;
 						GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
-						GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
 					} else {
 						DeviceState = FD2930_STATE_WORKING;
 						////push_flash_command(FLASH_WRITE_EVENT, EVENT_NORMAL_EVENT, MBS.buffer);
@@ -329,7 +325,6 @@ void FunctionalTaskPeriodic()
 		        }
 		        GPIO_SET_PIN(LPC_GPIO2, IR_TEST);
 		        GPIO_SET_PIN(LPC_GPIO2, UV_TEST);
-		        GPIO_SET_PIN(LPC_GPIO0, UV_TEST2);
 		        DeviceState = FD2930_STATE_WORKING;
 		        DeviceData.Status &= ~FD2930_DEVICE_STATUS_SELF_TEST;
 		        ////push_flash_command(FLASH_WRITE_EVENT, EVENT_NORMAL_EVENT, MBS.buffer);
@@ -353,16 +348,16 @@ void FunctionalTaskPeriodic()
 		    	if ((DeviceData.Config & 0x0F) <= 4) { // , только для двухканальных режимов
 		    		if ((DeviceData.UVGain < 150) && (postFireCnt == 0) && (UVPickCnt < 1)) {// если на уф канале все спокойно то вычисляем уровень шума в ИК и прибавляем часть его к установленному порогу
 		    			IRNoise = IRNoise + ((DeviceData.IRGain * 100) - (IRNoise * 100)) / 1000;// усредненное значение шума для плавающего порога
-		    			IRThresF = DeviceData.IRThres + 0.7 * IRNoise;
+		    			DeviceData.IRThresF = DeviceData.IRThres + 0.7 * IRNoise;
 		    		}
-		    		if (IRThresF > 1000) IRThresF = 1000;
+		    		if (DeviceData.IRThresF > 1000) DeviceData.IRThresF = 1000;
 		    		if (postFireCnt > 0) {
 		    			IRNoise = 0;
-		    			IRThresF = DeviceData.IRThres;
+		    			DeviceData.IRThresF = DeviceData.IRThres;
 		    		}
 		    	} else {
 		    		IRNoise = 0;
-		    		IRThresF = DeviceData.IRThres;
+		    		DeviceData.IRThresF = DeviceData.IRThres;
 		    	}
 		    	if (DeviceData.IRGain > (0.7 * DeviceData.IRThres)) {
 		    		if (DeviceData.UVGain < 150 && postFireCnt == 0) {
@@ -381,16 +376,16 @@ void FunctionalTaskPeriodic()
 		    	if ((DeviceData.Config & 0xf) <= 4) { // , только для двухканальных режимов
 		    		if (DeviceData.IRGain < 150 && postFireCnt == 0) { // если на ИК канале все спокойно то вычисляем уровень шума в УФ и прибавляем часть его к установленному порогу,
 		    			UVNoise = UVNoise + ((DeviceData.UVGain * 100) - (UVNoise * 100)) / 1000;// усредненное значение шума для плавающего порога
-		    			UVThresF = DeviceData.UVThres + 0.7 * UVNoise;
+		    			DeviceData.UVThresF = DeviceData.UVThres + 0.7 * UVNoise;
 		    		}
-		    		if (UVThresF > 1000) UVThresF = 1000;
+		    		if (DeviceData.UVThresF > 1000) DeviceData.UVThresF = 1000;
 		    		if (postFireCnt > 0) {
 		    			UVNoise = 0;
-		    			UVThresF = DeviceData.UVThres;
+		    			DeviceData.UVThresF = DeviceData.UVThres;
 		    		}
 		    	} else {
 		    		UVNoise = 0;
-		    		UVThresF = DeviceData.UVThres;
+		    		DeviceData.UVThresF = DeviceData.UVThres;
 		    	}
 
 		    	if (DeviceData.UVGain > (0.7 * DeviceData.UVThres)) {
@@ -432,8 +427,7 @@ void FunctionalTaskPeriodic()
 		        		////push_flash_command(FLASH_WRITE_EVENT, EVENT_HALL_OFF, MBS.buffer);
 		        	}
 		    	}
-		        GPIO_SET_PIN(LPC_GPIO2, (UV_TEST));
-		        GPIO_SET_PIN(LPC_GPIO0, (UV_TEST2)); //turn off UV test source
+		        GPIO_SET_PIN(LPC_GPIO2, (UV_TEST));//turn off UV test source
 		        GPIO_SET_PIN(LPC_GPIO2, IR_TEST);
 		    }
 
@@ -447,11 +441,10 @@ void FunctionalTaskPeriodic()
 		    			cnt24++;
 		    		} else {
 						cnt24 = 0;
-						//write_parameters();
+						EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 		    		}
 		    		if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_ALLOWED) {
 		    			GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
-		    			GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
 		    			DeviceState = FD2930_STATE_SELFTEST; //начинаем самотестирование
 		    			DeviceData.Status |= FD2930_DEVICE_STATUS_SELF_TEST;
 		    		}
@@ -466,11 +459,10 @@ void FunctionalTaskPeriodic()
 		    			cnt24++;
 		    		} else {
 		    			cnt24 = 0;
-		    			//write_parameters();
+		    			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 		    		}
 		    		if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_ALLOWED) {
 		    			GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
-		    			GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
 		    			DeviceState = FD2930_STATE_SELFTEST; //начинаем самотестирование
 		    			if (SelfTest < 14) SelfTest++;
 		    			DeviceData.Status |= FD2930_DEVICE_STATUS_SELF_TEST;
@@ -498,10 +490,9 @@ void FunctionalTaskPeriodic()
 		    		DeviceData.Status |= FD2930_DEVICE_STATUS_TEST_ZERO;
 		    		////push_flash_command(FLASH_WRITE_EVENT, EVENT_SET_ZERO, MBS.buffer);
 		    	}
-		    	//write_parameters();
+		    	EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 		    	DeviceState = FD2930_STATE_BREAK;
-		    	GPIO_SET_PIN(LPC_GPIO2, (UV_TEST));
-		    	GPIO_SET_PIN(LPC_GPIO0, (UV_TEST2)); //turn off UV test source
+		    	GPIO_SET_PIN(LPC_GPIO2, (UV_TEST));//turn off UV test source
 		    	GPIO_SET_PIN(LPC_GPIO2, IR_TEST);
 		    }
 		break;
@@ -516,11 +507,10 @@ void FunctionalTaskPeriodic()
 					DeviceData.Status |= FD2930_DEVICE_STATUS_TEST_CALIBR;
 					////push_flash_command(FLASH_WRITE_EVENT, EVENT_CALIBR1, MBS.buffer);
 				}
-				//write_parameters();
+				EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 				DeviceState = FD2930_STATE_WORKING;
 				////push_flash_command(FLASH_WRITE_EVENT, EVENT_NORMAL_EVENT, MBS.buffer);
-				GPIO_SET_PIN(LPC_GPIO2, (UV_TEST));
-				GPIO_SET_PIN(LPC_GPIO0, (UV_TEST2)); //turn off UV test source
+				GPIO_SET_PIN(LPC_GPIO2, (UV_TEST));//turn off UV test source
 				GPIO_SET_PIN(LPC_GPIO2, IR_TEST);
 				DeviceData.IRGain = 0;
 				IR = 0;
@@ -552,22 +542,20 @@ void FunctionalTaskPeriodic()
 		    			////push_flash_command(FLASH_WRITE_EVENT, EVENT_CALIBR2, MBS.buffer);
 		    			DeviceData.Status |= FD2930_DEVICE_STATUS_IR_UV_SET;
 		    		}
-		    		//write_parameters();
+		    		EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 		    	}
 		    	if (AutorecoveryCnt == 10) {
 		            DeviceState = FD2930_STATE_TEST_ZERO;
 		            DeviceData.Status &= ~FD2930_DEVICE_STATUS_TEST_ZERO;
 		            DeviceData.Status &= ~FD2930_DEVICE_STATUS_TEST_CALIBR;
 		            GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
-		            GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
-		            //write_parameters();
+		            EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 		    	}
 		    	if (AutorecoveryCnt == 20) {
 		    		DeviceState = FD2930_STATE_TEST_CALIBR;
 		            DeviceData.Status &= ~FD2930_DEVICE_STATUS_TEST_CALIBR;
 		            GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
-		            GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
-		            //write_parameters();
+		            EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 		            //AutorecoveryCnt=0; ?? было так
 		    	}
 		    	UpdateOutputs();
@@ -578,7 +566,6 @@ void FunctionalTaskPeriodic()
 		    	selfTestCnt = 0;
 		    	if ((DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_ALLOWED) && (DeviceData.Status & FD2930_DEVICE_STATUS_TEST_CALIBR)) {
 		    		GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
-		    		GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
 		    		DeviceState = FD2930_STATE_SELFTEST;
 		    		DeviceData.Status |= FD2930_DEVICE_STATUS_SELF_TEST;
 		    	}
@@ -655,14 +642,14 @@ __STATIC_INLINE void CheckFireStatus()
 				}
 			}
 		}
-		if (DeviceData.UVGain > 1.7 * UVThresF) {
+		if (DeviceData.UVGain > 1.7 * DeviceData.UVThresF) {
 			flag_UV_prefire = 1;
 			if (!(DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV)) {
 				DeviceData.Status |= FD2930_DEVICE_STATUS_ALARM_UV;
 				//push_flash_command(FLASH_WRITE_EVENT, EVENT_UV_HIGH, MBS.buffer);
 			}
 		} else {
-			if (DeviceData.UVGain > 1.7 * 0.7 * UVThresF) {
+			if (DeviceData.UVGain > 1.7 * 0.7 * DeviceData.UVThresF) {
 				flag_UV_prefire = 1;
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV) {
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_UV;
@@ -678,14 +665,14 @@ __STATIC_INLINE void CheckFireStatus()
 			}
 		}
 	} else {
-		if (DeviceData.IRGain > IRThresF) {
+		if (DeviceData.IRGain > DeviceData.IRThresF) {
 			flag_IR_prefire = 1;
 			if (!(DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR)) {
 				//push_flash_command(FLASH_WRITE_EVENT, EVENT_IR_HIGH, MBS.buffer);
 				DeviceData.Status |= FD2930_DEVICE_STATUS_ALARM_IR;
 			}
 		} else {
-			if (DeviceData.IRGain > 0.7 * IRThresF) {
+			if (DeviceData.IRGain > 0.7 * DeviceData.IRThresF) {
 				flag_IR_prefire = 1;
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR) {
 					//push_flash_command(FLASH_WRITE_EVENT, EVENT_IR_NORMAL, MBS.buffer);
@@ -700,14 +687,14 @@ __STATIC_INLINE void CheckFireStatus()
 				}
 			}
 		}
-		if (DeviceData.UVGain > UVThresF) {
+		if (DeviceData.UVGain > DeviceData.UVThresF) {
 			flag_UV_prefire = 1;
 			if (!(DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV)) {
 				DeviceData.Status |= FD2930_DEVICE_STATUS_ALARM_UV;
 				//push_flash_command(FLASH_WRITE_EVENT, EVENT_UV_HIGH, MBS.buffer);
 			}
 		} else {
-			if (DeviceData.UVGain > 0.7 * UVThresF) {
+			if (DeviceData.UVGain > 0.7 * DeviceData.UVThresF) {
 				flag_UV_prefire = 1;
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV) {
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_UV;
@@ -1686,7 +1673,7 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 			case 1:
 				DeviceState = FD2930_STATE_SELFTEST;
 				DeviceData.Status |= FD2930_DEVICE_STATUS_SELF_TEST;
-				GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST)); GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
+				GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
 				//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
 			break;
 			case 2:
@@ -1757,7 +1744,6 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 					DeviceState = FD2930_STATE_TEST_CALIBR;
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_TEST_CALIBR;
 					GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
-					GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
 					EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 					//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
 				}
@@ -1812,7 +1798,7 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 					DeviceState = FD2930_STATE_TEST_ZERO;
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_TEST_ZERO;
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_TEST_CALIBR;
-					GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST)); GPIO_RESET_PIN(LPC_GPIO0, (UV_TEST2));
+					GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
 					EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 					//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
 				}
@@ -1844,9 +1830,10 @@ void SDADCTask(double avCoeffIR, double avCoeffUV)
 	IRRaw = res->ch[0];
 	UVRaw = res->ch[1];
 
-	if (UVRaw < UVNoise / 10) {
+	if (UVRaw * 10 > UVNoise) {
 		if (UVPickCnt < UV_PICK_LIMIT) UVPickCnt++;
-		else UVPickCnt = 0;
+	} else {
+		UVPickCnt = 0;
 	}
 
 	if ((UVPickCnt > UV_PICK_WORK_AREA) || (UVPickCnt == 0) || (DeviceData.IRGain > IR_GAIN_UV_PICK)) {
@@ -1926,7 +1913,7 @@ void SetDefaultParameters()
 	DeviceData.WorkedTime = 0;
 	DeviceData.HeatPower = FD2930_DEFAULT_HEATPOWER;
 	DeviceData.HeaterThres = FD2930_DEFAULT_THRES_HEATER;
-	DeviceData.FFTThres = FD2930_DEFAULT_GAIN_FFT;
+	DeviceData.FFTGain = FD2930_DEFAULT_GAIN_FFT;
 	DeviceData.IRThres = FD2930_DEFAULT_THRES_IR;
 	DeviceData.UVThres = FD2930_DEFAULT_THRES_UV;
 	DeviceData.IRCoeff = FD2930_DEFAULT_K_IR;

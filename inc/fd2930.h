@@ -277,8 +277,8 @@ typedef struct
     uint16_t UVGain;   //отфильтрованное значение с учетом масштабирования
     uint16_t IRGain;   //отфильтрованное значение с учетом масштабирования
     uint16_t FFTExceeded;
-    uint16_t UVThres;
-    uint16_t IRThres;
+    uint16_t UVThresF;
+    uint16_t IRThresF;
     uint16_t UVCoeff;
     uint16_t IRCoeff;
     uint16_t FireDelay;
@@ -301,7 +301,7 @@ typedef struct
     uint16_t Current420;
     uint16_t FWCheckSumm;
     uint16_t ArchiveEvent;
-    uint16_t FFTThres;
+    uint16_t FFTGain;
     uint16_t IRRaw;
     uint16_t IRAv;
     uint16_t IRRect;
@@ -310,7 +310,9 @@ typedef struct
     uint16_t CntFaultUV;
     uint16_t StateFlags;
     uint16_t UVRaw;
-    uint16_t Reserved0[10];
+    uint16_t UVThres;
+    uint16_t IRThres;
+    uint16_t Reserved0[8];
 
     uint16_t Reserved1[142];
 
