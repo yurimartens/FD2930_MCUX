@@ -27,7 +27,7 @@ static void vTest_PerformFFT(void);
   */
 uint16_t FFTCalculate(float coeff, uint16_t gain, uint8_t *out)
 {	
-	//vTest_PerformFFT();
+	vTest_PerformFFT();
   
   	uint16_t FFTExceeded = 0;
   
@@ -40,7 +40,7 @@ uint16_t FFTCalculate(float coeff, uint16_t gain, uint8_t *out)
   	Noise = (float)Noise / FFT_OUTPUT_POINTS;
 
   	for (int j = 0; j < FFT_OUTPUT_POINTS; j++) {
-  		if (abs(Magnitude[j] - Noise) * (gain / coeff) > 2 * Noise) FFTExceeded++;
+  		if (fabs(Magnitude[j] - Noise) * (gain / coeff) > 2 * Noise) FFTExceeded++;
   	}
   	return FFTExceeded;
 }

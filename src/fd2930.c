@@ -151,7 +151,8 @@ void FunctionalTaskBG()
     if (DeviceData.StateFlags & FD2930_STATE_FLAG_FFT_START) {
     	DeviceData.StateFlags &= ~FD2930_STATE_FLAG_FFT_START;
     	DeviceData.StateFlags |= FD2930_STATE_FLAG_FFT_ACTIVE;
-    	//DeviceData.FFTExceeded = FFTCalculate(1, DeviceData.FFTGain, (uint8_t *)DeviceData.FFTData);
+    	float coeff = (-0.0000000006 * DeviceData.IRGain * DeviceData.IRGain * DeviceData.IRGain) + (0.000003 * DeviceData.IRGain * DeviceData.IRGain) - (0.0026 * DeviceData.IRGain) + 2.4145;
+    	DeviceData.FFTExceeded = FFTCalculate(coeff, DeviceData.FFTGain, (uint8_t *)DeviceData.FFTData);
     	DeviceData.StateFlags &= ~FD2930_STATE_FLAG_FFT_ACTIVE;
     }
 }
