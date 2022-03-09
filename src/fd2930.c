@@ -1641,6 +1641,18 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 		}
 		return 0;
 	}
+	if ((addr == MB_REG_ADDR(DeviceData, UVThresF)) && (qty == 1)) {
+		if ((DeviceData.UVThresF >= FD2930_MIN_THRES_UV) && (DeviceData.UVThresF <= FD2930_MAX_THRES_UV)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, IRThresF)) && (qty == 1)) {
+		if ((DeviceData.IRThresF >= FD2930_MIN_THRES_IR) && (DeviceData.IRThresF <= FD2930_MAX_THRES_IR)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
 	if ((addr == MB_REG_ADDR(DeviceData, UVCoeff)) && (qty == 1)) {
 		if ((DeviceData.UVCoeff >= FD2930_MIN_K_UV) && (DeviceData.UVCoeff <= FD2930_MAX_K_UV)) {
 			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
@@ -1664,6 +1676,42 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 		}
 		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, Years)) && (qty == 1)) {
+		if (DeviceData.Years <= 4095 && DeviceData.Years > 2000) {
+			RTC_SetTime(LPC_RTC, RTC_TIMETYPE_YEAR, DeviceData.Years);
+			//push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+        }
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, Months)) && (qty == 1)) {
+		if (DeviceData.Months <= 12 && DeviceData.Months > 0) {
+			RTC_SetTime(LPC_RTC, RTC_TIMETYPE_MONTH, DeviceData.Months);
+			//push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+		}
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, Days)) && (qty == 1)) {
+		if (DeviceData.Days <= 31 && DeviceData.Days > 0) {
+			RTC_SetTime(LPC_RTC, RTC_TIMETYPE_DAYOFMONTH, DeviceData.Days);
+			//push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+		}
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, Hours)) && (qty == 1)) {
+		if (DeviceData.Hours < 24) {
+			RTC_SetTime(LPC_RTC, RTC_TIMETYPE_HOUR, DeviceData.Hours);
+			//push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+		}
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, Minutes)) && (qty == 1)) {
+		if (DeviceData.Minutes < 60) {
+			RTC_SetTime(LPC_RTC, RTC_TIMETYPE_MINUTE, DeviceData.Minutes);
+			//push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+		}
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, Seconds)) && (qty == 1)) {
+		if (DeviceData.Seconds < 60) {
+			RTC_SetTime(LPC_RTC, RTC_TIMETYPE_SECOND, DeviceData.Seconds);
+			//push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+		}
 	}
 	if ((addr == MB_REG_ADDR(DeviceData, Command)) && (qty == 1)) {
 		switch (DeviceData.Command) {
@@ -1917,6 +1965,8 @@ void SetDefaultParameters()
 	DeviceData.FFTGain = FD2930_DEFAULT_GAIN_FFT;
 	DeviceData.IRThres = FD2930_DEFAULT_THRES_IR;
 	DeviceData.UVThres = FD2930_DEFAULT_THRES_UV;
+	DeviceData.IRThresF = FD2930_DEFAULT_THRES_IR;
+	DeviceData.UVThresF = FD2930_DEFAULT_THRES_UV;
 	DeviceData.IRCoeff = FD2930_DEFAULT_K_IR;
 	DeviceData.UVCoeff = FD2930_DEFAULT_K_UV;
 	DeviceData.FaultDelay = FD2930_DEFAULT_WAIT_FAULT;

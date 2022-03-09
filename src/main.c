@@ -170,10 +170,6 @@ __STATIC_INLINE void MCUPeriphConfiguration(void)
     LPC_SC->PCLKSEL0 &= ~(3 << UART1_PCLK_OFFSET);
     LPC_SC->PCLKSEL0 |= PCLCK_U1_CLK_1;
 
-    NVIC_SetPriority(UART1_IRQn, 18);
-    NVIC_EnableIRQ(UART1_IRQn);
-    NVIC_ClearPendingIRQ(UART1_IRQn);
-
     LPC_SC->PCONP |= PCONP_PCAD;
     NVIC_ClearPendingIRQ(ADC_IRQn);
 
@@ -443,6 +439,9 @@ __STATIC_INLINE void Uart1AndProtocolInit()
 	UARTInitTxBuf(&Uart, TxBuf, sizeof(TxBuf));
 	UARTInitRxBuf(&Uart, RxBuf, sizeof(RxBuf));
 
+	NVIC_SetPriority(UART1_IRQn, 18);
+	NVIC_EnableIRQ(UART1_IRQn);
+	//NVIC_ClearPendingIRQ(UART1_IRQn);
 }
 
 /**
