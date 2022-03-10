@@ -10,8 +10,8 @@
 #include <math.h>
 
 
-int16_t 		*FFTInputData  = (int16_t *)0x2007C000; /* AHB SRAM0 */
-int16_t 		*FFTOutputData = (int16_t *)0x20080000; /* AHB SRAM1 */
+int16_t 		FFTInputData[FFT_POINTS * 2];//  = (int16_t *)0x2007C000; /* AHB SRAM0 */
+int16_t 		FFTOutputData[FFT_POINTS * 2];// = (int16_t *)0x20080000; /* AHB SRAM1 */
 
 static uint16_t Magnitude[FFT_OUTPUT_POINTS];
 
@@ -25,17 +25,16 @@ static void vTest_PerformFFT(void);
   * @param
   * @retval
   */
-uint16_t FFTCalculate(float coeff, uint16_t gain, uint8_t *out)
+uint16_t FFTCalculate(float coeff, uint16_t gain, uint16_t *out)
 {	
 	vTest_PerformFFT();
   
   	uint16_t FFTExceeded = 0;
   
   	for(int j = 0; j < FFT_OUTPUT_POINTS; j++) {
-  		Magnitude[j] = (int)sqrt(pow(FFTOutputData[2 * j], 2) + pow(FFTOutputData[(2 * j) + 1], 2));
+  		Magnitude[j] = (int)sqrt(FFTOutputData[2 * j] * FFTOutputData[2 * j] + FFTOutputData[2 * j + 1] * FFTOutputData[2 * j + 1]);
   		Noise += Magnitude[j];
-  		out[2 * j] = Magnitude[j] >> 8;
-  		out[2 * j + 1] = Magnitude[j];
+  		out[j] = Magnitude[j];
   	}
   	Noise = (float)Noise / FFT_OUTPUT_POINTS;
 

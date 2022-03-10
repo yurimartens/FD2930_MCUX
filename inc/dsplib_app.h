@@ -14,17 +14,17 @@ extern "C" {
 
 #include <stdint.h>
 
-
+#define FFT_POINTS						1024
 #define FFT_OUTPUT_POINTS				40
 
 
-extern int16_t 		*FFTInputData;
-extern int16_t 		*FFTOutputData;
+extern int16_t 		FFTInputData[FFT_POINTS * 2];
+extern int16_t 		FFTOutputData[FFT_POINTS * 2];
 
 extern uint16_t 	FFTMagnitude[FFT_OUTPUT_POINTS];
 
 
-uint16_t FFTCalculate(float coeff, uint16_t gain, uint8_t *out);
+uint16_t FFTCalculate(float coeff, uint16_t gain, uint16_t *out);
 
 #endif // DSPLIB_APP
 

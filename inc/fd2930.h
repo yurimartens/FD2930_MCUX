@@ -27,7 +27,7 @@ extern "C" {
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	304
+#define FW_VERSION_LO                  	310
 
 
 #define MB_REG_ADDR(_STR_, _REG_)      	((uint16_t *)&_STR_._REG_ - (uint16_t *)&_STR_)
@@ -46,8 +46,6 @@ extern "C" {
 #define STARTUP_BLINK					500
 
 #define MB_ADDR_RUN_BOOTLOADER			0xFFFC
-
-#define FFT_POINTS						1024
 
 #define RIT_INTERVAL_mS					1
 
@@ -303,7 +301,7 @@ typedef struct
     uint16_t ArchiveEvent;
     uint16_t FFTGain;
     uint16_t IRRaw;
-    uint16_t IRAv;
+    uint16_t IRAv;		// 40
     uint16_t IRRect;
     uint32_t ArchPageIdx;
     uint16_t CntFaultIR;
@@ -312,9 +310,7 @@ typedef struct
     uint16_t UVRaw;
     uint16_t UVThres;
     uint16_t IRThres;
-    uint16_t Reserved0[8];
-
-    uint16_t Reserved1[142];
+    uint16_t Reserved0[150];	// 50
 
     Archive_t Archive;		// 200th MB addr
     uint16_t FFTData[100];
