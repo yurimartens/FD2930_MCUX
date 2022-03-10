@@ -16,6 +16,8 @@
 
 #include <dsplib_app.h>
 
+#include <log_app.h>
+
 
 DeviceData_t	DeviceData;
 DeviceState_t	DeviceState;
@@ -48,8 +50,12 @@ DeviceLEDState_t LEDState = FD2930_LED_YELLOW;
 
 uint8_t 		IRDA_Command_Rcvd;
 
+uint8_t 		BlockService = 1;
+
 uint8_t			Protocol;
 uint8_t 		ChangeConnectionSettings;
+
+uint32_t 		ArchPageIdx, ArchLastPage;
 
 float 			HeatPowerInst = 1.0;
 
@@ -154,6 +160,19 @@ void FunctionalTaskBG()
     	float coeff = (-0.0000000006 * DeviceData.IRGain * DeviceData.IRGain * DeviceData.IRGain) + (0.000003 * DeviceData.IRGain * DeviceData.IRGain) - (0.0026 * DeviceData.IRGain) + 2.4145;
     	DeviceData.FFTExceeded = FFTCalculate(coeff, DeviceData.FFTGain, DeviceData.FFTData);
     	DeviceData.StateFlags &= ~FD2930_STATE_FLAG_FFT_ACTIVE;
+    }
+    if (DeviceData.Status & FD2930_DEVICE_STATUS_SD_CARD) {
+    	LogAppPopAndStoreAllData();
+    	if (DeviceData.StateFlags & FD2930_STATE_FLAG_ERASE_ARCHIVE) {
+    		DeviceData.StateFlags &= ~FD2930_STATE_FLAG_ERASE_ARCHIVE;
+    		ArchLastPage = DeviceData.ArchLastPageHi = DeviceData.ArchLastPageLo = 0;
+    		ArchPageIdx = DeviceData.ArchPageIdxHi = DeviceData.ArchPageIdxLo = 0;
+            LogAppErase();
+    	}
+    	if (DeviceData.StateFlags & FD2930_STATE_FLAG_READ_ARCHIVE) {
+    		DeviceData.StateFlags &= ~FD2930_STATE_FLAG_READ_ARCHIVE;
+    		LogAppRestoreData();
+    	}
     }
 }
 
@@ -437,7 +456,6 @@ void FunctionalTaskPeriodic()
 		    		selfTestCnt++;//яя// тестируемся каждые три минуты
 		    	} else {
 		    		selfTestCnt = 0;
-		    		DeviceData.WorkedTime += 30;
 		    		if (cnt24 < 48) {
 		    			cnt24++;
 		    		} else {
@@ -455,7 +473,6 @@ void FunctionalTaskPeriodic()
 		    		selfTestCnt++;//яя
 		    	} else {
 		    		selfTestCnt = 0;
-		    		DeviceData.WorkedTime += 30;
 		    		if (cnt24 < 48) {
 		    			cnt24++;
 		    		} else {
@@ -1557,6 +1574,12 @@ uint8_t MBPassCallBack(uint16_t addr, uint16_t valQty)
 	} else {
 		setVal = valQty;
 	}
+	if (addr == MB_REG_ADDR(DeviceData, BlockService)) {
+		if (setVal == FD2930_PASSWORD) BlockService = 0;
+		else BlockService = 1;
+		return 0;
+	}
+
 	storVal = *(((uint16_t *)&DeviceData) + addr);
 
 	if (setVal != storVal) MBRegModified = 1;
@@ -1713,6 +1736,38 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 			//push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
 		}
 	}
+	if (addr == (MB_REG_ADDR(DeviceData, ArchPageIdxHi)) && (qty == 1)) {
+		ArchPageIdx = DeviceData.ArchPageIdxHi << 16;
+	}
+	if (addr == (MB_REG_ADDR(DeviceData, ArchPageIdxLo)) && (qty == 1)) {
+		ArchPageIdx |= DeviceData.ArchPageIdxLo;
+		if (ArchPageIdx > ArchLastPage) ArchPageIdx = 0;
+		//read push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+	}
+	if (addr == (MB_REG_ADDR(DeviceData, HeatPower)) && (qty == 1)) {
+		if (DeviceData.HeatPower < FD2930_MAX_HEATPOWER) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+			//read push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+		}
+	}
+	if (addr == (MB_REG_ADDR(DeviceData, HeaterThres)) && (qty == 1)) {
+		if (DeviceData.HeaterThres < FD2930_MAX_THRES_HEATER) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+			//read push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+		}
+	}
+	if (addr == (MB_REG_ADDR(DeviceData, FFTGain)) && (qty == 1)) {
+		if (DeviceData.FFTGain >= FD2930_MIN_GAIN_FFT || DeviceData.FFTGain <= FD2930_MAX_GAIN_FFT) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+			//read push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+		}
+	}
+	if (addr == (MB_REG_ADDR(DeviceData, BlockService)) && (qty == 1)) {
+		if (DeviceData.FFTGain >= FD2930_MIN_GAIN_FFT || DeviceData.FFTGain <= FD2930_MAX_GAIN_FFT) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+			//read push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+		}
+	}
 	if ((addr == MB_REG_ADDR(DeviceData, Command)) && (qty == 1)) {
 		switch (DeviceData.Command) {
 			case 0:
@@ -1806,15 +1861,15 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 			break;
 			case 17:
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_SD_CARD) {
-					if ((DeviceData.ArchPageIdx) >= DeviceData.ArchLastPage) DeviceData.ArchPageIdx = 0;
-			        else DeviceData.ArchPageIdx++;
+					if ((ArchPageIdx) >= ArchLastPage) ArchPageIdx = 0;
+			        else ArchPageIdx++;
 					//push_flash_command(FLASH_READ_ARCHIVE, fd2930.chosen_archive_page, MBS.buffer);
 			    }
 			break;
 			case 18:
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_SD_CARD) {
-					if (DeviceData.ArchPageIdx == 0) DeviceData.ArchPageIdx = DeviceData.ArchLastPage - 1;
-					else DeviceData.ArchPageIdx--;
+					if (ArchPageIdx == 0) ArchPageIdx = ArchLastPage - 1;
+					else ArchPageIdx--;
 					//push_flash_command(FLASH_READ_ARCHIVE, fd2930.chosen_archive_page, MBS.buffer);
 				}
 			break;
@@ -1959,7 +2014,6 @@ void SetDefaultParameters()
 	DeviceData.Status = FD2930_DEVICE_STATUS_BREAK;
 	DeviceData.MBId = FD2930_DEF_MBS_ADDR;
 	DeviceData.Baudrate = FD2930_DEF_MBS_BAUD;
-	DeviceData.WorkedTime = 0;
 	DeviceData.HeatPower = FD2930_DEFAULT_HEATPOWER;
 	DeviceData.HeaterThres = FD2930_DEFAULT_THRES_HEATER;
 	DeviceData.FFTGain = FD2930_DEFAULT_GAIN_FFT;

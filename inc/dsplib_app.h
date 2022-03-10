@@ -18,8 +18,8 @@ extern "C" {
 #define FFT_OUTPUT_POINTS				40
 
 
-extern int16_t 		FFTInputData[FFT_POINTS * 2];
-extern int16_t 		FFTOutputData[FFT_POINTS * 2];
+extern int16_t 		*FFTInputData;
+extern int16_t 		*FFTOutputData;
 
 extern uint16_t 	FFTMagnitude[FFT_OUTPUT_POINTS];
 

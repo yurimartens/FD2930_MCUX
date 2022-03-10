@@ -36,10 +36,12 @@ void LogAppInit()
 
 	if (LOG_ERROR_NONE == LogInit(&DeviceTime, DeviceData.SerialNumber)) {
 		DeviceData.Status |= FD2930_DEVICE_STATUS_SD_CARD;
-		DeviceData.ArchLastPage = LogGetEntriesNum();
+		ArchLastPage = LogGetEntriesNum();
+		DeviceData.ArchLastPageHi = ArchLastPage >> 16;
+		DeviceData.ArchLastPageLo = ArchLastPage;
 	} else {
 		DeviceData.Status &= ~FD2930_DEVICE_STATUS_SD_CARD;
-		DeviceData.ArchLastPage = 0;
+		ArchLastPage = DeviceData.ArchLastPageHi = DeviceData.ArchLastPageLo = 0;
 	}
 }
 
@@ -49,7 +51,7 @@ void LogAppInit()
   * @param
   * @retval
   */
-void LogPushData()
+void LogAppPushData()
 {
 	if (DeviceData.Status & FD2930_DEVICE_STATUS_SD_CARD) {
 		FIFOPush(&FIFO, (uint8_t *)&DeviceData);
@@ -61,7 +63,7 @@ void LogPushData()
   * @param
   * @retval
   */
-void LogPushLiveData()
+void LogAppPushLiveData()
 {
 	if (DeviceData.Status & FD2930_DEVICE_STATUS_SD_CARD) {
 		FIFOPush(&FIFOLive, (uint8_t *)&DeviceData);
@@ -73,7 +75,7 @@ void LogPushLiveData()
   * @param
   * @retval
   */
-void LogPopAndStoreAllData()
+void LogAppPopAndStoreAllData()
 {
 	uint16_t status;
 	uint32_t regIdx;
@@ -122,7 +124,9 @@ void LogPopAndStoreAllData()
 		ct.YEAR = (FIFOTemp[regIdx * 2] << 8) | FIFOTemp[regIdx * 2 + 1];
 		LogWriteEvent(FIFOTemp, LOG_ENTRY_SIZE, &ct, "");
 
-		DeviceData.ArchLastPage = LogGetEntriesNum() - 1;
+		ArchLastPage = LogGetEntriesNum() - 1;
+		DeviceData.ArchLastPageHi = ArchLastPage >> 16;
+		DeviceData.ArchLastPageLo = ArchLastPage;
 	}
 }
 
@@ -131,34 +135,44 @@ void LogPopAndStoreAllData()
   * @param
   * @retval
   */
-void LogRestoreData()
+void LogAppRestoreData()
 {
 	if (DeviceData.Status & FD2930_DEVICE_STATUS_SD_CARD) {
-		DeviceData.ArchLastPage = LogGetEntriesNum() - 1;
-	    LogReadEvent(DeviceData.ArchPageIdx, FileLine, LOG_FILE_LINE_LEN);
+		ArchLastPage = LogGetEntriesNum() - 1;
+		DeviceData.ArchLastPageHi = ArchLastPage >> 16;
+		DeviceData.ArchLastPageLo = ArchLastPage;
+	    LogReadEvent(ArchPageIdx, FileLine, LOG_FILE_LINE_LEN);
 	    LogParseEvent((uint8_t *)DeviceData.Archive.Page, FileLine, LOG_FILE_LINE_LEN);
 	    int YY, MM, DD, hh, mm, ss;
 	    sscanf((const char *)FileLine, "%02d:%02d:%02d/%02d:%02d:%02d", &DD, &MM, &YY, &hh, &mm, &ss);
 	    uint32_t regIdx = MB_REG_ADDR(DeviceData, Seconds);		// following regs must be in a strict order
-	    DeviceData.Archive.Page[regIdx * 2 + 1] = ss;
-	    DeviceData.Archive.Page[(regIdx++) * 2 + 1] = mm;
-	    DeviceData.Archive.Page[(regIdx++) * 2 + 1] = hh;
-	    DeviceData.Archive.Page[(regIdx++) * 2 + 1] = DD;
-	    DeviceData.Archive.Page[(regIdx++) * 2 + 1] = MM;
-	    DeviceData.Archive.Page[(regIdx++) * 2 + 1] = YY;
+	    DeviceData.Archive.Page[regIdx] = ss;
+	    DeviceData.Archive.Page[regIdx++] = mm;
+	    DeviceData.Archive.Page[regIdx++] = hh;
+	    DeviceData.Archive.Page[regIdx++] = DD;
+	    DeviceData.Archive.Page[regIdx++] = MM;
+	    DeviceData.Archive.Page[regIdx++] = YY;
 
-	    regIdx = MB_REG_ADDR(DeviceData, ArchLastPage);
-	    DeviceData.Archive.Page[regIdx * 2] = DeviceData.ArchLastPage >> 24;
-	    DeviceData.Archive.Page[regIdx * 2 + 1] = DeviceData.ArchLastPage >> 16;
-	    DeviceData.Archive.Page[regIdx * 2 + 2] = DeviceData.ArchLastPage >> 8;
-	    DeviceData.Archive.Page[regIdx * 2 + 3] = DeviceData.ArchLastPage;
+	    regIdx = MB_REG_ADDR(DeviceData, ArchLastPageHi);
+	    DeviceData.Archive.Page[regIdx] = DeviceData.ArchLastPageHi;
+	    regIdx = MB_REG_ADDR(DeviceData, ArchLastPageLo);
+	    DeviceData.Archive.Page[regIdx] = DeviceData.ArchLastPageLo;
 
-	    regIdx = MB_REG_ADDR(DeviceData, ArchPageIdx);
-	    DeviceData.Archive.Page[regIdx * 2] = DeviceData.ArchPageIdx >> 24;
-	    DeviceData.Archive.Page[regIdx * 2 + 1] = DeviceData.ArchPageIdx >> 16;
-	    DeviceData.Archive.Page[regIdx * 2 + 2] = DeviceData.ArchPageIdx >> 8;
-	    DeviceData.Archive.Page[regIdx * 2 + 3] = DeviceData.ArchPageIdx;
+	    regIdx = MB_REG_ADDR(DeviceData, ArchPageIdxHi);
+	    DeviceData.Archive.Page[regIdx] = DeviceData.ArchPageIdxHi;
+	    regIdx = MB_REG_ADDR(DeviceData, ArchPageIdxLo);
+	    DeviceData.Archive.Page[regIdx] = DeviceData.ArchPageIdxLo;
 	}
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+void LogAppErase()
+{
+	LogErase();
 }
 
 

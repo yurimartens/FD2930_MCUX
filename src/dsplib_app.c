@@ -10,8 +10,8 @@
 #include <math.h>
 
 
-int16_t 		FFTInputData[FFT_POINTS * 2];//  = (int16_t *)0x2007C000; /* AHB SRAM0 */
-int16_t 		FFTOutputData[FFT_POINTS * 2];// = (int16_t *)0x20080000; /* AHB SRAM1 */
+int16_t 		*FFTInputData = (int16_t *)0x2007C000; /* AHB SRAM0 */
+int16_t 		*FFTOutputData = (int16_t *)0x20080000; /* AHB SRAM1 */
 
 static uint16_t Magnitude[FFT_OUTPUT_POINTS];
 

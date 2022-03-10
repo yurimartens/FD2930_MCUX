@@ -111,6 +111,8 @@ extern "C" {
 #define FD2930_MBS_BAUD_MULT   			4800
 #define IPES_MBS_BAUD_MULT             	1200
 
+#define FD2930_PASSWORD                 5813
+
 #define FD2930_DEFAULT_THRES_IR         400
 #define FD2930_MIN_THRES_IR              100
 #define FD2930_MAX_THRES_IR              2000
@@ -211,6 +213,7 @@ extern "C" {
 #define FD2930_STATE_FLAG_ERASE_ARCHIVE         (1 << 3)
 #define FD2930_STATE_FLAG_FFT_START             (1 << 4)
 #define FD2930_STATE_FLAG_FFT_ACTIVE            (1 << 5)
+#define FD2930_STATE_FLAG_READ_ARCHIVE          (1 << 8)
 
 #define UV_PICK_LIMIT							10000
 #define UV_PICK_WORK_AREA						500
@@ -287,14 +290,16 @@ typedef struct
     int16_t Temperature;
     uint16_t UVVoltage;
     uint16_t InPowerVoltage;
-    uint32_t WorkedTime;
+    uint16_t IRDACmd;
+    uint16_t Reserved0;
     uint16_t Seconds;
     uint16_t Minutes;
     uint16_t Hours;
     uint16_t Days;
     uint16_t Months;
     uint16_t Years;
-    uint32_t ArchLastPage;
+    uint16_t ArchLastPageHi;
+    uint16_t ArchLastPageLo;
     uint16_t BlockService;
     uint16_t Current420;
     uint16_t FWCheckSumm;
@@ -303,14 +308,15 @@ typedef struct
     uint16_t IRRaw;
     uint16_t IRAv;		// 40
     uint16_t IRRect;
-    uint32_t ArchPageIdx;
+    uint16_t ArchPageIdxHi;
+    uint16_t ArchPageIdxLo;
     uint16_t CntFaultIR;
     uint16_t CntFaultUV;
     uint16_t StateFlags;
     uint16_t UVRaw;
     uint16_t UVThres;
     uint16_t IRThres;
-    uint16_t Reserved0[150];	// 50
+    uint16_t Reserved1[150];	// 50
 
     Archive_t Archive;		// 200th MB addr
     uint16_t FFTData[100];
@@ -319,7 +325,9 @@ typedef struct
 extern DeviceData_t	DeviceData;
 extern RTC_TIME_Type DeviceTime;
 extern uint8_t		ChangeConnectionSettings;
-extern uint8_t			Protocol;
+extern uint8_t		Protocol;
+
+extern uint32_t 	ArchPageIdx, ArchLastPage;
 
 extern Timer_t		MeasurmentTimer;
 

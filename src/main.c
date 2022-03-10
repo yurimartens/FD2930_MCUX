@@ -61,13 +61,13 @@ uint8_t     SD420InBuf[16];
 
 
 
-
 __STATIC_INLINE void MCUPinsConfiguration(void);
 __STATIC_INLINE void MCUPeriphConfiguration(void);
 __STATIC_INLINE void RUNPeriodicTasks();
 __STATIC_INLINE void Uart1AndProtocolInit();
 __STATIC_INLINE void SSP0AndModulesInit();
 __STATIC_INLINE void SSP1AndModulesInit();
+
 
 /**
   * @brief
