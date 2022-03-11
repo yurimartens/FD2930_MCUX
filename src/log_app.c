@@ -84,20 +84,20 @@ void LogAppPopAndStoreAllData()
 
 	while (FIFO_ERROR_NONE == FIFOPop(&FIFO, FIFOTemp)) {	// if SD isn't available FifoPop won't get anything
 		regIdx = MB_REG_ADDR(DeviceData, Status);
-		status = (FIFOTemp[regIdx * 2] << 8) | FIFOTemp[regIdx * 2 + 1];
+		status = (FIFOTemp[regIdx * 2 + 1] << 8) | FIFOTemp[regIdx * 2];
 
 		if (status & FD2930_DEVICE_STATUS_FIRE) {
 			strcpy(reason, LOG_REASON_FIRE);
 			while (1) {
 				if (FIFO_ERROR_NONE != FIFOPop(&FIFO, FIFOTempLive)) break;
 				regIdx = MB_REG_ADDR(DeviceData, Seconds);		// following regs must be in a strict order
-				ct.SEC = FIFOTempLive[regIdx * 2 + 1];
-				ct.MIN = FIFOTempLive[(regIdx++) * 2 + 1];
-				ct.HOUR = FIFOTempLive[(regIdx++) * 2 + 1];
-				ct.DOM = FIFOTempLive[(regIdx++) * 2 + 1];
-				ct.MONTH = FIFOTempLive[(regIdx++) * 2 + 1];
+				ct.SEC = FIFOTempLive[regIdx * 2];
+				ct.MIN = FIFOTempLive[(++regIdx) * 2];
+				ct.HOUR = FIFOTempLive[(++regIdx) * 2];
+				ct.DOM = FIFOTempLive[(++regIdx) * 2];
+				ct.MONTH = FIFOTempLive[(++regIdx) * 2];
 				regIdx++;
-				ct.YEAR = (FIFOTempLive[regIdx * 2] << 8) | FIFOTempLive[regIdx * 2 + 1];
+				ct.YEAR = (FIFOTempLive[regIdx * 2 + 1] << 8) | FIFOTempLive[regIdx * 2];
 				LogWriteEvent(FIFOTempLive, LOG_ENTRY_SIZE, &ct, "");
 			}
 		} else if (status & FD2930_DEVICE_STATUS_PREFIRE)
@@ -115,13 +115,13 @@ void LogAppPopAndStoreAllData()
 	    else strcpy(reason, " ");
 
 		regIdx = MB_REG_ADDR(DeviceData, Seconds);		// following regs must be in a strict order
-		ct.SEC = FIFOTemp[regIdx * 2 + 1];
-		ct.MIN = FIFOTemp[(regIdx++) * 2 + 1];
-		ct.HOUR = FIFOTemp[(regIdx++) * 2 + 1];
-		ct.DOM = FIFOTemp[(regIdx++) * 2 + 1];
-		ct.MONTH = FIFOTemp[(regIdx++) * 2 + 1];
+		ct.SEC = FIFOTemp[regIdx * 2];
+		ct.MIN = FIFOTemp[(++regIdx) * 2];
+		ct.HOUR = FIFOTemp[(++regIdx) * 2];
+		ct.DOM = FIFOTemp[(++regIdx) * 2];
+		ct.MONTH = FIFOTemp[(++regIdx) * 2];
 		regIdx++;
-		ct.YEAR = (FIFOTemp[regIdx * 2] << 8) | FIFOTemp[regIdx * 2 + 1];
+		ct.YEAR = (FIFOTemp[regIdx * 2 + 1] << 8) | FIFOTemp[regIdx * 2];
 		LogWriteEvent(FIFOTemp, LOG_ENTRY_SIZE, &ct, "");
 
 		ArchLastPage = LogGetEntriesNum() - 1;

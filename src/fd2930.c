@@ -243,7 +243,7 @@ void FunctionalTaskPeriodic()
 						GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
 					} else {
 						DeviceState = FD2930_STATE_WORKING;
-						////push_flash_command(FLASH_WRITE_EVENT, EVENT_NORMAL_EVENT, MBS.buffer);
+						LogAppPushData();
 					}
 				} else {
 					DeviceState = FD2930_STATE_BREAK;
@@ -347,7 +347,7 @@ void FunctionalTaskPeriodic()
 		        GPIO_SET_PIN(LPC_GPIO2, UV_TEST);
 		        DeviceState = FD2930_STATE_WORKING;
 		        DeviceData.Status &= ~FD2930_DEVICE_STATUS_SELF_TEST;
-		        ////push_flash_command(FLASH_WRITE_EVENT, EVENT_NORMAL_EVENT, MBS.buffer);
+		        LogAppPushData();
 		        CheckFireStatusCnt = 0; //счетчик для разрешения анализа пожара, после процессов калибровки и самотестирования
 			}
 		break;
@@ -438,13 +438,13 @@ void FunctionalTaskPeriodic()
 		        if ((!GPIO_READ_PIN(LPC_GPIO4, HALL1)) || (!GPIO_READ_PIN(LPC_GPIO4, HALL2))) {
 		        	if (!(DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET)) {
 		        		DeviceData.Status |= FD2930_DEVICE_STATUS_MAGNET;
-		        		////push_flash_command(FLASH_WRITE_EVENT, EVENT_HALL_ON, MBS.buffer);
+		        		LogAppPushData();
 		        	}
 		        	ResetFireStatus(); //сброс зафиксированного состояния пожар
 		        } else {
 		        	if (DeviceData.Status & FD2930_DEVICE_STATUS_MAGNET) {
 		        		DeviceData.Status &= ~FD2930_DEVICE_STATUS_MAGNET;
-		        		////push_flash_command(FLASH_WRITE_EVENT, EVENT_HALL_OFF, MBS.buffer);
+		        		LogAppPushData();
 		        	}
 		    	}
 		        GPIO_SET_PIN(LPC_GPIO2, (UV_TEST));//turn off UV test source
@@ -506,7 +506,7 @@ void FunctionalTaskPeriodic()
 		    	UVNoiseTest = 200;//DeviceData.UVGain;
 		    	if (!(DeviceData.Status & FD2930_DEVICE_STATUS_TEST_ZERO)) {
 		    		DeviceData.Status |= FD2930_DEVICE_STATUS_TEST_ZERO;
-		    		////push_flash_command(FLASH_WRITE_EVENT, EVENT_SET_ZERO, MBS.buffer);
+		    		LogAppPushData();
 		    	}
 		    	EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 		    	DeviceState = FD2930_STATE_BREAK;
@@ -523,11 +523,11 @@ void FunctionalTaskPeriodic()
 				UVTestLevel = DeviceData.UVGain - UVNoiseTest;
 				if (!(DeviceData.Status & FD2930_DEVICE_STATUS_TEST_CALIBR)) {
 					DeviceData.Status |= FD2930_DEVICE_STATUS_TEST_CALIBR;
-					////push_flash_command(FLASH_WRITE_EVENT, EVENT_CALIBR1, MBS.buffer);
+					LogAppPushData();
 				}
 				EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 				DeviceState = FD2930_STATE_WORKING;
-				////push_flash_command(FLASH_WRITE_EVENT, EVENT_NORMAL_EVENT, MBS.buffer);
+				LogAppPushData();
 				GPIO_SET_PIN(LPC_GPIO2, (UV_TEST));//turn off UV test source
 				GPIO_SET_PIN(LPC_GPIO2, IR_TEST);
 				DeviceData.IRGain = 0;
@@ -557,7 +557,7 @@ void FunctionalTaskPeriodic()
 		    	if (AutorecoveryCnt > 0 && AutorecoveryCnt < 30) AutorecoveryCnt++;
 		    	if (AutorecoveryCnt == 2) {
 		    		if (!(DeviceData.Status & FD2930_DEVICE_STATUS_IR_UV_SET)) {
-		    			////push_flash_command(FLASH_WRITE_EVENT, EVENT_CALIBR2, MBS.buffer);
+		    			LogAppPushData();
 		    			DeviceData.Status |= FD2930_DEVICE_STATUS_IR_UV_SET;
 		    		}
 		    		EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
@@ -641,21 +641,21 @@ __STATIC_INLINE void CheckFireStatus()
 		if (DeviceData.IRGain > 1.7 * DeviceData.IRThres) {
 			flag_IR_prefire = 1;
 			if (!(DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR)) {
-				//push_flash_command(FLASH_WRITE_EVENT, EVENT_IR_HIGH, MBS.buffer);
+				LogAppPushData();
 				DeviceData.Status |= FD2930_DEVICE_STATUS_ALARM_IR;
 			}
 		} else {
 			if (DeviceData.IRGain > 1.7 * 0.7 * DeviceData.IRThres) {
 				flag_IR_prefire = 1;
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR) {
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_IR_NORMAL, MBS.buffer);
+					LogAppPushData();
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_IR;
 				}
 			} else {
 				flag_IR_prefire = 0;
 				flag_IR_fire_2ch = 0;
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR) {
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_IR_NORMAL, MBS.buffer);
+					LogAppPushData();
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_IR;
 				}
 			}
@@ -664,21 +664,21 @@ __STATIC_INLINE void CheckFireStatus()
 			flag_UV_prefire = 1;
 			if (!(DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV)) {
 				DeviceData.Status |= FD2930_DEVICE_STATUS_ALARM_UV;
-				//push_flash_command(FLASH_WRITE_EVENT, EVENT_UV_HIGH, MBS.buffer);
+				LogAppPushData();
 			}
 		} else {
 			if (DeviceData.UVGain > 1.7 * 0.7 * DeviceData.UVThresF) {
 				flag_UV_prefire = 1;
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV) {
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_UV;
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_UV_NORMAL, MBS.buffer);
+					LogAppPushData();
 				}
 			} else {
 				flag_UV_prefire = 0;
 				flag_UV_fire_2ch = 0;
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV) {
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_UV;
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_UV_NORMAL, MBS.buffer);
+					LogAppPushData();
 				}
 			}
 		}
@@ -686,21 +686,21 @@ __STATIC_INLINE void CheckFireStatus()
 		if (DeviceData.IRGain > DeviceData.IRThresF) {
 			flag_IR_prefire = 1;
 			if (!(DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR)) {
-				//push_flash_command(FLASH_WRITE_EVENT, EVENT_IR_HIGH, MBS.buffer);
+				LogAppPushData();
 				DeviceData.Status |= FD2930_DEVICE_STATUS_ALARM_IR;
 			}
 		} else {
 			if (DeviceData.IRGain > 0.7 * DeviceData.IRThresF) {
 				flag_IR_prefire = 1;
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR) {
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_IR_NORMAL, MBS.buffer);
+					LogAppPushData();
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_IR;
 				}
 			} else {
 				flag_IR_prefire = 0;
 				flag_IR_fire_2ch = 0;
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR) {
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_IR_NORMAL, MBS.buffer);
+					LogAppPushData();
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_IR;
 				}
 			}
@@ -709,21 +709,21 @@ __STATIC_INLINE void CheckFireStatus()
 			flag_UV_prefire = 1;
 			if (!(DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV)) {
 				DeviceData.Status |= FD2930_DEVICE_STATUS_ALARM_UV;
-				//push_flash_command(FLASH_WRITE_EVENT, EVENT_UV_HIGH, MBS.buffer);
+				LogAppPushData();
 			}
 		} else {
 			if (DeviceData.UVGain > 0.7 * DeviceData.UVThresF) {
 				flag_UV_prefire = 1;
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV) {
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_UV;
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_UV_NORMAL, MBS.buffer);
+					LogAppPushData();
 				}
 			} else {
 				flag_UV_prefire = 0;
 				flag_UV_fire_2ch = 0;
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV) {
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_UV;
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_UV_NORMAL, MBS.buffer);
+					LogAppPushData();
 				}
 			}
 		}
@@ -1219,7 +1219,7 @@ __STATIC_INLINE void SetFireStatus()
 	if (DeviceStatusTemp & FD2930_DEVICE_STATUS_FIRE) {
 		if (!(DeviceData.Status & FD2930_DEVICE_STATUS_FIRE)) {
 			DeviceData.Status |= FD2930_DEVICE_STATUS_FIRE;
-			//push_flash_command(FLASH_WRITE_EVENT, EVENT_FIRE_ON, MBS.buffer);
+			LogAppPushData();
 		}
 	}
 	if (DeviceStatusTemp & FD2930_DEVICE_STATUS_PREFIRE) DeviceData.Status |= FD2930_DEVICE_STATUS_PREFIRE;
@@ -1227,7 +1227,7 @@ __STATIC_INLINE void SetFireStatus()
 		if (!(DeviceStatusTemp & FD2930_DEVICE_STATUS_FIRE)) {
 			if (DeviceData.Status & FD2930_DEVICE_STATUS_FIRE) {
 				DeviceData.Status &= ~FD2930_DEVICE_STATUS_FIRE;
-				//push_flash_command(FLASH_WRITE_EVENT, EVENT_FIRE_OFF, MBS.buffer);
+				LogAppPushData();
 			}
 		}
 		if (!(DeviceStatusTemp & FD2930_DEVICE_STATUS_PREFIRE)) DeviceData.Status &= ~FD2930_DEVICE_STATUS_PREFIRE;
@@ -1244,7 +1244,7 @@ __STATIC_INLINE void ResetFireStatus()
 	if (!(DeviceStatusTemp & FD2930_DEVICE_STATUS_FIRE)) {
 		if (DeviceData.Status & FD2930_DEVICE_STATUS_FIRE) {
 			DeviceData.Status &= ~FD2930_DEVICE_STATUS_FIRE;
-			//push_flash_command(FLASH_WRITE_EVENT, EVENT_FIRE_OFF, MBS.buffer);
+			LogAppPushData();
 		}
 	}
 	if (!(DeviceStatusTemp & FD2930_DEVICE_STATUS_PREFIRE)) DeviceData.Status &= ~FD2930_DEVICE_STATUS_PREFIRE;
@@ -1264,12 +1264,12 @@ __STATIC_INLINE void SetDeviceStatus()
 			if (DeviceData.Config & DeviceData.Flags & 0xf000) {
 				if (!(DeviceData.Status & FD2930_DEVICE_STATUS_FAULT)) {
 					DeviceData.Status |= FD2930_DEVICE_STATUS_FAULT;
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_FAULT_ON, MBS.buffer);
+					LogAppPushData();
 				}
 			} else
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_FAULT) {
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_FAULT;
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_FAULT_OFF, MBS.buffer);
+					LogAppPushData();
 				}
 			if (DeviceData.Status & FD2930_DEVICE_STATUS_TESTING || DeviceData.Flags & FD2930_DEVICEFLAGS_IR_ERROR || DeviceData.Flags & FD2930_DEVICEFLAGS_UV_ERROR \
 				|| !(DeviceData.Status & FD2930_DEVICE_STATUS_FLASH_OK) || !(DeviceData.Status & FD2930_DEVICE_STATUS_CRC_OK) \
@@ -1278,12 +1278,12 @@ __STATIC_INLINE void SetDeviceStatus()
 				&& (DeviceData.Flags & FD2930_DEVICEFLAGS_BREAK_DUST)))  {
 				if (!(DeviceData.Status & FD2930_DEVICE_STATUS_BREAK)) {
 					DeviceData.Status |= FD2930_DEVICE_STATUS_BREAK;
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_BREAK_ON, MBS.buffer);
+					LogAppPushData();
 				}
 			} else {
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_BREAK) {
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_BREAK;
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_BREAK_OFF, MBS.buffer);
+					LogAppPushData();
 				}
 			}
 			if (DeviceData.Status & FD2930_DEVICE_STATUS_BREAK) {
@@ -1703,37 +1703,37 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 	if ((addr == MB_REG_ADDR(DeviceData, Years)) && (qty == 1)) {
 		if (DeviceData.Years <= 4095 && DeviceData.Years > 2000) {
 			RTC_SetTime(LPC_RTC, RTC_TIMETYPE_YEAR, DeviceData.Years);
-			//push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+			LogAppPushData();
         }
 	}
 	if ((addr == MB_REG_ADDR(DeviceData, Months)) && (qty == 1)) {
 		if (DeviceData.Months <= 12 && DeviceData.Months > 0) {
 			RTC_SetTime(LPC_RTC, RTC_TIMETYPE_MONTH, DeviceData.Months);
-			//push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+			LogAppPushData();
 		}
 	}
 	if ((addr == MB_REG_ADDR(DeviceData, Days)) && (qty == 1)) {
 		if (DeviceData.Days <= 31 && DeviceData.Days > 0) {
 			RTC_SetTime(LPC_RTC, RTC_TIMETYPE_DAYOFMONTH, DeviceData.Days);
-			//push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+			LogAppPushData();
 		}
 	}
 	if ((addr == MB_REG_ADDR(DeviceData, Hours)) && (qty == 1)) {
 		if (DeviceData.Hours < 24) {
 			RTC_SetTime(LPC_RTC, RTC_TIMETYPE_HOUR, DeviceData.Hours);
-			//push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+			LogAppPushData();
 		}
 	}
 	if ((addr == MB_REG_ADDR(DeviceData, Minutes)) && (qty == 1)) {
 		if (DeviceData.Minutes < 60) {
 			RTC_SetTime(LPC_RTC, RTC_TIMETYPE_MINUTE, DeviceData.Minutes);
-			//push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+			LogAppPushData();
 		}
 	}
 	if ((addr == MB_REG_ADDR(DeviceData, Seconds)) && (qty == 1)) {
 		if (DeviceData.Seconds < 60) {
 			RTC_SetTime(LPC_RTC, RTC_TIMETYPE_SECOND, DeviceData.Seconds);
-			//push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+			LogAppPushData();
 		}
 	}
 	if (addr == (MB_REG_ADDR(DeviceData, ArchPageIdxHi)) && (qty == 1)) {
@@ -1742,114 +1742,114 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 	if (addr == (MB_REG_ADDR(DeviceData, ArchPageIdxLo)) && (qty == 1)) {
 		ArchPageIdx |= DeviceData.ArchPageIdxLo;
 		if (ArchPageIdx > ArchLastPage) ArchPageIdx = 0;
-		//read push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+		DeviceData.StateFlags |= FD2930_STATE_FLAG_READ_ARCHIVE;
 	}
 	if (addr == (MB_REG_ADDR(DeviceData, HeatPower)) && (qty == 1)) {
 		if (DeviceData.HeatPower < FD2930_MAX_HEATPOWER) {
 			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
-			//read push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+			LogAppPushData();
 		}
 	}
 	if (addr == (MB_REG_ADDR(DeviceData, HeaterThres)) && (qty == 1)) {
 		if (DeviceData.HeaterThres < FD2930_MAX_THRES_HEATER) {
 			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
-			//read push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+			LogAppPushData();
 		}
 	}
 	if (addr == (MB_REG_ADDR(DeviceData, FFTGain)) && (qty == 1)) {
 		if (DeviceData.FFTGain >= FD2930_MIN_GAIN_FFT || DeviceData.FFTGain <= FD2930_MAX_GAIN_FFT) {
 			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
-			//read push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
+			LogAppPushData();
 		}
 	}
 	if (addr == (MB_REG_ADDR(DeviceData, BlockService)) && (qty == 1)) {
 		if (DeviceData.FFTGain >= FD2930_MIN_GAIN_FFT || DeviceData.FFTGain <= FD2930_MAX_GAIN_FFT) {
 			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
-			//read push_flash_command(FLASH_WRITE_EVENT, EVENT_PARAMETER + Adr.w, MBS.buffer);
 		}
 	}
 	if ((addr == MB_REG_ADDR(DeviceData, Command)) && (qty == 1)) {
 		switch (DeviceData.Command) {
 			case 0:
 				ResetFireStatus();
-				///push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+				LogAppPushData();
 			break;
 			case 1:
 				DeviceState = FD2930_STATE_SELFTEST;
 				DeviceData.Status |= FD2930_DEVICE_STATUS_SELF_TEST;
 				GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
-				//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+				LogAppPushData();
 			break;
 			case 2:
 				DeviceData.Config &= ~FD2930_DEVICECONFIG_FIRE_FIXATION;
-				//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+				LogAppPushData();
 			break;
 			case 3:
 				SetDefaultParameters();
-				//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+				LogAppPushData();
 			break;
 			case 4:
 				EEPROMErase();
 				DeviceData.Status &= ~FD2930_DEVICE_STATUS_FLASH_OK;
-				//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+				LogAppPushData();
 			    for(;;);
 			break;
 			case 5:
 				DeviceData.StateFlags |= FD2930_STATE_FLAG_ERASE_ARCHIVE;
-				//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+				LogAppPushData();
 			break;
 			case 6:
 				if (DeviceState == FD2930_STATE_TEST) {
 					DeviceData.Flags |= FD2930_DEVICEFLAGS_FIRE_RELAY_ON;
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+					LogAppPushData();
 				}
 			break;
 			case 7:
 				if (DeviceState == FD2930_STATE_TEST) {
 					DeviceData.Flags &= ~FD2930_DEVICEFLAGS_FIRE_RELAY_ON;
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+					LogAppPushData();
 				}
 			break;
 			case 8:
 				if (DeviceState == FD2930_STATE_TEST) {
 					DeviceData.Flags |= FD2930_DEVICEFLAGS_WORK_RELAY_ON;
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+					LogAppPushData();
 			    }
 			break;
 			case 9:
 				if (DeviceState == FD2930_STATE_TEST) {
 					DeviceData.Flags &= ~FD2930_DEVICEFLAGS_WORK_RELAY_ON;
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+					LogAppPushData();
 				}
 			break;
 			case 10:
 				if (DeviceState == FD2930_STATE_TEST) {
 					DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST_RELAY_ON;
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+					LogAppPushData();
 				}
 			break;
 			case 11:
 				if (DeviceState == FD2930_STATE_TEST) {
 					DeviceData.Flags &= ~FD2930_DEVICEFLAGS_DUST_RELAY_ON;
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+					LogAppPushData();
 				}
 			break;
 			case 12:
 				if (DeviceState == FD2930_STATE_TEST) {
 					DeviceData.Current420 = 19990;
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+					LogAppPushData();
 				}
 			break;
 			case 13:
-				DeviceState = FD2930_STATE_CHANNEL_CALIBR;
+				//DeviceState = FD2930_STATE_CHANNEL_CALIBR;
+				LogAppPushData();
 			break;
 			case 14:
-				if (!(DeviceData.Status & FD2930_DEVICE_STATUS_TEST_ZERO)) {
+				if (DeviceData.Status & FD2930_DEVICE_STATUS_TEST_ZERO) {
 					DeviceState = FD2930_STATE_TEST_CALIBR;
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_TEST_CALIBR;
 					GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
 					EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+					LogAppPushData();
 				}
 			break;
 			case 15:
@@ -1863,14 +1863,14 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_SD_CARD) {
 					if ((ArchPageIdx) >= ArchLastPage) ArchPageIdx = 0;
 			        else ArchPageIdx++;
-					//push_flash_command(FLASH_READ_ARCHIVE, fd2930.chosen_archive_page, MBS.buffer);
+					DeviceData.StateFlags |= FD2930_STATE_FLAG_READ_ARCHIVE;
 			    }
 			break;
 			case 18:
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_SD_CARD) {
 					if (ArchPageIdx == 0) ArchPageIdx = ArchLastPage - 1;
 					else ArchPageIdx--;
-					//push_flash_command(FLASH_READ_ARCHIVE, fd2930.chosen_archive_page, MBS.buffer);
+					DeviceData.StateFlags |= FD2930_STATE_FLAG_READ_ARCHIVE;
 				}
 			break;
 			case 19:
@@ -1879,11 +1879,11 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 			case 20:
 				DeviceState = FD2930_STATE_TEST;
 				DeviceData.Status |= FD2930_DEVICE_STATUS_TESTING;
-				//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
+				LogAppPushData();
 			break;
 			case 21:
 				DeviceState = FD2930_STATE_WORKING;
-				//push_flash_command(FLASH_WRITE_EVENT, EVENT_NORMAL_EVENT, MBS.buffer);
+				LogAppPushData();
 				DeviceData.Status &= ~FD2930_DEVICE_STATUS_TESTING;
 				//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
 				break;
@@ -1891,7 +1891,7 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 				//fd2930.K_IR = fd2930_K_IR;
 				//fd2930.K_UV = fd2930_K_UV;
 				if (!(DeviceData.Status & FD2930_DEVICE_STATUS_IR_UV_SET)) {
-					//push_flash_command(FLASH_WRITE_EVENT, EVENT_CALIBR2, MBS.buffer);
+					LogAppPushData();
 					DeviceData.Status |= FD2930_DEVICE_STATUS_IR_UV_SET;
 					//push_flash_command(FLASH_WRITE_EVENT, EVENT_COMMAND + Cnt.w, MBS.buffer);
 				}
@@ -1983,19 +1983,27 @@ void ADCTask()
 		if (DeviceData.Temperature > TEMPERATURE_MAXIMUM || DeviceData.Temperature < TEMPERATURE_MINIMUM) {
 		    if (CntTemperatureFault < TEMPERATURE_FAULT_DELAY) {CntTemperatureFault++;};
 		    if (CntTemperatureFault >= TEMPERATURE_FAULT_DELAY) {
-		    	if (!(DeviceData.Flags & FD2930_DEVICEFLAGS_ERROR_TEMPERATURE)) {;}////push_flash_command(FLASH_WRITE_EVENT, EVENT_T_FAULT, MBS.buffer);
+		    	if (!(DeviceData.Flags & FD2930_DEVICEFLAGS_ERROR_TEMPERATURE)) {
+		    		LogAppPushData();
+		    	}
 		    	DeviceData.Flags |= FD2930_DEVICEFLAGS_ERROR_TEMPERATURE;
 		    }
 		} else {
-		    if ((DeviceData.Flags & FD2930_DEVICEFLAGS_ERROR_TEMPERATURE)) {;}////push_flash_command(FLASH_WRITE_EVENT, EVENT_T_NORMAL, MBS.buffer);
+		    if ((DeviceData.Flags & FD2930_DEVICEFLAGS_ERROR_TEMPERATURE)) {
+		    	LogAppPushData();
+		    }
 		    DeviceData.Flags &= ~FD2930_DEVICEFLAGS_ERROR_TEMPERATURE;
 		    CntTemperatureFault = 0;
 		}
 		if (DeviceData.UVVoltage > VOLTAGE_UV_WORKING_MAXIMUM || DeviceData.UVVoltage < VOLTAGE_UV_WORKING_MINIMUM) {
-		    if (!(DeviceData.Flags & FD2930_DEVICEFLAGS_ERROR_UV_VOLTAGE)) {;}////push_flash_command(FLASH_WRITE_EVENT, EVENT_HV_FAULT, MBS.buffer);
+		    if (!(DeviceData.Flags & FD2930_DEVICEFLAGS_ERROR_UV_VOLTAGE)) {
+		    	LogAppPushData();
+		    }
 		    DeviceData.Flags |= FD2930_DEVICEFLAGS_ERROR_UV_VOLTAGE;
 		} else {
-		    if ((DeviceData.Flags & FD2930_DEVICEFLAGS_ERROR_UV_VOLTAGE)) {;}////push_flash_command(FLASH_WRITE_EVENT, EVENT_HV_NORMAL, MBS.buffer);
+		    if ((DeviceData.Flags & FD2930_DEVICEFLAGS_ERROR_UV_VOLTAGE)) {
+		    	LogAppPushData();
+		    }
 		    DeviceData.Flags &= ~FD2930_DEVICEFLAGS_ERROR_UV_VOLTAGE;
 		}
 	}

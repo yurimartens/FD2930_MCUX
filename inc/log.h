@@ -39,7 +39,10 @@ extern "C" {
 
 //#define LOG_EVENT_FILE_PATH     PPCAT(LOG_LOGICAL_DRIVE, LOG_EVENT_FILE_NAME)
 //#define LOG_PARAMETER_FILE_PATH PPCAT(LOG_LOGICAL_DRIVE, LOG_PARAMETER_FILE_NAME)
-     
+
+#define LOG_ID_LINE_FORMAT		"SN#: %5d"
+#define LOG_ID_LINE_LEN			12
+
 #define LOG_EVENT_TIME_LEN      17     // see the actual size of time format in write proc
 #define LOG_EVENT_TIME_LEN_Q    "%17s"
 #define LOG_EVENT_REASON_LEN    8     

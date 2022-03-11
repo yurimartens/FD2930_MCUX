@@ -27,7 +27,7 @@ extern "C" {
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	310
+#define FW_VERSION_LO                  	311
 
 
 #define MB_REG_ADDR(_STR_, _REG_)      	((uint16_t *)&_STR_._REG_ - (uint16_t *)&_STR_)
@@ -66,29 +66,6 @@ extern "C" {
 #define DELAY_RELAY_WORK				10
 #define IR_CHANNEL_TIMING1				90
 #define IR_CHANNEL_TIMING2				140
-
-
-// STATUS BITS
-#define STATUS_BITS_WORK_POS	        0
-#define STATUS_BITS_MODEM_ON_POS        4
-#define STATUS_BITS_FLASH_ERR_POS       11
-#define STATUS_BITS_SEND_DATA_POS       13
-#define STATUS_BITS_BOOT_ACTIVE_POS   	14
-#define STATUS_BITS_INIT_POS            15
-
-
-// CONFIG BITS
-#define CONFIG_BITS_LANG_POS            0
-#define CONFIG_BITS_STOP_BITS_POS       1
-#define CONFIG_BITS_PARITY_BITS_POS     2	// 2 bit width
-#define CONFIG_BITS_PARITY_PROTOCOL_POS 4	// 2 bit width
-#define CONFIG_BITS_SIMULATION_POS 		8	// 1 bit width
-
-// CONTROL BITS
-#define CONTROL_BITS_MODEM_ONOFF_POS	0 // 1 bit width
-
-// PHONE STATUS BITS
-#define PHONE_STATUS_BITS_NEW_MSG_POS   0
 
 #define STOP_BITS_1             		0
 
@@ -149,7 +126,6 @@ extern "C" {
 #define VOLTAGE_UV_WORKING_MAXIMUM      600
 #define VOLTAGE_UV_WORKING_MINIMUM      400
 #define TEMPERATURE_FAULT_DELAY         100
-
 
 
 #define FD2930_DEVICE_STATUS_FIRE                       (1 << 0)

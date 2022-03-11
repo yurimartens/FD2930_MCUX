@@ -229,7 +229,7 @@ LogError_t LogWriteEvent(uint8_t *buf, uint16_t bufSize, RTC_TIME_Type *time, ch
             FSIZE_t temp = f_tell(&f);
             f_lseek(&f, 0);
             // put an id information about device
-            sprintf(str, "SN# :%d", SN);
+            sprintf(str, LOG_ID_LINE_FORMAT, SN);
             f_puts(str, &f);    
             f_puts("\r\n", &f);	
             f_lseek(&f, temp);
@@ -273,7 +273,7 @@ LogError_t LogReadEvent(uint32_t entryNum, uint8_t *buf, uint16_t bufSize)
     FRESULT fr = f_open(&f, LOG_EVENT_FILE_NAME, FA_READ | FA_OPEN_EXISTING);
     if (FR_OK == fr)
     {
-        if (FR_OK != f_lseek(&f, HeaderLen + (entryNum * EntryLen))) return LOG_ERROR_FS;
+        if (FR_OK != f_lseek(&f, LOG_ID_LINE_LEN + HeaderLen + (entryNum * EntryLen))) return LOG_ERROR_FS;
         f_gets((char *)buf, EntryLen, &f);
         
         if (FR_OK != f_close(&f)) return LOG_ERROR_FS;
@@ -390,7 +390,7 @@ static LogError_t CreateFileEventAndHeader(uint16_t sn)
     if (0 == f_size(&f))
     {   
         // put an id information about device
-        sprintf(str, "SN# :%d", sn);
+        sprintf(str, LOG_ID_LINE_FORMAT, sn);
         f_puts(str, &f);    
         f_puts("\r\n", &f);	
         // put a log-file header of the table
@@ -410,7 +410,7 @@ static LogError_t CreateFileEventAndHeader(uint16_t sn)
         }
         f_puts("\r\n", &f);	
     } 
-    Entries = (f_size(&f) - HeaderLen) / EntryLen;
+    Entries = (f_size(&f) - LOG_ID_LINE_LEN - HeaderLen) / EntryLen;
         
     if (FR_OK != f_close(&f)) return LOG_ERROR_FS;
     
