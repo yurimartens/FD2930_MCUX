@@ -2,6 +2,9 @@
 #ifndef __BOARD_H
 #define __BOARD_H
 
+#define PHOENIX_IRUV				1
+#define PHOENIX_IR4					4
+
 //***********PINS CONNECTIONS**************
 #define TXD0         (1UL << 2)    //P0.2 TXD0 TX UART0 (RS232 for ISP)
 #define RXD0         (1UL << 3)    //P0.3 RXD0 RX UART0

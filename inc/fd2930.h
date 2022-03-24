@@ -21,14 +21,32 @@ extern "C" {
 #include <lpc17xx_rtc.h>
 
 #include <board.h>
+#include <dsplib_app.h>
 
-#define DEVICE_TYPE         			1
+#define DEVICE_TYPE         			PHOENIX_IR4
+
+#if DEVICE_TYPE == PHOENIX_IRUV
 #define FW_VERSION                     	301
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	311
+#define FW_VERSION_LO                  	324
 
+#elif DEVICE_TYPE == PHOENIX_IR4
+
+#define FW_VERSION                     	301
+#define HW_VERSION        				2
+
+#define FW_VERSION_HI                  	2022
+#define FW_VERSION_LO                  	324
+
+#define PHOENIX_IR4_CHANNELS			4
+#define FD2930_THRES_RAT1               4
+#define FD2930_THRES_RAT2               2
+#define FD2930_THRES_RAT3               6
+#define FD2930_THRES_RAT1_3             5
+
+#endif
 
 #define MB_REG_ADDR(_STR_, _REG_)      	((uint16_t *)&_STR_._REG_ - (uint16_t *)&_STR_)
 
@@ -140,7 +158,7 @@ extern "C" {
 #define FD2930_DEVICEFLAGS_DUST_DUBL                    (1 << 9)//äóáëèðóþùèé ôëàã çàïûëåííîñòè
 #define FD2930_DEVICE_STATUS_FLASH_OK                   (1 << 10)
 #define FD2930_DEVICE_STATUS_CRC_OK                     (1 << 11)
-#define FD2930_DEVICE_STATUS_IR_UV_SET                  (1 << 12)
+#define FD2930_DEVICE_STATUS_IR_UV_SET                  (1 << 12)	// IR4 - for all ir channels
 #define FD2930_DEVICE_STATUS_TEST_CALIBR                (1 << 13)
 #define FD2930_DEVICE_STATUS_TEST_ZERO                  (1 << 14)
 #define FD2930_DEVICE_STATUS_SD_CARD                    (1 << 15)
@@ -240,6 +258,7 @@ typedef struct {
 	uint16_t Page[100];
 } Archive_t;
 
+#if DEVICE_TYPE == PHOENIX_IRUV
 typedef struct
 {
     uint16_t MBId;                      //modbus address
@@ -297,6 +316,63 @@ typedef struct
     Archive_t Archive;		// 200th MB addr
     uint16_t FFTData[100];
 } DeviceData_t;
+
+#elif DEVICE_TYPE == PHOENIX_IR4
+typedef struct
+{
+    uint16_t MBId;                      //modbus address
+    uint16_t Baudrate;                           //modbus baudrate /4800
+    uint16_t SerialNumber;
+    uint16_t DeviceType;
+    uint16_t HWVersion;
+    uint16_t FWVersion;
+    uint16_t Status;
+    uint16_t Flags;
+    uint16_t Config;
+    uint16_t IRGain[PHOENIX_IR4_CHANNELS];  	// 9   filtered and scaled
+    uint16_t Correlation;	// 13
+    uint16_t IRCoeff12;		// 14
+    uint16_t IRCoeff34;		// 15
+    uint16_t FireDelay;		// 16
+    uint16_t FaultDelay;	// 17
+    uint16_t Command;		// 18
+    uint16_t HeatPower;		// 19
+    int16_t HeaterThres;	// 20
+    int16_t Temperature;	// 21
+    uint16_t FFTExceeded;	// 22
+    uint16_t InPowerVoltage;// 23
+    uint16_t IRDACmd;		// 24
+    uint16_t IRThres;		// 25
+    uint16_t Seconds;
+    uint16_t Minutes;
+    uint16_t Hours;
+    uint16_t Days;
+    uint16_t Months;
+    uint16_t Years;
+    uint16_t ArchLastPageHi;
+    uint16_t ArchLastPageLo;
+    uint16_t BlockService;
+    uint16_t Current420;
+    uint16_t FWCheckSumm;
+    uint16_t ArchiveEvent;
+    uint16_t FFTGain;
+    uint16_t Res0;
+    uint16_t Res1;		// 40
+    uint16_t Res2;
+    uint16_t ArchPageIdxHi;
+    uint16_t ArchPageIdxLo;
+    uint16_t CntFaultIR;
+    uint16_t CntFaultUV;
+    uint16_t StateFlags;
+    uint16_t Res3;
+    uint16_t Res4;
+    uint16_t Res5;
+    uint16_t Reserved1[150];	// 50
+
+    Archive_t Archive;		// 200th MB addr
+    uint16_t FFTData[PHOENIX_IR4_CHANNELS * FFT_OUTPUT_POINTS];
+} DeviceData_t;
+#endif
 
 extern DeviceData_t	DeviceData;
 extern RTC_TIME_Type DeviceTime;

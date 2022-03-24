@@ -13,33 +13,31 @@
 int16_t 		*FFTInputData = (int16_t *)0x2007C000; /* AHB SRAM0 */
 int16_t 		*FFTOutputData = (int16_t *)0x20080000; /* AHB SRAM1 */
 
-static uint16_t Magnitude[FFT_OUTPUT_POINTS];
-
 
 uint32_t Noise = 0;
 
-static void vTest_PerformFFT(void);
+static void vTest_PerformFFT(uint32_t arrayIdx);
 
 /**
   * @brief
   * @param
   * @retval
   */
-uint16_t FFTCalculate(float coeff, uint16_t gain, uint16_t *out)
+uint16_t FFTCalculate(float coeff, uint16_t gain, uint16_t i, uint16_t *out)
 {	
-	vTest_PerformFFT();
+	vTest_PerformFFT(i);
   
   	uint16_t FFTExceeded = 0;
+  	int offsetOut = i * FFT_OUTPUT_POINTS, offsetFFT = i * NPOINTS_1024;
   
   	for(int j = 0; j < FFT_OUTPUT_POINTS; j++) {
-  		Magnitude[j] = (int)sqrt(FFTOutputData[2 * j] * FFTOutputData[2 * j] + FFTOutputData[2 * j + 1] * FFTOutputData[2 * j + 1]);
-  		Noise += Magnitude[j];
-  		out[j] = Magnitude[j];
+  		out[offsetOut + j] = (int)sqrt(FFTOutputData[offsetFFT + 2 * j] * FFTOutputData[offsetFFT + 2 * j] + FFTOutputData[offsetFFT + 2 * j + 1] * FFTOutputData[offsetFFT + 2 * j + 1]);
+  		Noise += out[offsetOut + j];
   	}
   	Noise = (float)Noise / FFT_OUTPUT_POINTS;
 
   	for (int j = 0; j < FFT_OUTPUT_POINTS; j++) {
-  		if (fabs(Magnitude[j] - Noise) * (gain / coeff) > 2 * Noise) FFTExceeded++;
+  		if (fabs(out[offsetOut + j] - Noise) * (gain / coeff) > 2 * Noise) FFTExceeded++;
   	}
   	return FFTExceeded;
 }
@@ -54,7 +52,7 @@ uint16_t FFTCalculate(float coeff, uint16_t gain, uint16_t *out)
 ** Returned value:  None
 **
 ******************************************************************************/
-static void vTest_PerformFFT(void)
+static void vTest_PerformFFT(uint32_t arrayIdx)
 {
 	#ifdef NPOINTS
 	{
@@ -68,7 +66,7 @@ static void vTest_PerformFFT(void)
 		}
 		#elif (NPOINTS == NPOINTS_1024)
 		{
-			vF_dspl_fftR4b16N1024(FFTOutputData, FFTInputData);
+			vF_dspl_fftR4b16N1024(FFTOutputData + arrayIdx * NPOINTS_1024, FFTInputData + arrayIdx * NPOINTS_1024);
 		}
 		#elif (NPOINTS == NPOINTS_4096)
 		{

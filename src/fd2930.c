@@ -14,8 +14,6 @@
 #include <Modbus.h>
 #include <ad5421.h>
 
-#include <dsplib_app.h>
-
 #include <log_app.h>
 
 
@@ -42,7 +40,12 @@ uint16_t 		AutorecoveryCnt;
 
 uint16_t 		FFTCnt;
 
+#if DEVICE_TYPE == PHOENIX_IRUV
 double 			IR, UV, IRRaw, UVRaw, IRAv, IRRect;
+#elif DEVICE_TYPE == PHOENIX_IR4
+double 			IR[PHOENIX_IR4_CHANNELS], IRRaw[PHOENIX_IR4_CHANNELS], IRAv[PHOENIX_IR4_CHANNELS], IRRect[PHOENIX_IR4_CHANNELS];
+float 			Rat1, Rat2, Rat3, Rat1_3;
+#endif
 
 uint16_t		CriminalFFTChannelNumber;
 
@@ -119,15 +122,21 @@ void DeviceInit()
 		}
 		if (DeviceData.FFTGain > FD2930_MAX_GAIN_FFT || DeviceData.FFTGain < FD2930_MIN_GAIN_FFT) {DeviceData.FFTGain = FD2930_DEFAULT_GAIN_FFT; write = 1;}
 		if (DeviceData.IRThres > FD2930_MAX_THRES_IR || DeviceData.IRThres < FD2930_MIN_THRES_IR) {DeviceData.IRThres = FD2930_DEFAULT_THRES_IR; write = 1;}
+#if DEVICE_TYPE == PHOENIX_IRUV
 		if (DeviceData.UVThres > FD2930_MAX_THRES_UV || DeviceData.UVThres < FD2930_MIN_THRES_UV) {DeviceData.UVThres = FD2930_DEFAULT_THRES_UV; write = 1;}
 		if (DeviceData.IRCoeff > FD2930_MAX_K_IR || DeviceData.IRCoeff < FD2930_MIN_K_IR) {DeviceData.IRCoeff = FD2930_DEFAULT_K_IR; write = 1;}
 		if (DeviceData.UVCoeff > FD2930_MAX_K_UV || DeviceData.UVCoeff < FD2930_MIN_K_UV) {DeviceData.UVCoeff = FD2930_DEFAULT_K_UV; write = 1;}
+#elif DEVICE_TYPE == PHOENIX_IR4
+		if (DeviceData.IRCoeff12 > FD2930_MAX_K_IR || DeviceData.IRCoeff12 < FD2930_MIN_K_IR) {DeviceData.IRCoeff12 = FD2930_DEFAULT_K_IR; write = 1;}
+		if (DeviceData.IRCoeff34 > FD2930_MAX_K_IR || DeviceData.IRCoeff34 < FD2930_MIN_K_IR) {DeviceData.IRCoeff34 = FD2930_DEFAULT_K_IR; write = 1;}
+#endif
 		if (DeviceData.FaultDelay > FD2930_MAX_WAIT_FAULT || DeviceData.FaultDelay < FD2930_MIN_WAIT_FAULT) {DeviceData.FaultDelay = FD2930_DEFAULT_WAIT_FAULT; write = 1;}
 		if (DeviceData.FireDelay > FD2930_MAX_WAIT_FIRE || DeviceData.FireDelay < FD2930_MIN_WAIT_FIRE) {DeviceData.FireDelay = FD2930_DEFAULT_WAIT_FIRE; write = 1;}
 	}
 	DeviceData.FWVersion = FW_VERSION;
 	DeviceData.HWVersion = HW_VERSION;
 	DeviceData.DeviceType = DEVICE_TYPE;
+	DeviceData.StateFlags = 0;
 
 	if (write) EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 
@@ -157,8 +166,16 @@ void FunctionalTaskBG()
     if (DeviceData.StateFlags & FD2930_STATE_FLAG_FFT_START) {
     	DeviceData.StateFlags &= ~FD2930_STATE_FLAG_FFT_START;
     	DeviceData.StateFlags |= FD2930_STATE_FLAG_FFT_ACTIVE;
-    	float coeff = (-0.0000000006 * DeviceData.IRGain * DeviceData.IRGain * DeviceData.IRGain) + (0.000003 * DeviceData.IRGain * DeviceData.IRGain) - (0.0026 * DeviceData.IRGain) + 2.4145;
-    	DeviceData.FFTExceeded = FFTCalculate(coeff, DeviceData.FFTGain, DeviceData.FFTData);
+    	float coeff;
+#if DEVICE_TYPE == PHOENIX_IRUV
+    	coeff = (-0.0000000006 * DeviceData.IRGain * DeviceData.IRGain * DeviceData.IRGain) + (0.000003 * DeviceData.IRGain * DeviceData.IRGain) - (0.0026 * DeviceData.IRGain) + 2.4145;
+    	DeviceData.FFTExceeded = FFTCalculate(coeff, DeviceData.FFTGain, 0, DeviceData.FFTData);
+#elif DEVICE_TYPE == PHOENIX_IR4
+    	for (int i = 0; i < PHOENIX_IR4_CHANNELS; i++) {
+    		coeff = (-0.0000000006 * DeviceData.IRGain[i] * DeviceData.IRGain[i] * DeviceData.IRGain[i]) + (0.000003 * DeviceData.IRGain[i] * DeviceData.IRGain[i]) - (0.0026 * DeviceData.IRGain[i]) + 2.4145;
+    		DeviceData.FFTExceeded = FFTCalculate(coeff, DeviceData.FFTGain, i, DeviceData.FFTData);
+    	}
+#endif
     	DeviceData.StateFlags &= ~FD2930_STATE_FLAG_FFT_ACTIVE;
     }
     if (DeviceData.Status & FD2930_DEVICE_STATUS_SD_CARD) {
@@ -262,6 +279,7 @@ void FunctionalTaskPeriodic()
 			        case FD2930_CONFIG_2:
 			        case FD2930_CONFIG_3:
 			        case FD2930_CONFIG_4:
+#if DEVICE_TYPE == PHOENIX_IRUV
 			        	if ((DeviceData.UVGain - UVNoiseTest) < 0.7 * UVTestLevel) UVTestFaultCnt++;
 			        	if ((DeviceData.IRGain - IRNoiseTest) < 0.7 * IRTestLevel) IRTestFaultCnt++;
 
@@ -298,9 +316,31 @@ void FunctionalTaskPeriodic()
 			        		DeviceData.Status &= ~FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
 			        		DeviceData.Flags &= ~FD2930_DEVICEFLAGS_BREAK_DUST;
 			        	}
+#elif DEVICE_TYPE == PHOENIX_IR4
+			        	for (int i = 0; i < PHOENIX_IR4_CHANNELS; i++) {
+			        		if (((DeviceData.IRGain[i] - IRNoiseTest) < 0.5 * IRTestLevel)) {
+			        			if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50)  && (HeatPowerInst < 20)) {
+			        				DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
+			        				DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
+			        			}
+			        		}
+			        		if (((DeviceData.IRGain[i] - IRNoiseTest) < 0.7 * IRTestLevel)) {
+			        			if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50)  && (HeatPowerInst < 20)) {
+			        				DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
+			        				DeviceData.Status |= FD2930_DEVICEFLAGS_DUST_DUBL;
+			        			}
+			        		}
+			        		if (((DeviceData.IRGain[i] - IRNoiseTest) >= 0.7 * IRTestLevel)) {
+			        			DeviceData.Flags &= ~FD2930_DEVICEFLAGS_DUST;
+			        			DeviceData.Status &= ~FD2930_DEVICEFLAGS_DUST_DUBL;
+			        			DeviceData.Flags &= ~FD2930_DEVICEFLAGS_BREAK_DUST;
+			        		}
+			        	}
+#endif
 			       break;
 			       case FD2930_CONFIG_5:// в одноканальных ИК режимах не проверяем УФ канал
 			       case FD2930_CONFIG_6:// в одноканальных ИК режимах не проверяем УФ канал
+#if DEVICE_TYPE == PHOENIX_IRUV
 			    	   if (((DeviceData.IRGain - IRNoiseTest) < 0.5 * IRTestLevel)) { // если чувствительность ИК меньше 40% то ставим флаг аварийной запыленности запыленности
 			    		   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50) && (HeatPowerInst < 20)) { // если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
 			    			   DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
@@ -336,6 +376,28 @@ void FunctionalTaskPeriodic()
 			    		   DeviceData.Status &= ~FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
 			    		   DeviceData.Flags &= ~FD2930_DEVICEFLAGS_BREAK_DUST;
 			    	   }
+#elif DEVICE_TYPE == PHOENIX_IR4
+			       case FD2930_CONFIG_7:
+			    	   for (int i = 0; i < PHOENIX_IR4_CHANNELS; i++) {
+			    		   if (((DeviceData.IRGain[i] - IRNoiseTest) < 0.5 * IRTestLevel)) {
+			    			   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50)  && (HeatPowerInst < 20)) {
+			    				   DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
+			    				   DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
+			        			}
+			        		}
+			        		if (((DeviceData.IRGain[i] - IRNoiseTest) < 0.7 * IRTestLevel)) {
+			        			if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50)  && (HeatPowerInst < 20)) {
+			        				DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
+			        				DeviceData.Status |= FD2930_DEVICEFLAGS_DUST_DUBL;
+			        			}
+			        		}
+			        		if (((DeviceData.IRGain[i] - IRNoiseTest) >= 0.7 * IRTestLevel)) {
+			        			DeviceData.Flags &= ~FD2930_DEVICEFLAGS_DUST;
+			        			DeviceData.Status &= ~FD2930_DEVICEFLAGS_DUST_DUBL;
+			        			DeviceData.Flags &= ~FD2930_DEVICEFLAGS_BREAK_DUST;
+			        		}
+			        	}
+#endif
 			       break;
 			       case FD2930_CONFIG_8:// в режиме КПГ ничего не проверяем, снимаем флаги
 			    	   DeviceData.Flags &= ~FD2930_DEVICEFLAGS_DUST;
@@ -362,7 +424,7 @@ void FunctionalTaskPeriodic()
 		        //push_live_data();
 		    	if (DeviceData.Status & FD2930_DEVICE_STATUS_FIRE) postFireCnt = 10;// счетчик мертвого времени после сброса пожара, что бы плавающие пороги не подпрыгивали от остаточных сигналов в ИК и УФ
 		    	else if (postFireCnt > 0) postFireCnt--;
-
+#if DEVICE_TYPE == PHOENIX_IRUV
 		    	if (DeviceData.IRGain > (0.5 * DeviceData.IRThres) && DeviceData.UVGain > (0.5 * DeviceData.UVThres)) selfTestCnt = 0;
 
 		    	if ((DeviceData.Config & 0x0F) <= 4) { // , только для двухканальных режимов
@@ -430,7 +492,41 @@ void FunctionalTaskPeriodic()
 		        	UVTroubleCnt = 0;
 		        	DeviceData.Flags &= ~FD2930_DEVICEFLAGS_UV_ERROR;
 		        }
+#elif DEVICE_TYPE == PHOENIX_IR4
+		    	for (int i = 0; i < PHOENIX_IR4_CHANNELS; i++) {
+		    		if (DeviceData.IRGain[i] > (0.5 * DeviceData.IRThres)) selfTestCnt = 0;
+		    	}
+		    	if ((DeviceData.Config & 0x0F) <= 4) { // , только для двухканальных режимов
+		    	    if (postFireCnt > 0) {
+		    	    	IRNoise = 0;
+		    	    }
+		    	} else {
+		    		IRNoise = 0;
+		    	}
+		    	for (int i = 0; i < PHOENIX_IR4_CHANNELS; i++) {
+					if (DeviceData.IRGain[i] > (0.7 * DeviceData.IRThres)) {
+						if (postFireCnt == 0) {
+							if (IRTroubleCnt < FD2930_W_TRL) IRTroubleCnt++; // 1 час
+							if (IRTroubleCntPiece < FD2930_W_TRL_P) IRTroubleCntPiece++; // 3 часов
+							if (((DeviceData.Config & 0xf) == 5) || ((DeviceData.Config & 0xf) == 7) || ((DeviceData.Config & 0xf) == 8)) {
+								IRTroubleCnt = 0;
+								IRTroubleCntPiece = 0;
+							}
+						}
+					} else {
+						IRTroubleCnt = 0;
+					}
+					if (IRTroubleCnt == FD2930_W_TRL || IRTroubleCntPiece == FD2930_W_TRL_P) {
+						DeviceData.Flags |= FD2930_DEVICEFLAGS_IR_ERROR; //3600 10800
+					}
 
+					if (DeviceData.IRGain[i] < (0.7 * DeviceData.IRThres) && IRTroubleCntPiece < FD2930_W_TRL_P) {
+						IRTroubleCnt = 0;
+						DeviceData.Flags &= ~FD2930_DEVICEFLAGS_IR_ERROR;
+						DeviceState = FD2930_STATE_WORKING;
+					}
+		    	}
+#endif
 		        RTC_GetFullTime(LPC_RTC, &DeviceTime);
 		        UpdateTime();
 		        UpdateOutputs();
@@ -503,7 +599,7 @@ void FunctionalTaskPeriodic()
 		    } else {
 		    	SelfTestCnt = 0;
 		    	IRNoiseTest = 100;//DeviceData.IRGain;
-		    	UVNoiseTest = 200;//DeviceData.UVGain;
+				UVNoiseTest = 200;//DeviceData.UVGain;
 		    	if (!(DeviceData.Status & FD2930_DEVICE_STATUS_TEST_ZERO)) {
 		    		DeviceData.Status |= FD2930_DEVICE_STATUS_TEST_ZERO;
 		    		LogAppPushData();
@@ -519,8 +615,14 @@ void FunctionalTaskPeriodic()
 				SelfTestCnt++;
 			} else {
 				SelfTestCnt = 0;
-				IRTestLevel = DeviceData.IRGain - IRNoiseTest;
+#if DEVICE_TYPE == PHOENIX_IRUV
+				IRTestLevel = DeviceData.IRGain - IRNoiseTest;	// todo make the IRTestLevel and noise as arrays
 				UVTestLevel = DeviceData.UVGain - UVNoiseTest;
+#elif DEVICE_TYPE == PHOENIX_IR4
+				for (int i = 0; i < PHOENIX_IR4_CHANNELS; i++) {
+					IRTestLevel = DeviceData.IRGain[i] - IRNoiseTest;	// todo make the IRTestLevel and noise as arrays
+				}
+#endif
 				if (!(DeviceData.Status & FD2930_DEVICE_STATUS_TEST_CALIBR)) {
 					DeviceData.Status |= FD2930_DEVICE_STATUS_TEST_CALIBR;
 					LogAppPushData();
@@ -530,10 +632,20 @@ void FunctionalTaskPeriodic()
 				LogAppPushData();
 				GPIO_SET_PIN(LPC_GPIO2, (UV_TEST));//turn off UV test source
 				GPIO_SET_PIN(LPC_GPIO2, IR_TEST);
+#if DEVICE_TYPE == PHOENIX_IRUV
 				DeviceData.IRGain = 0;
 				IR = 0;
 				DeviceData.IRAv = 1250;
 				DeviceData.IRRaw = 1250;
+#elif DEVICE_TYPE == PHOENIX_IR4
+				for (int i = 0; i < PHOENIX_IR4_CHANNELS; i++) {
+					DeviceData.IRGain[i] = 0;
+					IR[i] = 0;
+					IRAv[i] = 1250;
+					IRRaw[i] = 1250;
+					IRRect[i] = 0;
+				}
+#endif
 				CheckFireStatusCnt = 0;
 		    }
 		break;
@@ -628,6 +740,7 @@ __STATIC_INLINE void UpdateTime()
   */
 __STATIC_INLINE void CheckFireStatus()
 {
+#if DEVICE_TYPE == PHOENIX_IRUV
 	const uint32_t channel_fire_delay = 3000;//750;//300;
 	const uint32_t between_channel_fire_delay = 23000;//5750;//2300;
 	static uint32_t between_channel_fire_counter = 0, between_channel_prefire_counter = 0;
@@ -1207,6 +1320,18 @@ __STATIC_INLINE void CheckFireStatus()
 			}
 		break;
 	}
+#elif DEVICE_TYPE == PHOENIX_IR4
+	if (DeviceData.IRGain[0] != 0) Rat1 = DeviceData.IRGain[1] / DeviceData.IRGain[0];
+	if (DeviceData.IRGain[2] != 0) Rat2 = DeviceData.IRGain[1] / DeviceData.IRGain[2];
+	if (DeviceData.IRGain[3] != 0) Rat3 = DeviceData.IRGain[1] / DeviceData.IRGain[3];
+	Rat1_3 = (Rat1 + Rat2 + Rat3) / 3;
+
+	if ((Rat1 > FD2930_THRES_RAT1) && (Rat2 > FD2930_THRES_RAT2) && (Rat3 > FD2930_THRES_RAT3) && (Rat1_3 > FD2930_THRES_RAT1_3)) {
+		DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;
+	} else {
+		DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
+	}
+#endif
 }
 
 /**
@@ -1652,14 +1777,15 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 		}
 		return 0;
 	}
-	if ((addr == MB_REG_ADDR(DeviceData, UVThres)) && (qty == 1)) {
-		if ((DeviceData.UVThres >= FD2930_MIN_THRES_UV) && (DeviceData.UVThres <= FD2930_MAX_THRES_UV)) {
+	if ((addr == MB_REG_ADDR(DeviceData, IRThres)) && (qty == 1)) {
+		if ((DeviceData.IRThres >= FD2930_MIN_THRES_IR) && (DeviceData.IRThres <= FD2930_MAX_THRES_IR)) {
 			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 		}
 		return 0;
 	}
-	if ((addr == MB_REG_ADDR(DeviceData, IRThres)) && (qty == 1)) {
-		if ((DeviceData.IRThres >= FD2930_MIN_THRES_IR) && (DeviceData.IRThres <= FD2930_MAX_THRES_IR)) {
+#if DEVICE_TYPE == PHOENIX_IRUV
+	if ((addr == MB_REG_ADDR(DeviceData, UVThres)) && (qty == 1)) {
+		if ((DeviceData.UVThres >= FD2930_MIN_THRES_UV) && (DeviceData.UVThres <= FD2930_MAX_THRES_UV)) {
 			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 		}
 		return 0;
@@ -1688,6 +1814,20 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 		}
 		return 0;
 	}
+#elif DEVICE_TYPE == PHOENIX_IR4
+	if ((addr == MB_REG_ADDR(DeviceData, IRCoeff12)) && (qty == 1)) {
+		if ((DeviceData.IRCoeff12 >= FD2930_MIN_K_IR) && (DeviceData.IRCoeff12 <= FD2930_MAX_K_IR)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, IRCoeff34)) && (qty == 1)) {
+		if ((DeviceData.IRCoeff34 >= FD2930_MIN_K_IR) && (DeviceData.IRCoeff34 <= FD2930_MAX_K_IR)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
+#endif
 	if ((addr == MB_REG_ADDR(DeviceData, FireDelay)) && (qty == 1)) {
 		if ((DeviceData.FireDelay >= FD2930_MIN_WAIT_FIRE) && (DeviceData.FireDelay <= FD2930_MAX_WAIT_FIRE)) {
 			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
@@ -1930,6 +2070,7 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
   */
 void SDADCTask(double avCoeffIR, double avCoeffUV)
 {
+#if DEVICE_TYPE == PHOENIX_IRUV
 	Max11040ChannelData_t *res = Max11040GetData(2);
 	IRRaw = res->ch[0];
 	UVRaw = res->ch[1];
@@ -1965,6 +2106,25 @@ void SDADCTask(double avCoeffIR, double avCoeffUV)
 			DeviceData.StateFlags |= FD2930_STATE_FLAG_FFT_START;
 		}
 	}
+#elif DEVICE_TYPE == PHOENIX_IR4
+	static uint8_t channels[4] = {2, 3, 0, 1};
+	Max11040ChannelData_t *res = Max11040GetData(4);
+	uint8_t pc;
+	for (int i = 0; i < PHOENIX_IR4_CHANNELS; i++) {
+		pc = channels[i];
+		IRRaw[pc] = res->ch[i];
+		IRAv[pc] = EWMA_FILTER(IRAv[pc], IRRaw[pc], avCoeffIR);
+		if (IRRaw[pc] > IRAv[pc]) IRRect[pc] = IRRaw[pc] - IRAv[pc];
+		else IRRect[pc] = IRAv[pc] - IRRaw[pc];
+		IR[pc] = EWMA_FILTER(IR[pc], IRRect[pc], avCoeffIR);
+
+		if (pc < 2) {
+			DeviceData.IRGain[pc] = IR[pc] * 4 * DeviceData.IRCoeff12 / 10;
+		} else {
+			DeviceData.IRGain[pc] = IR[pc] * 4 * DeviceData.IRCoeff34 / 10;
+		}
+	}
+#endif
 }
 
 /**
@@ -1977,7 +2137,9 @@ void ADCTask()
 	if (TimerIsOverflow(&MeasurmentTimer)) {
 		TimerReset(&MeasurmentTimer, ADC_SAMPLING_PERIOD);
 		DeviceData.Temperature = (ADCGetDataSingleChannel(1) - 750) / 10 + 25;
+#if DEVICE_TYPE == PHOENIX_IRUV
 		DeviceData.UVVoltage = (uint16_t)(ADCGetDataSingleChannel(2) * UV_VOLTAGE_SCALE);
+#endif
 		DeviceData.InPowerVoltage = 24;
 
 		if (DeviceData.Temperature > TEMPERATURE_MAXIMUM || DeviceData.Temperature < TEMPERATURE_MINIMUM) {
@@ -1995,6 +2157,7 @@ void ADCTask()
 		    DeviceData.Flags &= ~FD2930_DEVICEFLAGS_ERROR_TEMPERATURE;
 		    CntTemperatureFault = 0;
 		}
+#if DEVICE_TYPE == PHOENIX_IRUV
 		if (DeviceData.UVVoltage > VOLTAGE_UV_WORKING_MAXIMUM || DeviceData.UVVoltage < VOLTAGE_UV_WORKING_MINIMUM) {
 		    if (!(DeviceData.Flags & FD2930_DEVICEFLAGS_ERROR_UV_VOLTAGE)) {
 		    	LogAppPushData();
@@ -2006,6 +2169,7 @@ void ADCTask()
 		    }
 		    DeviceData.Flags &= ~FD2930_DEVICEFLAGS_ERROR_UV_VOLTAGE;
 		}
+#endif
 	}
 }
 
@@ -2026,11 +2190,16 @@ void SetDefaultParameters()
 	DeviceData.HeaterThres = FD2930_DEFAULT_THRES_HEATER;
 	DeviceData.FFTGain = FD2930_DEFAULT_GAIN_FFT;
 	DeviceData.IRThres = FD2930_DEFAULT_THRES_IR;
+#if DEVICE_TYPE == PHOENIX_IRUV
 	DeviceData.UVThres = FD2930_DEFAULT_THRES_UV;
 	DeviceData.IRThresF = FD2930_DEFAULT_THRES_IR;
 	DeviceData.UVThresF = FD2930_DEFAULT_THRES_UV;
 	DeviceData.IRCoeff = FD2930_DEFAULT_K_IR;
 	DeviceData.UVCoeff = FD2930_DEFAULT_K_UV;
+#elif DEVICE_TYPE == PHOENIX_IR4
+	DeviceData.IRCoeff12 = FD2930_DEFAULT_K_IR;
+	DeviceData.IRCoeff34 = FD2930_DEFAULT_K_IR;
+#endif
 	DeviceData.FaultDelay = FD2930_DEFAULT_WAIT_FAULT;
 	DeviceData.FireDelay = FD2930_DEFAULT_WAIT_FIRE;
 }

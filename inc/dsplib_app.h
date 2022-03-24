@@ -24,7 +24,7 @@ extern int16_t 		*FFTOutputData;
 extern uint16_t 	FFTMagnitude[FFT_OUTPUT_POINTS];
 
 
-uint16_t FFTCalculate(float coeff, uint16_t gain, uint16_t *out);
+uint16_t FFTCalculate(float coeff, uint16_t gain, uint16_t i, uint16_t *out);
 
 #endif // DSPLIB_APP
 
