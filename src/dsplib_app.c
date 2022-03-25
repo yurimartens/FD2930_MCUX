@@ -28,7 +28,7 @@ uint16_t FFTCalculate(float coeff, uint16_t gain, uint16_t i, uint16_t *out)
 	vTest_PerformFFT(i);
   
   	uint16_t FFTExceeded = 0;
-  	int offsetOut = i * FFT_OUTPUT_POINTS, offsetFFT = i * NPOINTS_1024;
+  	int offsetOut = i * FFT_OUTPUT_POINTS, offsetFFT = i * 2 * FFT_POINTS;
   
   	for(int j = 0; j < FFT_OUTPUT_POINTS; j++) {
   		out[offsetOut + j] = (int)sqrt(FFTOutputData[offsetFFT + 2 * j] * FFTOutputData[offsetFFT + 2 * j] + FFTOutputData[offsetFFT + 2 * j + 1] * FFTOutputData[offsetFFT + 2 * j + 1]);
@@ -66,7 +66,7 @@ static void vTest_PerformFFT(uint32_t arrayIdx)
 		}
 		#elif (NPOINTS == NPOINTS_1024)
 		{
-			vF_dspl_fftR4b16N1024(FFTOutputData + arrayIdx * NPOINTS_1024, FFTInputData + arrayIdx * NPOINTS_1024);
+			vF_dspl_fftR4b16N1024(FFTOutputData + arrayIdx * 2 * NPOINTS_1024, FFTInputData + arrayIdx * 2 * NPOINTS_1024);
 		}
 		#elif (NPOINTS == NPOINTS_4096)
 		{

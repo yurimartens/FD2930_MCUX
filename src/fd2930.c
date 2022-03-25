@@ -38,8 +38,6 @@ uint16_t 		SelfTestCnt, SelfTest, BadSelfTest;
 uint16_t 		CheckFireStatusCnt;
 uint16_t 		AutorecoveryCnt;
 
-uint16_t 		FFTCnt;
-
 #if DEVICE_TYPE == PHOENIX_IRUV
 double 			IR, UV, IRRaw, UVRaw, IRAv, IRRect;
 #elif DEVICE_TYPE == PHOENIX_IR4
@@ -136,6 +134,7 @@ void DeviceInit()
 	DeviceData.FWVersion = FW_VERSION;
 	DeviceData.HWVersion = HW_VERSION;
 	DeviceData.DeviceType = DEVICE_TYPE;
+	DeviceData.Flags = 0;
 	DeviceData.StateFlags = 0;
 
 	if (write) EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
@@ -1326,7 +1325,7 @@ __STATIC_INLINE void CheckFireStatus()
 	if (DeviceData.IRGain[3] != 0) Rat3 = DeviceData.IRGain[1] / DeviceData.IRGain[3];
 	Rat1_3 = (Rat1 + Rat2 + Rat3) / 3;
 
-	if ((Rat1 > FD2930_THRES_RAT1) && (Rat2 > FD2930_THRES_RAT2) && (Rat3 > FD2930_THRES_RAT3) && (Rat1_3 > FD2930_THRES_RAT1_3)) {
+	if ((Rat1 > DeviceData.IRThres) && (Rat2 > FD2930_THRES_RAT2) && (Rat3 > FD2930_THRES_RAT3) && (Rat1_3 > FD2930_THRES_RAT1_3)) {
 		DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;
 	} else {
 		DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
@@ -2070,6 +2069,7 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
   */
 void SDADCTask(double avCoeffIR, double avCoeffUV)
 {
+	static uint16_t 		FFTCnt = 0;
 #if DEVICE_TYPE == PHOENIX_IRUV
 	Max11040ChannelData_t *res = Max11040GetData(2);
 	IRRaw = res->ch[0];
@@ -2122,6 +2122,18 @@ void SDADCTask(double avCoeffIR, double avCoeffUV)
 			DeviceData.IRGain[pc] = IR[pc] * 4 * DeviceData.IRCoeff12 / 10;
 		} else {
 			DeviceData.IRGain[pc] = IR[pc] * 4 * DeviceData.IRCoeff34 / 10;
+		}
+	}
+	if (!(DeviceData.StateFlags & FD2930_STATE_FLAG_FFT_ACTIVE)) {
+		if (FFTCnt < FFT_POINTS * 2) {
+			for (int i = 0; i < PHOENIX_IR4_CHANNELS; i++) {
+				pc = channels[i];
+				FFTInputData[FFTCnt + pc * FFT_POINTS * 2] = IRRect[pc];
+			}
+			FFTCnt++;
+		} else {
+			DeviceData.StateFlags |= FD2930_STATE_FLAG_FFT_START;
+			FFTCnt = 0;
 		}
 	}
 #endif
