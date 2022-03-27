@@ -156,6 +156,14 @@ void DeviceInit()
   */
 void FunctionalTaskBG()
 {
+	if (DeviceData.StateFlags & FD2930_STATE_FLAG_INIT_CURRENT) {
+		DeviceData.StateFlags &= ~FD2930_STATE_FLAG_INIT_CURRENT;
+		SSP0_420_MODE();
+		AD5421Init(&SSPSD420, 0);
+		DeviceData.Current420 = FD2930_TASK_STARTUP_CUR_UA;
+		AD5421SetCurrent(FD2930_TASK_STARTUP_CUR_UA);
+		SSP0_SD_CARD_MODE();
+	}
 	if ((DeviceData.StateFlags & FD2930_STATE_FLAG_UPDATE_CURRENT) && (DeviceState > FD2930_STATE_START3)){
 		SSP0_420_MODE();
 		AD5421SetCurrent(DeviceData.Current420);
@@ -239,11 +247,7 @@ void FunctionalTaskPeriodic()
 				cnt++;
 			} else {
 				cnt = 0;
-				SSP0_420_MODE();
-				AD5421Init(&SSPSD420, 0);
-				DeviceData.Current420 = FD2930_TASK_STARTUP_CUR_UA;
-				AD5421SetCurrent(FD2930_TASK_STARTUP_CUR_UA);
-				SSP0_SD_CARD_MODE();
+				DeviceData.StateFlags |= FD2930_STATE_FLAG_INIT_CURRENT;
 				DeviceState++;
 			}
 		break;

@@ -23,14 +23,14 @@ extern "C" {
 #include <board.h>
 #include <dsplib_app.h>
 
-#define DEVICE_TYPE         			PHOENIX_IR4
+#define DEVICE_TYPE         			PHOENIX_IRUV
 
 #if DEVICE_TYPE == PHOENIX_IRUV
 #define FW_VERSION                     	301
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	324
+#define FW_VERSION_LO                  	327
 
 #elif DEVICE_TYPE == PHOENIX_IR4
 
@@ -38,7 +38,7 @@ extern "C" {
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	324
+#define FW_VERSION_LO                  	327
 
 #define PHOENIX_IR4_CHANNELS			4
 #define FD2930_THRES_RAT1               4
@@ -208,6 +208,7 @@ extern "C" {
 #define FD2930_STATE_FLAG_FFT_START             (1 << 4)
 #define FD2930_STATE_FLAG_FFT_ACTIVE            (1 << 5)
 #define FD2930_STATE_FLAG_READ_ARCHIVE          (1 << 8)
+#define FD2930_STATE_FLAG_INIT_CURRENT	        (1 << 9)
 
 #define UV_PICK_LIMIT							10000
 #define UV_PICK_WORK_AREA						500
