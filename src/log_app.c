@@ -33,7 +33,12 @@ void LogAppInit()
 {
 	FIFOInit(&FIFO, FIFOMem, LOG_ENTRY_SIZE, LOG_FIFO_ITEMS);
 	FIFOInit(&FIFOLive, FIFOMemLive, LOG_ENTRY_SIZE, LOG_FIFO_LIVE_ITEMS);
-
+	uint8_t a = 0;
+	if (a == 0) {
+		DeviceData.Status &= ~FD2930_DEVICE_STATUS_SD_CARD;
+		ArchLastPage = DeviceData.ArchLastPageHi = DeviceData.ArchLastPageLo = 0;
+		return;
+	}
 	if (LOG_ERROR_NONE == LogInit(&DeviceTime, DeviceData.SerialNumber)) {
 		DeviceData.Status |= FD2930_DEVICE_STATUS_SD_CARD;
 		ArchLastPage = LogGetEntriesNum();

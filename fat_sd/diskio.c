@@ -249,9 +249,8 @@ static int select (void)	/* 1:OK, 0:Timeout */
 
 static void power_on (void)	/* Enable SSP module and attach it to I/O pads */
 {
-	/*
+/*
 	PINSEL_CFG_Type PinCfg;
-	SSP_CFG_Type SSP_ConfigStruct;
 
 	PinCfg.Funcnum   = PINSEL_FUNC_0;
 	PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
@@ -273,14 +272,18 @@ static void power_on (void)	/* Enable SSP module and attach it to I/O pads */
 	PinCfg.Pinnum    = 24;
 	PINSEL_ConfigPin(&PinCfg);
 
+
+	SSP_CFG_Type SSP_ConfigStruct;
 	SSP_ConfigStructInit(&SSP_ConfigStruct);
+	//SSP_ConfigStruct.CPHA = SSP_CPHA_SECOND;
 	SSP_Init(SSPx, &SSP_ConfigStruct);
 
 	CLKPWR_SetPCLKDiv(CLKPWR_PCLKSEL_SSP0, CLKPWR_PCLKSEL_CCLK_DIV_2);
 
 	SSP_Cmd(SSPx, ENABLE);
+*/
+	deselect();
 
-	*/
 	while(SSPx->SR & SSP_SR_BSY ) { ; }
 
 	/* drain SPI RX FIFO */

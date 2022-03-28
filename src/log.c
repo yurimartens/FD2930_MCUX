@@ -114,7 +114,7 @@ LogError_t LogInit(RTC_TIME_Type *time, uint16_t sn)
         {
             if (FR_OK != f_mkdir(LOG_EVENT_DIR_NAME)) return LOG_ERROR_FS;
             if (FR_OK != f_chdir(LOG_EVENT_DIR_NAME)) return LOG_ERROR_FS;                        
-            if (FR_OK != f_utime(LOG_EVENT_DIR_NAME, &fno)) return LOG_ERROR_FS; 
+            f_utime(LOG_EVENT_DIR_NAME, &fno);
         }        
         if (LOG_ERROR_NONE != CreateFileEventAndHeader(sn)) return LOG_ERROR_FS;
     }
@@ -130,7 +130,7 @@ LogError_t LogInit(RTC_TIME_Type *time, uint16_t sn)
                 {
                     if (FR_OK != f_mkdir(LOG_EVENT_DIR_NAME)) return LOG_ERROR_FS;
                     if (FR_OK != f_chdir(LOG_EVENT_DIR_NAME)) return LOG_ERROR_FS;                             
-                    if (FR_OK != f_utime(LOG_EVENT_DIR_NAME, &fno)) return LOG_ERROR_FS;
+                    f_utime(LOG_EVENT_DIR_NAME, &fno);
                 }
                 if (LOG_ERROR_NONE != CreateFileEventAndHeader(sn)) return LOG_ERROR_FS;
             }

@@ -60,8 +60,12 @@ uint32_t 		ArchPageIdx, ArchLastPage;
 
 float 			HeatPowerInst = 1.0;
 
+//#define 		SSP0_420_MODE()			LPC_SSP0->CR0 &= ~(SSP_CPOL_LO); LPC_SSP0->CR0 |= SSP_CPHA_SECOND;
+//#define 		SSP0_SD_CARD_MODE()		LPC_SSP0->CR0 |= (SSP_CPOL_LO | SSP_CPHA_SECOND);
 #define 		SSP0_420_MODE()			LPC_SSP0->CR0 &= ~(SSP_CPOL_LO);
-#define 		SSP0_SD_CARD_MODE()		LPC_SSP0->CR0 |= (SSP_CPOL_LO);
+#define 		SSP0_SD_CARD_MODE()		LPC_SSP0->CR0 |= SSP_CPOL_LO;
+//#define 		SSP0_420_MODE()			LPC_SSP0->CR0 = (1 << 8) | SSP_DATABIT_8 | SSP_CPHA_SECOND;
+//#define 		SSP0_SD_CARD_MODE()		LPC_SSP0->CR0 = (1 << 8) | SSP_DATABIT_8 | SSP_CPHA_SECOND | SSP_CPOL_LO;
 
 extern Modbus_t Modbus;
 extern SSPAl_t  SSPSD420;
@@ -145,6 +149,7 @@ void DeviceInit()
 	TimerReset(&MeasurmentTimer, ADC_SAMPLING_PERIOD);
 
 	RTC_GetFullTime(LPC_RTC, &DeviceTime);
+	if ((DeviceTime.YEAR < 2000) || (DeviceTime.YEAR > 2100)) DeviceTime.YEAR = 2022;
 	UpdateTime();
 }
 

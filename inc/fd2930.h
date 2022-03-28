@@ -30,7 +30,7 @@ extern "C" {
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	327
+#define FW_VERSION_LO                  	328
 
 #elif DEVICE_TYPE == PHOENIX_IR4
 
@@ -38,7 +38,7 @@ extern "C" {
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	327
+#define FW_VERSION_LO                  	328
 
 #define PHOENIX_IR4_CHANNELS			4
 #define FD2930_THRES_RAT1               4
@@ -379,6 +379,8 @@ extern DeviceData_t	DeviceData;
 extern RTC_TIME_Type DeviceTime;
 extern uint8_t		ChangeConnectionSettings;
 extern uint8_t		Protocol;
+
+extern DeviceState_t	DeviceState;
 
 extern uint32_t 	ArchPageIdx, ArchLastPage;
 
