@@ -23,7 +23,7 @@ extern "C" {
 #include <board.h>
 #include <dsplib_app.h>
 
-#define DEVICE_TYPE         			PHOENIX_IRUV
+#define DEVICE_TYPE         			PHOENIX_IR4
 
 #if DEVICE_TYPE == PHOENIX_IRUV
 #define FW_VERSION                     	301
@@ -109,7 +109,7 @@ extern "C" {
 #define FD2930_PASSWORD                 5813
 
 #define FD2930_DEFAULT_THRES_IR         400
-#define FD2930_MIN_THRES_IR              100
+#define FD2930_MIN_THRES_IR              0
 #define FD2930_MAX_THRES_IR              2000
 #define FD2930_DEFAULT_THRES_UV          400
 #define FD2930_MIN_THRES_UV              100

@@ -61,7 +61,7 @@ clean:
 
 post-build:
 	-@echo 'Performing post-build steps'
-	-arm-none-eabi-size "FD2930_MCUX.axf" ; arm-none-eabi-objcopy -v -O binary "FD2930_MCUX.axf" "FD2930_MCUX.bin" ; # checksum -p LPC1768 -d "FD2930_MCUX.bin"
+	-arm-none-eabi-size "FD2930_MCUX.axf" ; arm-none-eabi-objcopy -v -O binary "FD2930_MCUX.axf" "FD2930_MCUX.bin" ; arm-none-eabi-objcopy -v -O ihex "FD2930_MCUX.axf" "FD2930_MCUX.hex"
 	-@echo ' '
 
 .PHONY: all clean dependents post-build
