@@ -1334,7 +1334,7 @@ __STATIC_INLINE void CheckFireStatus()
 	if (DeviceData.IRGain[3] != 0) Rat3 = DeviceData.IRGain[1] / DeviceData.IRGain[3];
 	Rat1_3 = (Rat1 + Rat2 + Rat3) / 3;
 
-	if ((Rat1 > DeviceData.IRThres) && (Rat2 > FD2930_THRES_RAT2) && (Rat3 > FD2930_THRES_RAT3) && (Rat1_3 > FD2930_THRES_RAT1_3)) {
+	if ((Rat1 > DeviceData.IRThres) && (Rat2 > DeviceData.Rat2Thres) && (Rat3 > DeviceData.Rat3Thres) && (Rat1_3 > DeviceData.Rat13Thres)) {
 		DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;
 	} else {
 		DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
@@ -1787,6 +1787,24 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 	}
 	if ((addr == MB_REG_ADDR(DeviceData, IRThres)) && (qty == 1)) {
 		if ((DeviceData.IRThres >= FD2930_MIN_THRES_IR) && (DeviceData.IRThres <= FD2930_MAX_THRES_IR)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, Rat2Thres)) && (qty == 1)) {
+		if ((DeviceData.Rat2Thres >= FD2930_MIN_THRES_IR) && (DeviceData.Rat2Thres <= FD2930_MAX_THRES_IR)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, Rat3Thres)) && (qty == 1)) {
+		if ((DeviceData.Rat3Thres >= FD2930_MIN_THRES_IR) && (DeviceData.Rat3Thres <= FD2930_MAX_THRES_IR)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, Rat13Thres)) && (qty == 1)) {
+		if ((DeviceData.Rat13Thres >= FD2930_MIN_THRES_IR) && (DeviceData.Rat13Thres <= FD2930_MAX_THRES_IR)) {
 			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 		}
 		return 0;

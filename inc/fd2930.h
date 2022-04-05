@@ -34,11 +34,11 @@ extern "C" {
 
 #elif DEVICE_TYPE == PHOENIX_IR4
 
-#define FW_VERSION                     	301
+#define FW_VERSION                     	302
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	328
+#define FW_VERSION_LO                  	405
 
 #define PHOENIX_IR4_CHANNELS			4
 #define FD2930_THRES_RAT1               4
@@ -357,9 +357,9 @@ typedef struct
     uint16_t FWCheckSumm;
     uint16_t ArchiveEvent;
     uint16_t FFTGain;
-    uint16_t Res0;
-    uint16_t Res1;		// 40
-    uint16_t Res2;
+    uint16_t Rat2Thres;
+    uint16_t Rat3Thres;		// 40
+    uint16_t Rat13Thres;
     uint16_t ArchPageIdxHi;
     uint16_t ArchPageIdxLo;
     uint16_t CntFaultIR;
