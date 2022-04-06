@@ -34,11 +34,11 @@ extern "C" {
 
 #elif DEVICE_TYPE == PHOENIX_IR4
 
-#define FW_VERSION                     	302
+#define FW_VERSION                     	303
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	405
+#define FW_VERSION_LO                  	406
 
 #define PHOENIX_IR4_CHANNELS			4
 #define FD2930_THRES_RAT1               4
@@ -109,8 +109,10 @@ extern "C" {
 #define FD2930_PASSWORD                 5813
 
 #define FD2930_DEFAULT_THRES_IR         400
-#define FD2930_MIN_THRES_IR              0
+#define FD2930_MIN_THRES_IR              40
 #define FD2930_MAX_THRES_IR              2000
+#define FD2930_MIN_RAT_THRES             1
+#define FD2930_MAX_RAT_THRES             20
 #define FD2930_DEFAULT_THRES_UV          400
 #define FD2930_MIN_THRES_UV              100
 #define FD2930_MAX_THRES_UV              2000
@@ -137,6 +139,13 @@ extern "C" {
 #define FD2930_MAX_GAIN_FFT             100
 #define FD2930_W_TRL                    3600// 3600 1 ÷àñ
 #define FD2930_W_TRL_P                  10800//800// 108003 ÷àñà
+
+#define FD2930_DEFAULT_RAT1_THRES		9
+#define FD2930_DEFAULT_RAT2_THRES		3
+#define FD2930_DEFAULT_RAT3_THRES		3
+#define FD2930_DEFAULT_RAT13_THRES		5
+
+#define MAX_RAT							65535
 
 
 #define TEMPERATURE_MAXIMUM             110
@@ -343,7 +352,7 @@ typedef struct
     uint16_t FFTExceeded;	// 22
     uint16_t InPowerVoltage;// 23
     uint16_t IRDACmd;		// 24
-    uint16_t IRThres;		// 25
+    uint16_t Rat1Thres;		// 25
     uint16_t Seconds;
     uint16_t Minutes;
     uint16_t Hours;
@@ -368,7 +377,11 @@ typedef struct
     uint16_t Res3;
     uint16_t Res4;
     uint16_t Res5;
-    uint16_t Reserved1[150];	// 50
+    float    Rat1;			// 50
+    float    Rat2;
+    float    Rat3;
+    float    Rat1_3;
+    uint16_t Reserved1[142];	// 58
 
     Archive_t Archive;		// 200th MB addr
     uint16_t FFTData[PHOENIX_IR4_CHANNELS * FFT_OUTPUT_POINTS];

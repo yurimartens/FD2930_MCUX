@@ -42,7 +42,6 @@ uint16_t 		AutorecoveryCnt;
 double 			IR, UV, IRRaw, UVRaw, IRAv, IRRect;
 #elif DEVICE_TYPE == PHOENIX_IR4
 double 			IR[PHOENIX_IR4_CHANNELS], IRRaw[PHOENIX_IR4_CHANNELS], IRAv[PHOENIX_IR4_CHANNELS], IRRect[PHOENIX_IR4_CHANNELS];
-float 			Rat1, Rat2, Rat3, Rat1_3;
 #endif
 
 uint16_t		CriminalFFTChannelNumber;
@@ -123,12 +122,16 @@ void DeviceInit()
 			}
 		}
 		if (DeviceData.FFTGain > FD2930_MAX_GAIN_FFT || DeviceData.FFTGain < FD2930_MIN_GAIN_FFT) {DeviceData.FFTGain = FD2930_DEFAULT_GAIN_FFT; write = 1;}
-		if (DeviceData.IRThres > FD2930_MAX_THRES_IR || DeviceData.IRThres < FD2930_MIN_THRES_IR) {DeviceData.IRThres = FD2930_DEFAULT_THRES_IR; write = 1;}
 #if DEVICE_TYPE == PHOENIX_IRUV
+		if (DeviceData.IRThres > FD2930_MAX_THRES_IR || DeviceData.IRThres < FD2930_MIN_THRES_IR) {DeviceData.IRThres = FD2930_DEFAULT_THRES_IR; write = 1;}
 		if (DeviceData.UVThres > FD2930_MAX_THRES_UV || DeviceData.UVThres < FD2930_MIN_THRES_UV) {DeviceData.UVThres = FD2930_DEFAULT_THRES_UV; write = 1;}
 		if (DeviceData.IRCoeff > FD2930_MAX_K_IR || DeviceData.IRCoeff < FD2930_MIN_K_IR) {DeviceData.IRCoeff = FD2930_DEFAULT_K_IR; write = 1;}
 		if (DeviceData.UVCoeff > FD2930_MAX_K_UV || DeviceData.UVCoeff < FD2930_MIN_K_UV) {DeviceData.UVCoeff = FD2930_DEFAULT_K_UV; write = 1;}
 #elif DEVICE_TYPE == PHOENIX_IR4
+		if (DeviceData.Rat1Thres > FD2930_MAX_RAT_THRES || DeviceData.Rat1Thres < FD2930_MIN_RAT_THRES) {DeviceData.Rat1Thres = FD2930_DEFAULT_RAT1_THRES; write = 1;}
+		if (DeviceData.Rat2Thres > FD2930_MAX_RAT_THRES || DeviceData.Rat2Thres < FD2930_MIN_RAT_THRES) {DeviceData.Rat2Thres = FD2930_DEFAULT_RAT2_THRES; write = 1;}
+		if (DeviceData.Rat3Thres > FD2930_MAX_RAT_THRES || DeviceData.Rat3Thres < FD2930_MIN_RAT_THRES) {DeviceData.Rat3Thres = FD2930_DEFAULT_RAT3_THRES; write = 1;}
+		if (DeviceData.Rat13Thres > FD2930_MAX_RAT_THRES || DeviceData.Rat13Thres < FD2930_MIN_RAT_THRES) {DeviceData.Rat13Thres = FD2930_DEFAULT_RAT13_THRES; write = 1;}
 		if (DeviceData.IRCoeff12 > FD2930_MAX_K_IR || DeviceData.IRCoeff12 < FD2930_MIN_K_IR) {DeviceData.IRCoeff12 = FD2930_DEFAULT_K_IR; write = 1;}
 		if (DeviceData.IRCoeff34 > FD2930_MAX_K_IR || DeviceData.IRCoeff34 < FD2930_MIN_K_IR) {DeviceData.IRCoeff34 = FD2930_DEFAULT_K_IR; write = 1;}
 #endif
@@ -501,6 +504,7 @@ void FunctionalTaskPeriodic()
 		        	DeviceData.Flags &= ~FD2930_DEVICEFLAGS_UV_ERROR;
 		        }
 #elif DEVICE_TYPE == PHOENIX_IR4
+#if 0
 		    	for (int i = 0; i < PHOENIX_IR4_CHANNELS; i++) {
 		    		if (DeviceData.IRGain[i] > (0.5 * DeviceData.IRThres)) selfTestCnt = 0;
 		    	}
@@ -534,6 +538,7 @@ void FunctionalTaskPeriodic()
 						DeviceState = FD2930_STATE_WORKING;
 					}
 		    	}
+#endif
 #endif
 		        RTC_GetFullTime(LPC_RTC, &DeviceTime);
 		        UpdateTime();
@@ -1329,12 +1334,12 @@ __STATIC_INLINE void CheckFireStatus()
 		break;
 	}
 #elif DEVICE_TYPE == PHOENIX_IR4
-	if (DeviceData.IRGain[0] != 0) Rat1 = DeviceData.IRGain[1] / DeviceData.IRGain[0];
-	if (DeviceData.IRGain[2] != 0) Rat2 = DeviceData.IRGain[1] / DeviceData.IRGain[2];
-	if (DeviceData.IRGain[3] != 0) Rat3 = DeviceData.IRGain[1] / DeviceData.IRGain[3];
-	Rat1_3 = (Rat1 + Rat2 + Rat3) / 3;
+	if (DeviceData.IRGain[0] != 0) DeviceData.Rat1 = (float)DeviceData.IRGain[1] / DeviceData.IRGain[0]; else DeviceData.Rat1 = MAX_RAT;
+	if (DeviceData.IRGain[2] != 0) DeviceData.Rat2 = (float)DeviceData.IRGain[1] / DeviceData.IRGain[2]; else DeviceData.Rat2 = MAX_RAT;
+	if (DeviceData.IRGain[3] != 0) DeviceData.Rat3 = (float)DeviceData.IRGain[1] / DeviceData.IRGain[3]; else DeviceData.Rat3 = MAX_RAT;
+	DeviceData.Rat1_3 = (DeviceData.Rat1 + DeviceData.Rat2 + DeviceData.Rat3) / 3;
 
-	if ((Rat1 > DeviceData.IRThres) && (Rat2 > DeviceData.Rat2Thres) && (Rat3 > DeviceData.Rat3Thres) && (Rat1_3 > DeviceData.Rat13Thres)) {
+	if ((DeviceData.Rat1 > (float)DeviceData.Rat1Thres) && (DeviceData.Rat2 > (float)DeviceData.Rat2Thres) && (DeviceData.Rat3 > (float)DeviceData.Rat3Thres) && (DeviceData.Rat1_3 > (float)DeviceData.Rat13Thres)) {
 		DeviceStatusTemp |= FD2930_DEVICE_STATUS_FIRE;
 	} else {
 		DeviceStatusTemp &= ~FD2930_DEVICE_STATUS_FIRE;
@@ -1785,12 +1790,7 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 		}
 		return 0;
 	}
-	if ((addr == MB_REG_ADDR(DeviceData, IRThres)) && (qty == 1)) {
-		if ((DeviceData.IRThres >= FD2930_MIN_THRES_IR) && (DeviceData.IRThres <= FD2930_MAX_THRES_IR)) {
-			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
-		}
-		return 0;
-	}
+
 	if ((addr == MB_REG_ADDR(DeviceData, Rat2Thres)) && (qty == 1)) {
 		if ((DeviceData.Rat2Thres >= FD2930_MIN_THRES_IR) && (DeviceData.Rat2Thres <= FD2930_MAX_THRES_IR)) {
 			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
@@ -1810,6 +1810,12 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 		return 0;
 	}
 #if DEVICE_TYPE == PHOENIX_IRUV
+	if ((addr == MB_REG_ADDR(DeviceData, IRThres)) && (qty == 1)) {
+		if ((DeviceData.IRThres >= FD2930_MIN_THRES_IR) && (DeviceData.IRThres <= FD2930_MAX_THRES_IR)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
 	if ((addr == MB_REG_ADDR(DeviceData, UVThres)) && (qty == 1)) {
 		if ((DeviceData.UVThres >= FD2930_MIN_THRES_UV) && (DeviceData.UVThres <= FD2930_MAX_THRES_UV)) {
 			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
@@ -1841,6 +1847,30 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 		return 0;
 	}
 #elif DEVICE_TYPE == PHOENIX_IR4
+	if ((addr == MB_REG_ADDR(DeviceData, Rat1Thres)) && (qty == 1)) {
+		if ((DeviceData.Rat1Thres >= FD2930_MIN_RAT_THRES) && (DeviceData.Rat1Thres <= FD2930_MAX_RAT_THRES)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, Rat2Thres)) && (qty == 1)) {
+		if ((DeviceData.Rat2Thres >= FD2930_MIN_RAT_THRES) && (DeviceData.Rat2Thres <= FD2930_MAX_RAT_THRES)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, Rat3Thres)) && (qty == 1)) {
+		if ((DeviceData.Rat3Thres >= FD2930_MIN_RAT_THRES) && (DeviceData.Rat3Thres <= FD2930_MAX_RAT_THRES)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
+	if ((addr == MB_REG_ADDR(DeviceData, Rat13Thres)) && (qty == 1)) {
+		if ((DeviceData.Rat13Thres >= FD2930_MIN_RAT_THRES) && (DeviceData.Rat13Thres <= FD2930_MAX_RAT_THRES)) {
+			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		}
+		return 0;
+	}
 	if ((addr == MB_REG_ADDR(DeviceData, IRCoeff12)) && (qty == 1)) {
 		if ((DeviceData.IRCoeff12 >= FD2930_MIN_K_IR) && (DeviceData.IRCoeff12 <= FD2930_MAX_K_IR)) {
 			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
@@ -2228,8 +2258,8 @@ void SetDefaultParameters()
 	DeviceData.HeatPower = FD2930_DEFAULT_HEATPOWER;
 	DeviceData.HeaterThres = FD2930_DEFAULT_THRES_HEATER;
 	DeviceData.FFTGain = FD2930_DEFAULT_GAIN_FFT;
-	DeviceData.IRThres = FD2930_DEFAULT_THRES_IR;
 #if DEVICE_TYPE == PHOENIX_IRUV
+	DeviceData.IRThres = FD2930_DEFAULT_THRES_IR;
 	DeviceData.UVThres = FD2930_DEFAULT_THRES_UV;
 	DeviceData.IRThresF = FD2930_DEFAULT_THRES_IR;
 	DeviceData.UVThresF = FD2930_DEFAULT_THRES_UV;
@@ -2238,6 +2268,10 @@ void SetDefaultParameters()
 #elif DEVICE_TYPE == PHOENIX_IR4
 	DeviceData.IRCoeff12 = FD2930_DEFAULT_K_IR;
 	DeviceData.IRCoeff34 = FD2930_DEFAULT_K_IR;
+	DeviceData.Rat1Thres = FD2930_DEFAULT_RAT1_THRES;
+	DeviceData.Rat2Thres = FD2930_DEFAULT_RAT2_THRES;
+	DeviceData.Rat3Thres = FD2930_DEFAULT_RAT3_THRES;
+	DeviceData.Rat13Thres = FD2930_DEFAULT_RAT13_THRES;
 #endif
 	DeviceData.FaultDelay = FD2930_DEFAULT_WAIT_FAULT;
 	DeviceData.FireDelay = FD2930_DEFAULT_WAIT_FIRE;
