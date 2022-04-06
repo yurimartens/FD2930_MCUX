@@ -96,7 +96,7 @@ int main(void) {
 
 	//IRPortInit();
 
-	while (DeviceState <= FD2930_STATE_START3) {};
+	//while (DeviceState <= FD2930_STATE_START3) {};
 	LogAppInit();
 
 	while (1) {

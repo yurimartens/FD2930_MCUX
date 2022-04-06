@@ -41,10 +41,6 @@ extern "C" {
 #define FW_VERSION_LO                  	406
 
 #define PHOENIX_IR4_CHANNELS			4
-#define FD2930_THRES_RAT1               4
-#define FD2930_THRES_RAT2               2
-#define FD2930_THRES_RAT3               6
-#define FD2930_THRES_RAT1_3             5
 
 #endif
 
