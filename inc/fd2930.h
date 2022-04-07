@@ -23,22 +23,22 @@ extern "C" {
 #include <board.h>
 #include <dsplib_app.h>
 
-#define DEVICE_TYPE         			PHOENIX_IR4
+#define DEVICE_TYPE         			PHOENIX_IRUV
 
 #if DEVICE_TYPE == PHOENIX_IRUV
-#define FW_VERSION                     	301
+#define FW_VERSION                     	302
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	328
+#define FW_VERSION_LO                  	407
 
 #elif DEVICE_TYPE == PHOENIX_IR4
 
-#define FW_VERSION                     	303
+#define FW_VERSION                     	304
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	406
+#define FW_VERSION_LO                  	407
 
 #define PHOENIX_IR4_CHANNELS			4
 
@@ -213,7 +213,8 @@ extern "C" {
 #define FD2930_STATE_FLAG_FFT_START             (1 << 4)
 #define FD2930_STATE_FLAG_FFT_ACTIVE            (1 << 5)
 #define FD2930_STATE_FLAG_READ_ARCHIVE          (1 << 8)
-#define FD2930_STATE_FLAG_INIT_CURRENT	        (1 << 9)
+#define FD2930_STATE_FLAG_READ_ARCHIVE_BIN      (1 << 9)
+#define FD2930_STATE_FLAG_INIT_CURRENT	        (1 << 10)
 
 #define UV_PICK_LIMIT							10000
 #define UV_PICK_WORK_AREA						500
@@ -281,11 +282,11 @@ typedef struct
     uint16_t FFTExceeded;
     uint16_t UVThresF;
     uint16_t IRThresF;
-    uint16_t UVCoeff;
-    uint16_t IRCoeff;
+    uint16_t UVCoeff;		// 14
+    uint16_t IRCoeff;		// 15
     uint16_t FireDelay;
     uint16_t FaultDelay;
-    uint16_t Command;
+    uint16_t Command;		// 18
     uint16_t HeatPower;
     int16_t HeaterThres;
     int16_t Temperature;
@@ -293,14 +294,14 @@ typedef struct
     uint16_t InPowerVoltage;
     uint16_t IRDACmd;
     uint16_t Reserved0;
-    uint16_t Seconds;
+    uint16_t Seconds;		// 26
     uint16_t Minutes;
     uint16_t Hours;
     uint16_t Days;
     uint16_t Months;
     uint16_t Years;
-    uint16_t ArchLastPageHi;
-    uint16_t ArchLastPageLo;
+    uint16_t ArchLastPageHi;	// 32
+    uint16_t ArchLastPageLo;	// 33
     uint16_t BlockService;
     uint16_t Current420;
     uint16_t FWCheckSumm;
@@ -308,9 +309,9 @@ typedef struct
     uint16_t FFTGain;
     uint16_t IRRaw;
     uint16_t IRAv;		// 40
-    uint16_t IRRect;
-    uint16_t ArchPageIdxHi;
-    uint16_t ArchPageIdxLo;
+    uint16_t IRRect;	// 41
+    uint16_t ArchPageIdxHi;	// 42
+    uint16_t ArchPageIdxLo;	// 43
     uint16_t CntFaultIR;
     uint16_t CntFaultUV;
     uint16_t StateFlags;

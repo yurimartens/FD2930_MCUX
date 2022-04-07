@@ -28,7 +28,7 @@ void LogAppInit();
 void LogAppPushData();
 void LogAppPushLiveData();
 void LogAppPopAndStoreAllData();
-void LogAppRestoreData();
+void LogAppRestoreData(uint8_t bin);
 void LogAppErase();
 
 #ifdef __cplusplus
