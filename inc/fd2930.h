@@ -34,13 +34,18 @@ extern "C" {
 
 #elif DEVICE_TYPE == PHOENIX_IR4
 
-#define FW_VERSION                     	303
+#define FW_VERSION                     	304
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	406
+#define FW_VERSION_LO                  	412
 
 #define PHOENIX_IR4_CHANNELS			4
+
+#define SENSOR_INFRATEC					1
+#define SENSOR_BELEAD					2
+
+#define SENSOR_TYPE						SENSOR_BELEAD
 
 #endif
 

@@ -2164,7 +2164,11 @@ void SDADCTask(double avCoeffIR, double avCoeffUV)
 		}
 	}
 #elif DEVICE_TYPE == PHOENIX_IR4
+#if SENSOR_TYPE == SENSOR_INFRATEC
 	static uint8_t channels[4] = {2, 3, 0, 1};
+#elif SENSOR_TYPE == SENSOR_BELEAD
+	static uint8_t channels[4] = {1, 0, 3, 2};
+#endif
 	Max11040ChannelData_t *res = Max11040GetData(4);
 	uint8_t pc;
 	for (int i = 0; i < PHOENIX_IR4_CHANNELS; i++) {
