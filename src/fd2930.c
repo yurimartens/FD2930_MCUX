@@ -143,6 +143,10 @@ void DeviceInit()
 	DeviceData.DeviceType = DEVICE_TYPE;
 	DeviceData.Flags = 0;
 	DeviceData.StateFlags = 0;
+	DeviceData.ArchPageIdxHi = 0;
+	DeviceData.ArchPageIdxLo = 0;
+	DeviceData.ArchLastPageHi = 0;
+	DeviceData.ArchLastPageLo = 0;
 
 	if (write) EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 
@@ -166,17 +170,17 @@ void FunctionalTaskBG()
 {
 	if (DeviceData.StateFlags & FD2930_STATE_FLAG_INIT_CURRENT) {
 		DeviceData.StateFlags &= ~FD2930_STATE_FLAG_INIT_CURRENT;
-		SSP0_420_MODE();
-		AD5421Init(&SSPSD420, 0);
-		DeviceData.Current420 = FD2930_TASK_STARTUP_CUR_UA;
-		AD5421SetCurrent(FD2930_TASK_STARTUP_CUR_UA);
-		SSP0_SD_CARD_MODE();
+		//SSP0_420_MODE();
+		//AD5421Init(&SSPSD420, 0);
+		//DeviceData.Current420 = FD2930_TASK_STARTUP_CUR_UA;
+		//AD5421SetCurrent(FD2930_TASK_STARTUP_CUR_UA);
+		//SSP0_SD_CARD_MODE();
 	}
 	if ((DeviceData.StateFlags & FD2930_STATE_FLAG_UPDATE_CURRENT) && (DeviceState > FD2930_STATE_START3)){
-		SSP0_420_MODE();
-		AD5421SetCurrent(DeviceData.Current420);
-		SSP0_SD_CARD_MODE();
-		DeviceData.StateFlags &= ~FD2930_STATE_FLAG_UPDATE_CURRENT;
+		//SSP0_420_MODE();
+		//AD5421SetCurrent(DeviceData.Current420);
+		//SSP0_SD_CARD_MODE();
+		//DeviceData.StateFlags &= ~FD2930_STATE_FLAG_UPDATE_CURRENT;
     }
     if (DeviceData.StateFlags & FD2930_STATE_FLAG_FFT_START) {
     	DeviceData.StateFlags &= ~FD2930_STATE_FLAG_FFT_START;
@@ -202,8 +206,12 @@ void FunctionalTaskBG()
             LogAppErase();
     	}
     	if (DeviceData.StateFlags & FD2930_STATE_FLAG_READ_ARCHIVE) {
-    		DeviceData.StateFlags &= ~FD2930_STATE_FLAG_READ_ARCHIVE;
-    		LogAppRestoreData();
+    		LogAppRestoreData(0);	// read using parser
+    		DeviceData.StateFlags &= ~FD2930_STATE_FLAG_READ_ARCHIVE;	// to indicate finish of reading
+    	}
+    	if (DeviceData.StateFlags & FD2930_STATE_FLAG_READ_ARCHIVE_BIN) {
+    		LogAppRestoreData(1);	// read in a clear binary mode
+    		DeviceData.StateFlags &= ~FD2930_STATE_FLAG_READ_ARCHIVE_BIN;	// to indicate finish of reading
     	}
     }
 }
@@ -1790,25 +1798,6 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 		}
 		return 0;
 	}
-
-	if ((addr == MB_REG_ADDR(DeviceData, Rat2Thres)) && (qty == 1)) {
-		if ((DeviceData.Rat2Thres >= FD2930_MIN_THRES_IR) && (DeviceData.Rat2Thres <= FD2930_MAX_THRES_IR)) {
-			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
-		}
-		return 0;
-	}
-	if ((addr == MB_REG_ADDR(DeviceData, Rat3Thres)) && (qty == 1)) {
-		if ((DeviceData.Rat3Thres >= FD2930_MIN_THRES_IR) && (DeviceData.Rat3Thres <= FD2930_MAX_THRES_IR)) {
-			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
-		}
-		return 0;
-	}
-	if ((addr == MB_REG_ADDR(DeviceData, Rat13Thres)) && (qty == 1)) {
-		if ((DeviceData.Rat13Thres >= FD2930_MIN_THRES_IR) && (DeviceData.Rat13Thres <= FD2930_MAX_THRES_IR)) {
-			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
-		}
-		return 0;
-	}
 #if DEVICE_TYPE == PHOENIX_IRUV
 	if ((addr == MB_REG_ADDR(DeviceData, IRThres)) && (qty == 1)) {
 		if ((DeviceData.IRThres >= FD2930_MIN_THRES_IR) && (DeviceData.IRThres <= FD2930_MAX_THRES_IR)) {
@@ -1991,7 +1980,6 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 			break;
 			case 5:
 				DeviceData.StateFlags |= FD2930_STATE_FLAG_ERASE_ARCHIVE;
-				LogAppPushData();
 			break;
 			case 6:
 				if (DeviceState == FD2930_STATE_TEST) {

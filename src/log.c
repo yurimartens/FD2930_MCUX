@@ -263,6 +263,30 @@ LogError_t LogWriteParameter(uint8_t *buf, uint16_t size)
   * @param  
   * @retval  
   */
+LogError_t LogReadHeader(uint8_t *buf)
+{
+    FIL f;
+
+    FRESULT fr = f_open(&f, LOG_EVENT_FILE_NAME, FA_READ | FA_OPEN_EXISTING);
+    if (FR_OK == fr)
+    {
+        f_gets((char *)buf, HeaderLen, &f);
+        if (FR_OK != f_close(&f)) return LOG_ERROR_FS;
+    }
+    else
+    {
+        return LOG_ERROR_FS; // TODO: parse res to detail an error
+    }
+    return LOG_ERROR_NONE;
+}
+
+/**
+  * @brief
+  * @param
+  * @param
+  * @param
+  * @retval
+  */
 LogError_t LogReadEvent(uint32_t entryNum, uint8_t *buf, uint16_t bufSize)
 { 
     FIL f;
