@@ -1342,9 +1342,22 @@ __STATIC_INLINE void CheckFireStatus()
 		break;
 	}
 #elif DEVICE_TYPE == PHOENIX_IR4
+#if SENSOR_TYPE == SENSOR_BELEAD_DET
+	if (DeviceData.IRGain[2] != 0) {
+		DeviceData.Rat1 = (float)DeviceData.IRGain[0] / DeviceData.IRGain[2];
+		DeviceData.Rat2 = (float)DeviceData.IRGain[1] / DeviceData.IRGain[2];
+		DeviceData.Rat3 = (float)DeviceData.IRGain[3] / DeviceData.IRGain[2];
+	} else {
+		DeviceData.Rat1 = MAX_RAT;
+		DeviceData.Rat2 = MAX_RAT;
+		DeviceData.Rat3 = MAX_RAT;
+	}
+#elif
 	if (DeviceData.IRGain[0] != 0) DeviceData.Rat1 = (float)DeviceData.IRGain[1] / DeviceData.IRGain[0]; else DeviceData.Rat1 = MAX_RAT;
 	if (DeviceData.IRGain[2] != 0) DeviceData.Rat2 = (float)DeviceData.IRGain[1] / DeviceData.IRGain[2]; else DeviceData.Rat2 = MAX_RAT;
 	if (DeviceData.IRGain[3] != 0) DeviceData.Rat3 = (float)DeviceData.IRGain[1] / DeviceData.IRGain[3]; else DeviceData.Rat3 = MAX_RAT;
+#endif
+
 	DeviceData.Rat1_3 = (DeviceData.Rat1 + DeviceData.Rat2 + DeviceData.Rat3) / 3;
 
 	if ((DeviceData.Rat1 > (float)DeviceData.Rat1Thres) && (DeviceData.Rat2 > (float)DeviceData.Rat2Thres) && (DeviceData.Rat3 > (float)DeviceData.Rat3Thres) && (DeviceData.Rat1_3 > (float)DeviceData.Rat13Thres)) {
@@ -2156,6 +2169,8 @@ void SDADCTask(double avCoeffIR, double avCoeffUV)
 	static uint8_t channels[4] = {2, 3, 0, 1};
 #elif SENSOR_TYPE == SENSOR_BELEAD
 	static uint8_t channels[4] = {1, 0, 3, 2};
+#elif SENSOR_TYPE == SENSOR_BELEAD_DET
+	static uint8_t channels[4] = {2, 3, 0, 1};
 #endif
 	Max11040ChannelData_t *res = Max11040GetData(4);
 	uint8_t pc;
