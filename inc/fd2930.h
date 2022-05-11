@@ -23,22 +23,22 @@ extern "C" {
 #include <board.h>
 #include <dsplib_app.h>
 
-#define DEVICE_TYPE         			PHOENIX_IR4
+#define DEVICE_TYPE         			PHOENIX_IRUV
 
 #if DEVICE_TYPE == PHOENIX_IRUV
-#define FW_VERSION                     	302
+#define FW_VERSION                     	303
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	407
+#define FW_VERSION_LO                  	511
 
 #elif DEVICE_TYPE == PHOENIX_IR4
 
-#define FW_VERSION                     	305
+#define FW_VERSION                     	306
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	418
+#define FW_VERSION_LO                  	511
 
 #define PHOENIX_IR4_CHANNELS			4
 

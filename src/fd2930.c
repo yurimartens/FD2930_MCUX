@@ -59,12 +59,6 @@ uint32_t 		ArchPageIdx, ArchLastPage;
 
 float 			HeatPowerInst = 1.0;
 
-//#define 		SSP0_420_MODE()			LPC_SSP0->CR0 &= ~(SSP_CPOL_LO); LPC_SSP0->CR0 |= SSP_CPHA_SECOND;
-//#define 		SSP0_SD_CARD_MODE()		LPC_SSP0->CR0 |= (SSP_CPOL_LO | SSP_CPHA_SECOND);
-#define 		SSP0_420_MODE()			LPC_SSP0->CR0 &= ~(SSP_CPOL_LO);
-#define 		SSP0_SD_CARD_MODE()		LPC_SSP0->CR0 |= SSP_CPOL_LO;
-//#define 		SSP0_420_MODE()			LPC_SSP0->CR0 = (1 << 8) | SSP_DATABIT_8 | SSP_CPHA_SECOND;
-//#define 		SSP0_SD_CARD_MODE()		LPC_SSP0->CR0 = (1 << 8) | SSP_DATABIT_8 | SSP_CPHA_SECOND | SSP_CPOL_LO;
 
 extern Modbus_t Modbus;
 extern SSPAl_t  SSPSD420;
@@ -170,17 +164,13 @@ void FunctionalTaskBG()
 {
 	if (DeviceData.StateFlags & FD2930_STATE_FLAG_INIT_CURRENT) {
 		DeviceData.StateFlags &= ~FD2930_STATE_FLAG_INIT_CURRENT;
-		//SSP0_420_MODE();
-		//AD5421Init(&SSPSD420, 0);
-		//DeviceData.Current420 = FD2930_TASK_STARTUP_CUR_UA;
-		//AD5421SetCurrent(FD2930_TASK_STARTUP_CUR_UA);
-		//SSP0_SD_CARD_MODE();
+		AD5421Init(&SSPSD420, 0);
+		DeviceData.Current420 = FD2930_TASK_STARTUP_CUR_UA;
+		AD5421SetCurrent(FD2930_TASK_STARTUP_CUR_UA);
 	}
 	if ((DeviceData.StateFlags & FD2930_STATE_FLAG_UPDATE_CURRENT) && (DeviceState > FD2930_STATE_START3)){
-		//SSP0_420_MODE();
-		//AD5421SetCurrent(DeviceData.Current420);
-		//SSP0_SD_CARD_MODE();
-		//DeviceData.StateFlags &= ~FD2930_STATE_FLAG_UPDATE_CURRENT;
+		DeviceData.StateFlags &= ~FD2930_STATE_FLAG_UPDATE_CURRENT;
+		AD5421SetCurrent(DeviceData.Current420);
     }
     if (DeviceData.StateFlags & FD2930_STATE_FLAG_FFT_START) {
     	DeviceData.StateFlags &= ~FD2930_STATE_FLAG_FFT_START;

@@ -12,7 +12,7 @@
 static SSPAl_t                  *SSPAlInst;
 static uint8_t                  CS;
 
-static uint8_t                  MOSIData[3];
+static uint8_t                  MOSIData[3], MISOData[3];
 
 
 
@@ -32,19 +32,19 @@ void AD5421Init(SSPAl_t *sspal, uint8_t cs)
     MOSIData[0] = AD5421_REG_CTRL;
     MOSIData[1] = (uint8_t)(reg >> 8);
     MOSIData[2] = (uint8_t)reg;
-    SSPTransmit(SSPAlInst, CS, MOSIData, 3);
+    SSPTransmitReceive(SSPAlInst, CS, MOSIData, (uint8_t *)&MISOData, 3, 3);
     
     reg = 0xFFFF;
     MOSIData[0] = AD5421_REG_GAIN;
     MOSIData[1] = (uint8_t)(reg >> 8);
     MOSIData[2] = (uint8_t)reg;
-    SSPTransmit(SSPAlInst, CS, MOSIData, 3);
+    SSPTransmitReceive(SSPAlInst, CS, MOSIData, (uint8_t *)&MISOData, 3, 3);
     
     reg = 0x8000;
     MOSIData[0] = AD5421_REG_OFFSET;
     MOSIData[1] = (uint8_t)(reg >> 8);
     MOSIData[2] = (uint8_t)reg;
-    SSPTransmit(SSPAlInst, CS, MOSIData, 3);
+    SSPTransmitReceive(SSPAlInst, CS, MOSIData, (uint8_t *)&MISOData, 3, 3);
 }
 
 
@@ -56,7 +56,7 @@ void AD5421Init(SSPAl_t *sspal, uint8_t cs)
 void AD5421Reset()
 {
 	MOSIData[0] = AD5421_REG_RESET;
-    SSPTransmit(SSPAlInst, CS, MOSIData, 1);
+	SSPTransmitReceive(SSPAlInst, CS, MOSIData, (uint8_t *)&MISOData, 1, 1);
 }
 
 /**
@@ -71,7 +71,7 @@ void AD5421SetCurrent(uint16_t uA)
 	MOSIData[0] = AD5421_REG_DAC_DATA;
 	MOSIData[1] = (uint8_t)(reg >> 8);
 	MOSIData[2] = (uint8_t)reg;
-	SSPTransmit(SSPAlInst, CS, MOSIData, 3);
+	SSPTransmitReceive(SSPAlInst, CS, MOSIData, (uint8_t *)&MISOData, 3, 3);
 }
 
 

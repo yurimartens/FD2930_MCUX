@@ -96,7 +96,6 @@ int main(void) {
 
 	//IRPortInit();
 
-	//while (DeviceState <= FD2930_STATE_START3) {};
 	LogAppInit();
 
 	while (1) {
@@ -128,10 +127,17 @@ void UART1_IRQHandler(void)
 */
 void SysTick_Handler(void)
 {
+	static uint32_t div = 0;
+
 	TimerDispatch(&Modbus.Timer);
 	TimerDispatch(&MeasurmentTimer);
 
-	disk_timerproc();   //for SD card
+	if (div < 10) {
+		div++;
+	} else {
+		div = 0;
+		disk_timerproc();   //for SD card
+	}
 }
 
 /**
@@ -163,7 +169,7 @@ __STATIC_INLINE void MCUPeriphConfiguration(void)
     NVIC_SetPriority(SysTick_IRQn, 20); //NVIC_EnableIRQ(SysTick_IRQn); already enabled
 
     LPC_SC->PCLKSEL1 &= ~(3 << SSP0_PCLK_OFFSET);
-    LPC_SC->PCLKSEL1 |= PCLCK_SSP0_CLK_1;
+    LPC_SC->PCLKSEL1 |= PCLCK_SSP0_CLK_2;
 
     LPC_SC->PCLKSEL0 &= ~(3 << SSP1_PCLK_OFFSET);
     LPC_SC->PCLKSEL0 |= PCLCK_SSP1_CLK_1;
@@ -452,7 +458,7 @@ __STATIC_INLINE void Uart1AndProtocolInit()
   */
 __STATIC_INLINE void SSP0AndModulesInit()
 {
-	SSPInit(&SSPSD420, LPC_SSP0, 12000000, SSP_CPHA_SECOND, SSP_CPOL_LO);
+	SSPInit(&SSPSD420, LPC_SSP0, 12000000, SSP_CPHA_FIRST, SSP_CPOL_HI);	// HI means lo sck in idle
 	SSPInitCSPin(&SSPSD420, 0, LPC_GPIO1, SYNC);
 	SSPInitCSPin(&SSPSD420, 1, LPC_GPIO1, SSEL0);
 	SSPInitTxBuf(&SSPSD420, SD420OutBuf, sizeof(SD420OutBuf));
