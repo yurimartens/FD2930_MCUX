@@ -91,11 +91,11 @@ typedef enum {
 
 LogError_t LogInit(RTC_TIME_Type *time, uint16_t sn);
 void LogChangeHeaderSN(uint16_t sn);    
-LogError_t LogWriteEvent(uint8_t *buf, uint16_t bufSize, RTC_TIME_Type *time, char *reason);
-LogError_t LogWriteParameter(uint8_t *buf, uint16_t size);
+LogError_t LogWriteEvent(uint16_t *buf, uint16_t bufSize, RTC_TIME_Type *time, char *reason);
+LogError_t LogWriteParameter(uint16_t *buf, uint16_t size);
 LogError_t LogReadHeader(uint8_t *buf);
 LogError_t LogReadEvent(uint32_t, uint8_t *, uint16_t);
-LogError_t LogParseEvent(uint8_t *, uint8_t *, uint16_t);
+LogError_t LogParseEvent(uint16_t *, uint8_t *, uint16_t);
 LogError_t LogErase(void);
 
 uint32_t LogGetEntriesNum(void);

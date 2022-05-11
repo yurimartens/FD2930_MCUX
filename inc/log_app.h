@@ -18,7 +18,7 @@ extern "C" {
 
 
 
-#define LOG_ENTRY_SIZE					100
+#define LOG_ENTRY_SIZE					50
 #define LOG_FIFO_ITEMS					8
 #define LOG_FIFO_LIVE_ITEMS				30
 #define LOG_FILE_LINE_LEN				170		// size of line, see HeaderLen in LogInit()

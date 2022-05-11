@@ -24,7 +24,7 @@ static uint8_t     SNChanged = 0;
 
 
 // see MBS.h
-LogEventColumn_t    LogEventColumn[] = {
+const LogEventColumn_t    LogEventColumn[] = {
     {.MBAddr = 6,
      .Type = LOG_COL_DT_UINT16,
      .Header = "Stat"
@@ -45,27 +45,27 @@ LogEventColumn_t    LogEventColumn[] = {
      .Type = LOG_COL_DT_UINT16,
      .Header = "IR"
     },
-    {.MBAddr = 11,
+    {.MBAddr = 12,
      .Type = LOG_COL_DT_UINT16,
      .Header = "UV_Thr"
     },
-    {.MBAddr = 12,
+    {.MBAddr = 13,
      .Type = LOG_COL_DT_UINT16,
      .Header = "IR_Thr"
     },
-    {.MBAddr = 13,
+    {.MBAddr = 14,
      .Type = LOG_COL_DT_UINT16,
      .Header = "IR_Sens"
     },
-    {.MBAddr = 14,
+    {.MBAddr = 15,
      .Type = LOG_COL_DT_UINT16,
      .Header = "UV_Sens"
     },    
-    {.MBAddr = 15,
+    {.MBAddr = 21,
      .Type = LOG_COL_DT_INT16,
      .Header = "Temp"
     },
-    {.MBAddr = 16,
+    {.MBAddr = 22,
      .Type = LOG_COL_DT_UINT16,
      .Header = "UVPwr"
     },
@@ -167,7 +167,7 @@ void LogChangeHeaderSN(uint16_t sn)
   * @param  
   * @retval  
   */
-LogError_t LogWriteEvent(uint8_t *buf, uint16_t bufSize, RTC_TIME_Type *time, char *reason)
+LogError_t LogWriteEvent(uint16_t *buf, uint16_t bufSize, RTC_TIME_Type *time, char *reason)
 { 
     FIL f;
     uint16_t mbSize = bufSize / 2;
@@ -202,15 +202,15 @@ LogError_t LogWriteEvent(uint8_t *buf, uint16_t bufSize, RTC_TIME_Type *time, ch
             switch ((uint8_t)LogEventColumn[i].Type) 
             {
                 case LOG_COL_DT_UINT16:
-                    value = (uint16_t)(buf[LogEventColumn[i].MBAddr * 2] << 8) | buf[LogEventColumn[i].MBAddr * 2 + 1];
+                    value = (uint16_t)buf[LogEventColumn[i].MBAddr];
                     sprintf(str, LOG_EVENT_ITEM_LEN_Q, (int)value);
                 break;
                 case LOG_COL_DT_INT16:
-                    value = (int16_t)(buf[LogEventColumn[i].MBAddr * 2] << 8) | buf[LogEventColumn[i].MBAddr * 2 + 1];
+                    value = (int16_t)buf[LogEventColumn[i].MBAddr];
                     sprintf(str, LOG_EVENT_ITEM_LEN_Q, (int)value);
                 break;
                 case LOG_COL_DT_UINT32:
-                    value = (buf[LogEventColumn[i].MBAddr * 2] << 24) | (buf[LogEventColumn[i].MBAddr * 2 + 1] << 16) | (buf[LogEventColumn[i].MBAddr * 2 + 2] << 8) | buf[LogEventColumn[i].MBAddr * 2 + 3];
+                    value = (buf[LogEventColumn[i].MBAddr] << 16) | buf[LogEventColumn[i].MBAddr + 1];
                     sprintf(str, LOG_EVENT_ITEM_LEN_Q, (int)value);
                 break;
                 default:
@@ -251,7 +251,7 @@ LogError_t LogWriteEvent(uint8_t *buf, uint16_t bufSize, RTC_TIME_Type *time, ch
   * @param  
   * @retval  
   */
-LogError_t LogWriteParameter(uint8_t *buf, uint16_t size)
+LogError_t LogWriteParameter(uint16_t *buf, uint16_t size)
 {
     return LOG_ERROR_NONE;
 }
@@ -316,7 +316,7 @@ LogError_t LogReadEvent(uint32_t entryNum, uint8_t *buf, uint16_t bufSize)
   * @param  
   * @retval  
   */
-LogError_t LogParseEvent(uint8_t *outBuf, uint8_t *inBuf, uint16_t bufSize)
+LogError_t LogParseEvent(uint16_t *outBuf, uint8_t *inBuf, uint16_t bufSize)
 { 
     uint16_t mbSize = bufSize / 2;
     int value;
@@ -330,19 +330,15 @@ LogError_t LogParseEvent(uint8_t *outBuf, uint8_t *inBuf, uint16_t bufSize)
             case LOG_COL_DT_UINT16:
             case LOG_COL_DT_INT16:
                 sscanf((const char *)&inBuf[offset], LOG_EVENT_ITEM_LEN_Q, &value);
-                outBuf[LogEventColumn[i].MBAddr * 2] = (value >> 8);
-                outBuf[LogEventColumn[i].MBAddr * 2 + 1] = value;  
+                outBuf[LogEventColumn[i].MBAddr] = value;
             break;
             case LOG_COL_DT_UINT32:
                 sscanf((const char *)&inBuf[offset], LOG_EVENT_ITEM_LEN_Q, &value);
-                outBuf[LogEventColumn[i].MBAddr * 2] = (value >> 24);
-                outBuf[LogEventColumn[i].MBAddr * 2 + 1] = (value >> 16);    
-                outBuf[LogEventColumn[i].MBAddr * 2 + 2] = (value >> 8);
-                outBuf[LogEventColumn[i].MBAddr * 2 + 3] = value;    
+                outBuf[LogEventColumn[i].MBAddr] = (value >> 16);
+                outBuf[LogEventColumn[i].MBAddr + 1] = value;
             break;
             default:
-                outBuf[LogEventColumn[i].MBAddr * 2] = 0;
-                outBuf[LogEventColumn[i].MBAddr * 2 + 1] = 0;                
+                outBuf[LogEventColumn[i].MBAddr] = 0;
         }
         offset += LOG_EVENT_ITEM_LEN + strlen(LOG_COL_DELIMITER);        
     }        

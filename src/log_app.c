@@ -13,12 +13,12 @@
 
 
 static FIFO_t 	FIFO;
-static uint8_t	FIFOMem[LOG_ENTRY_SIZE * LOG_FIFO_ITEMS];
-static uint8_t	FIFOTemp[LOG_ENTRY_SIZE];
+static uint16_t	FIFOMem[LOG_ENTRY_SIZE * LOG_FIFO_ITEMS];
+static uint16_t	FIFOTemp[LOG_ENTRY_SIZE];
 
 static FIFO_t 	FIFOLive;
-static uint8_t	FIFOMemLive[LOG_ENTRY_SIZE * LOG_FIFO_LIVE_ITEMS];
-static uint8_t	FIFOTempLive[LOG_ENTRY_SIZE];
+static uint16_t	FIFOMemLive[LOG_ENTRY_SIZE * LOG_FIFO_LIVE_ITEMS];
+static uint16_t	FIFOTempLive[LOG_ENTRY_SIZE];
 
 static uint8_t	FileLine[LOG_FILE_LINE_LEN];
 
@@ -31,8 +31,8 @@ static uint8_t	FileLine[LOG_FILE_LINE_LEN];
   */
 void LogAppInit()
 {
-	FIFOInit(&FIFO, FIFOMem, LOG_ENTRY_SIZE, LOG_FIFO_ITEMS);
-	FIFOInit(&FIFOLive, FIFOMemLive, LOG_ENTRY_SIZE, LOG_FIFO_LIVE_ITEMS);
+	FIFOInit(&FIFO, FIFOMem, LOG_ENTRY_SIZE * 2, LOG_FIFO_ITEMS);		// *2 - fifo operates with bytes
+	FIFOInit(&FIFOLive, FIFOMemLive, LOG_ENTRY_SIZE * 2, LOG_FIFO_LIVE_ITEMS); // *2 - fifo operates with bytes
 	uint8_t a = 1;
 	if (a == 0) {
 		DeviceData.Status &= ~FD2930_DEVICE_STATUS_SD_CARD;
@@ -59,7 +59,7 @@ void LogAppInit()
 void LogAppPushData()
 {
 	if (DeviceData.Status & FD2930_DEVICE_STATUS_SD_CARD) {
-		FIFOPush(&FIFO, (uint8_t *)&DeviceData);
+		FIFOPush(&FIFO, &DeviceData);
 	}
 }
 
@@ -71,7 +71,7 @@ void LogAppPushData()
 void LogAppPushLiveData()
 {
 	if (DeviceData.Status & FD2930_DEVICE_STATUS_SD_CARD) {
-		FIFOPush(&FIFOLive, (uint8_t *)&DeviceData);
+		FIFOPush(&FIFOLive, &DeviceData);
 	}
 }
 
@@ -89,20 +89,20 @@ void LogAppPopAndStoreAllData()
 
 	while (FIFO_ERROR_NONE == FIFOPop(&FIFO, FIFOTemp)) {	// if SD isn't available FifoPop won't get anything
 		regIdx = MB_REG_ADDR(DeviceData, Status);
-		status = (FIFOTemp[regIdx * 2 + 1] << 8) | FIFOTemp[regIdx * 2];
+		status = FIFOTemp[regIdx];
 
 		if (status & FD2930_DEVICE_STATUS_FIRE) {
 			strcpy(reason, LOG_REASON_FIRE);
 			while (1) {
 				if (FIFO_ERROR_NONE != FIFOPop(&FIFO, FIFOTempLive)) break;
 				regIdx = MB_REG_ADDR(DeviceData, Seconds);		// following regs must be in a strict order
-				ct.SEC = FIFOTempLive[regIdx * 2];
-				ct.MIN = FIFOTempLive[(++regIdx) * 2];
-				ct.HOUR = FIFOTempLive[(++regIdx) * 2];
-				ct.DOM = FIFOTempLive[(++regIdx) * 2];
-				ct.MONTH = FIFOTempLive[(++regIdx) * 2];
+				ct.SEC = FIFOTempLive[regIdx];
+				ct.MIN = FIFOTempLive[(++regIdx)];
+				ct.HOUR = FIFOTempLive[(++regIdx)];
+				ct.DOM = FIFOTempLive[(++regIdx)];
+				ct.MONTH = FIFOTempLive[(++regIdx)];
 				regIdx++;
-				ct.YEAR = (FIFOTempLive[regIdx * 2 + 1] << 8) | FIFOTempLive[regIdx * 2];
+				ct.YEAR = FIFOTempLive[regIdx];
 				LogWriteEvent(FIFOTempLive, LOG_ENTRY_SIZE, &ct, "");
 			}
 		} else if (status & FD2930_DEVICE_STATUS_PREFIRE)
@@ -120,13 +120,13 @@ void LogAppPopAndStoreAllData()
 	    else strcpy(reason, " ");
 
 		regIdx = MB_REG_ADDR(DeviceData, Seconds);		// following regs must be in a strict order
-		ct.SEC = FIFOTemp[regIdx * 2];
-		ct.MIN = FIFOTemp[(++regIdx) * 2];
-		ct.HOUR = FIFOTemp[(++regIdx) * 2];
-		ct.DOM = FIFOTemp[(++regIdx) * 2];
-		ct.MONTH = FIFOTemp[(++regIdx) * 2];
+		ct.SEC = FIFOTemp[regIdx];
+		ct.MIN = FIFOTemp[(++regIdx)];
+		ct.HOUR = FIFOTemp[(++regIdx)];
+		ct.DOM = FIFOTemp[(++regIdx)];
+		ct.MONTH = FIFOTemp[(++regIdx)];
 		regIdx++;
-		ct.YEAR = (FIFOTemp[regIdx * 2 + 1] << 8) | FIFOTemp[regIdx * 2];
+		ct.YEAR = FIFOTemp[regIdx];
 		LogWriteEvent(FIFOTemp, LOG_ENTRY_SIZE, &ct, "");
 
 		ArchLastPage = LogGetEntriesNum() - 1;
@@ -152,7 +152,7 @@ void LogAppRestoreData(uint8_t bin)
 			else LogReadEvent(ArchPageIdx, (uint8_t *)DeviceData.Archive.Page, LOG_FILE_LINE_LEN);
 		} else {
 			LogReadEvent(ArchPageIdx, FileLine, LOG_FILE_LINE_LEN);
-			LogParseEvent((uint8_t *)DeviceData.Archive.Page, FileLine, LOG_FILE_LINE_LEN);
+			LogParseEvent(DeviceData.Archive.Page, FileLine, LOG_FILE_LINE_LEN);
 			int YY, MM, DD, hh, mm, ss;
 			sscanf((const char *)FileLine, "%02d:%02d:%02d/%02d:%02d:%02d", &DD, &MM, &YY, &hh, &mm, &ss);
 			uint32_t regIdx = MB_REG_ADDR(DeviceData, Seconds);		// following regs must be in a strict order
