@@ -29,24 +29,21 @@ static uint8_t	FileLine[LOG_FILE_LINE_LEN];
   * @param
   * @retval
   */
-void LogAppInit()
+uint8_t LogAppInit()
 {
 	FIFOInit(&FIFO, FIFOMem, LOG_ENTRY_SIZE * 2, LOG_FIFO_ITEMS);		// *2 - fifo operates with bytes
 	FIFOInit(&FIFOLive, FIFOMemLive, LOG_ENTRY_SIZE * 2, LOG_FIFO_LIVE_ITEMS); // *2 - fifo operates with bytes
-	uint8_t a = 1;
-	if (a == 0) {
-		DeviceData.Status &= ~FD2930_DEVICE_STATUS_SD_CARD;
-		ArchLastPage = DeviceData.ArchLastPageHi = DeviceData.ArchLastPageLo = 0;
-		return;
-	}
+
 	if (LOG_ERROR_NONE == LogInit(&DeviceTime, DeviceData.SerialNumber)) {
 		DeviceData.Status |= FD2930_DEVICE_STATUS_SD_CARD;
 		ArchLastPage = LogGetEntriesNum();
 		DeviceData.ArchLastPageHi = ArchLastPage >> 16;
 		DeviceData.ArchLastPageLo = ArchLastPage;
+		return 0;
 	} else {
 		DeviceData.Status &= ~FD2930_DEVICE_STATUS_SD_CARD;
 		ArchLastPage = DeviceData.ArchLastPageHi = DeviceData.ArchLastPageLo = 0;
+		return 1;
 	}
 }
 
@@ -127,7 +124,7 @@ void LogAppPopAndStoreAllData()
 		ct.MONTH = FIFOTemp[(++regIdx)];
 		regIdx++;
 		ct.YEAR = FIFOTemp[regIdx];
-		LogWriteEvent(FIFOTemp, LOG_ENTRY_SIZE, &ct, "");
+		LogWriteEvent(FIFOTemp, LOG_ENTRY_SIZE, &ct, reason);
 
 		ArchLastPage = LogGetEntriesNum() - 1;
 		DeviceData.ArchLastPageHi = ArchLastPage >> 16;

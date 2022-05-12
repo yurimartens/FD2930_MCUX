@@ -25,9 +25,6 @@
 #define SSP_CS_PORT 1
 #define SSP_CS_PIN  21
 
-#define SCLK_FAST	25000000UL	/* SCLK frequency under normal operation [Hz] */
-#define	SCLK_SLOW	400000UL	/* SCLK frequency under initialization [Hz] */
-
 #define	MMC_CD		1//(!(FIO2PIN1 & _BV(1)))	/* Card detect (yes:true, no:false, default:true) */
 #define	MMC_WP		0						/* Write protected (yes:true, no:false, default:false) */
 

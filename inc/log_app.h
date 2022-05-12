@@ -24,7 +24,7 @@ extern "C" {
 #define LOG_FILE_LINE_LEN				170		// size of line, see HeaderLen in LogInit()
 
 
-void LogAppInit();
+uint8_t LogAppInit();
 void LogAppPushData();
 void LogAppPushLiveData();
 void LogAppPopAndStoreAllData();

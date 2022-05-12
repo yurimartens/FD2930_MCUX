@@ -30,7 +30,7 @@ extern "C" {
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	511
+#define FW_VERSION_LO                  	512
 
 #elif DEVICE_TYPE == PHOENIX_IR4
 
@@ -38,7 +38,7 @@ extern "C" {
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	511
+#define FW_VERSION_LO                  	512
 
 #define PHOENIX_IR4_CHANNELS			4
 
@@ -324,7 +324,22 @@ typedef struct
     uint16_t UVRaw;
     uint16_t UVThres;
     uint16_t IRThres;
-    uint16_t Reserved1[150];	// 50
+
+    uint16_t UVNoise; // 50
+    uint16_t UVNoiseTest;
+	uint16_t IRNoise;
+	uint16_t IRNoiseTest;
+    uint16_t UVTestLevel;
+	uint16_t IRTestLevel;
+	uint16_t UVTestFaultCnt;
+	uint16_t IRTestFaultCnt;
+    uint16_t IRTroubleCnt;
+	uint16_t IRTroubleCntPiece;
+	uint16_t UVTroubleCnt;
+	uint16_t UVTroubleCntPiece;
+    uint16_t UVPickCnt;
+
+    uint16_t Reserved1[137];	// 63
 
     Archive_t Archive;		// 200th MB addr
     uint16_t FFTData[100];
@@ -384,7 +399,15 @@ typedef struct
     float    Rat2;
     float    Rat3;
     float    Rat1_3;
-    uint16_t Reserved1[142];	// 58
+
+    uint16_t IRNoise;		// 58
+    uint16_t IRNoiseTest;
+    uint16_t IRTestLevel;
+    uint16_t IRTestFaultCnt;
+    uint16_t IRTroubleCnt;
+    uint16_t IRTroubleCntPiece;
+
+    uint16_t Reserved1[142];	// 64
 
     Archive_t Archive;		// 200th MB addr
     uint16_t FFTData[PHOENIX_IR4_CHANNELS * FFT_OUTPUT_POINTS];

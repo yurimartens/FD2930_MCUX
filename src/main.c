@@ -96,7 +96,9 @@ int main(void) {
 
 	//IRPortInit();
 
-	LogAppInit();
+	if (LogAppInit()) {
+		SSP0AndModulesInit();	// reinit, in fatfs speed is slow
+	}
 
 	while (1) {
 
@@ -458,7 +460,7 @@ __STATIC_INLINE void Uart1AndProtocolInit()
   */
 __STATIC_INLINE void SSP0AndModulesInit()
 {
-	SSPInit(&SSPSD420, LPC_SSP0, 12000000, SSP_CPHA_FIRST, SSP_CPOL_HI);	// HI means lo sck in idle
+	SSPInit(&SSPSD420, LPC_SSP0, SCLK_FAST, SSP_CPHA_FIRST, SSP_CPOL_HI);	// HI means lo sck in idle
 	SSPInitCSPin(&SSPSD420, 0, LPC_GPIO1, SYNC);
 	SSPInitCSPin(&SSPSD420, 1, LPC_GPIO1, SSEL0);
 	SSPInitTxBuf(&SSPSD420, SD420OutBuf, sizeof(SD420OutBuf));

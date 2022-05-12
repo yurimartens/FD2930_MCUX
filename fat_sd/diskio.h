@@ -14,6 +14,10 @@ extern "C" {
 //#define	_DISK_IMAGE		1	/* Drive number associated with disk image file (undefine this to disable disk image feature) */
 
 
+#define SCLK_FAST	12500000UL	/* SCLK frequency under normal operation [Hz] */
+#define	SCLK_SLOW	400000UL	/* SCLK frequency under initialization [Hz] */
+
+
 /* Status of Disk Functions */
 typedef BYTE	DSTATUS;
 
