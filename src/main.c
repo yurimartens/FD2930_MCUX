@@ -44,6 +44,8 @@
 
 #include <log_app.h>
 
+#include <nec_protocol.h>
+
 
 
 UartAl_t    Uart;
@@ -69,6 +71,61 @@ __STATIC_INLINE void SSP0AndModulesInit();
 __STATIC_INLINE void SSP1AndModulesInit();
 
 
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+void IRCallBack(uint8_t addr, uint8_t comm)
+{
+    IRDA_Command = comm;        // modbus output
+    IRDA_Command_Rcvd = 1;      // led indication
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+void IRPortInit(void)
+{
+    TIM_TIMERCFG_Type TIM_ConfigStruct;
+
+    TIM_ConfigStruct.PrescaleOption = TIM_PRESCALE_USVAL;
+    TIM_ConfigStruct.PrescaleValue = 1;
+    TIM_Init(LPC_TIM0, TIM_TIMER_MODE, &TIM_ConfigStruct);
+
+    TIM_Cmd(LPC_TIM0, TIM_ENABLE);
+    NecProtocolInit(IRCallBack);
+
+    PINSEL_CFG_Type PinCfg;
+    PinCfg.Portnum = 0;
+    PinCfg.Pinnum = PINSEL_PIN_11;
+    PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL;
+    PinCfg.Funcnum = PINSEL_FUNC_0;
+    PinCfg.Pinmode = PINSEL_PINMODE_PULLUP;
+
+    PINSEL_ConfigPin(&PinCfg);
+
+    GPIO_IntCmd(0, IR_PORT_PIN, 0);
+    GPIO_IntCmd(0, IR_PORT_PIN, 1);
+    NVIC_SetPriority(EINT3_IRQn, 19);
+    NVIC_EnableIRQ(EINT3_IRQn);
+}
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+void EINT3_IRQHandler(void)
+{
+    GPIO_ClearInt(0, IR_PORT_PIN);
+    NecRxData(LPC_TIM0->TC);
+}
+
+
 /**
   * @brief
   * @param
@@ -84,7 +141,6 @@ int main(void) {
 
 	DeviceInit();
 
-	Uart1AndProtocolInit();
 	SSP0AndModulesInit();
 	SSP1AndModulesInit();
 
@@ -94,14 +150,19 @@ int main(void) {
 
 	PWM1Init(1000); // 1kHz
 
-	//IRPortInit();
+	IRPortInit();
 
 	if (LogAppInit()) {
 		SSP0AndModulesInit();	// reinit, in fatfs speed is slow
 	}
 
 	while (1) {
-
+		if (ChangeConnectionSettings) {
+			if (UART_STATE_TX_COMPLETE == UARTGetState(&Uart)) {
+				ChangeConnectionSettings = 0;
+				Uart1AndProtocolInit();
+			}
+		}
 		ModbusIdle(&Modbus);
 
 		ADCTask();
@@ -140,6 +201,7 @@ void SysTick_Handler(void)
 		div = 0;
 		disk_timerproc();   //for SD card
 	}
+	NecProtocolResetCondition(LPC_TIM0->TC);
 }
 
 /**

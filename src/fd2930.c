@@ -55,6 +55,9 @@ float 			HeatPowerInst = 1.0;
 
 uint8_t			StoreParameters = 0;
 
+uint8_t 		IRDA_Command_Rcvd = 0;
+uint8_t 		IRDA_Command = 0;
+
 #define 		SSP0_420_MODE()			LPC_SSP0->CR0 |= SSP_CPHA_SECOND;
 #define 		SSP0_SD_CARD_MODE()		LPC_SSP0->CR0 &= ~SSP_CPHA_SECOND;
 
@@ -771,14 +774,14 @@ __STATIC_INLINE void CheckFireStatus()
 	static uint32_t counter_UV_inv = 0;
 
 	if (DeviceData.Config & FD2930_DEVICECONFIG_LOW_SENS) {
-		if (DeviceData.IRGain > 1.7 * DeviceData.IRThres) {
+		if (DeviceData.IRGain > LOW_SENSE_FACTOR * DeviceData.IRThres) {
 			flag_IR_prefire = 1;
 			if (!(DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR)) {
 				LogAppPushData();
 				DeviceData.Status |= FD2930_DEVICE_STATUS_ALARM_IR;
 			}
 		} else {
-			if (DeviceData.IRGain > 1.7 * 0.7 * DeviceData.IRThres) {
+			if (DeviceData.IRGain > LOW_SENSE_FACTOR * 0.7 * DeviceData.IRThres) {
 				flag_IR_prefire = 1;
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR) {
 					LogAppPushData();
@@ -793,14 +796,14 @@ __STATIC_INLINE void CheckFireStatus()
 				}
 			}
 		}
-		if (DeviceData.UVGain > 1.7 * DeviceData.UVThresF) {
+		if (DeviceData.UVGain > LOW_SENSE_FACTOR * DeviceData.UVThresF) {
 			flag_UV_prefire = 1;
 			if (!(DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV)) {
 				DeviceData.Status |= FD2930_DEVICE_STATUS_ALARM_UV;
 				LogAppPushData();
 			}
 		} else {
-			if (DeviceData.UVGain > 1.7 * 0.7 * DeviceData.UVThresF) {
+			if (DeviceData.UVGain > LOW_SENSE_FACTOR * 0.7 * DeviceData.UVThresF) {
 				flag_UV_prefire = 1;
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV) {
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_UV;
@@ -1837,13 +1840,13 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 	}
 	if ((addr == MB_REG_ADDR(DeviceData, UVCoeff)) && (qty == 1)) {
 		if ((DeviceData.UVCoeff >= FD2930_MIN_K_UV) && (DeviceData.UVCoeff <= FD2930_MAX_K_UV)) {
-			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+			//EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 		}
 		return 0;
 	}
 	if ((addr == MB_REG_ADDR(DeviceData, IRCoeff)) && (qty == 1)) {
 		if ((DeviceData.IRCoeff >= FD2930_MIN_K_IR) && (DeviceData.IRCoeff <= FD2930_MAX_K_IR)) {
-			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+			//EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 		}
 		return 0;
 	}

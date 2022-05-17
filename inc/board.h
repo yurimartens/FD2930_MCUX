@@ -15,7 +15,7 @@
 #define MISO1         (1UL << 8)    //P0.8 MISO1 SPI1
 #define MOSI1         (1UL << 9)    //P0.9 MOSI1 SPI1
 
-//#define IRDA          (1UL << 11)    //P0.11
+#define IR_PORT_PIN    (1 << 11)
 
 #define TX_485         (1UL << 15)    //P0.15 TXD1 TX UART1 (Modbus to the high level controller)
 #define RX_485        (1UL << 16)    //P0.16 RXD1 RX UART1

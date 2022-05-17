@@ -26,11 +26,11 @@ extern "C" {
 #define DEVICE_TYPE         			PHOENIX_IRUV
 
 #if DEVICE_TYPE == PHOENIX_IRUV
-#define FW_VERSION                     	303
+#define FW_VERSION                     	304
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	512
+#define FW_VERSION_LO                  	517
 
 #elif DEVICE_TYPE == PHOENIX_IR4
 
@@ -38,7 +38,7 @@ extern "C" {
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	512
+#define FW_VERSION_LO                  	517
 
 #define PHOENIX_IR4_CHANNELS			4
 
@@ -226,6 +226,8 @@ extern "C" {
 #define UV_PICK_WORK_AREA						500
 #define IR_GAIN_UV_PICK							150
 
+#define LOW_SENSE_FACTOR						1.7
+
 #define MB_REG_ADDR(_STR_, _REG_)      			((uint16_t *)&_STR_._REG_ - (uint16_t *)&_STR_)
 
 
@@ -318,8 +320,8 @@ typedef struct
     uint16_t IRRect;	// 41
     uint16_t ArchPageIdxHi;	// 42
     uint16_t ArchPageIdxLo;	// 43
-    uint16_t CntFaultIR;
-    uint16_t CntFaultUV;
+    uint16_t IRTestFaultCnt;
+    uint16_t UVTestFaultCnt;
     uint16_t StateFlags;
     uint16_t UVRaw;
     uint16_t UVThres;
@@ -331,15 +333,13 @@ typedef struct
 	uint16_t IRNoiseTest;
     uint16_t UVTestLevel;
 	uint16_t IRTestLevel;
-	uint16_t UVTestFaultCnt;
-	uint16_t IRTestFaultCnt;
     uint16_t IRTroubleCnt;
 	uint16_t IRTroubleCntPiece;
 	uint16_t UVTroubleCnt;
 	uint16_t UVTroubleCntPiece;
     uint16_t UVPickCnt;
 
-    uint16_t Reserved1[137];	// 63
+    uint16_t Reserved1[139];	// 61
 
     Archive_t Archive;		// 200th MB addr
     uint16_t FFTData[100];
@@ -424,6 +424,9 @@ extern DeviceState_t	DeviceState;
 extern uint32_t 	ArchPageIdx, ArchLastPage;
 
 extern Timer_t		MeasurmentTimer;
+
+extern uint8_t 		IRDA_Command_Rcvd;
+extern uint8_t 		IRDA_Command;
 
 void DeviceInit();
 void ADCTask();
