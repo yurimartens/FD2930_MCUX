@@ -228,6 +228,9 @@ extern "C" {
 
 #define LOW_SENSE_FACTOR						1.7
 
+#define IRDA_INDICATION_OFF_INTERVAL    		100
+#define IRDA_INDICATION_BLUE_INTERVAL   		200
+
 #define MB_REG_ADDR(_STR_, _REG_)      			((uint16_t *)&_STR_._REG_ - (uint16_t *)&_STR_)
 
 
@@ -241,6 +244,13 @@ typedef enum
   FD2930_LED_GREEN,
   FD2930_LED_BLUE,
 } DeviceLEDState_t;
+
+typedef enum {
+    IRDA_INDICATION_OFF = 0,
+    IRDA_INDICATION_OFF_WAIT,
+    IRDA_INDICATION_BLUE,
+    IRDA_INDICATION_BLUE_WAIT,
+} IRDAIndicationState_t;
 
 typedef enum
 {
@@ -425,6 +435,7 @@ extern uint32_t 	ArchPageIdx, ArchLastPage;
 
 extern Timer_t		MeasurmentTimer;
 
+extern DeviceLEDState_t LEDState;
 extern uint8_t 		IRDA_Command_Rcvd;
 extern uint8_t 		IRDA_Command;
 

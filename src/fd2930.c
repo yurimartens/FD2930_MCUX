@@ -202,12 +202,12 @@ void FunctionalTaskBG()
             LogAppErase();
     	}
     	if (DeviceData.StateFlags & FD2930_STATE_FLAG_READ_ARCHIVE) {
-    		LogAppRestoreData(0);	// read using parser
     		DeviceData.StateFlags &= ~FD2930_STATE_FLAG_READ_ARCHIVE;	// to indicate finish of reading
+    		LogAppRestoreData(0);	// read using parser
     	}
     	if (DeviceData.StateFlags & FD2930_STATE_FLAG_READ_ARCHIVE_BIN) {
-    		LogAppRestoreData(1);	// read in a clear binary mode
     		DeviceData.StateFlags &= ~FD2930_STATE_FLAG_READ_ARCHIVE_BIN;	// to indicate finish of reading
+    		LogAppRestoreData(1);	// read in a clear binary mode
     	}
     }
     if (StoreParameters) {

@@ -192,6 +192,10 @@ void SysTick_Handler(void)
 {
 	static uint32_t div = 0;
 
+	static IRDAIndicationState_t IRDAIndicatorState = IRDA_INDICATION_OFF;
+	static uint32_t sysTick = 0, startTick = 0;
+	static DeviceLEDState_t LEDStatePrev;
+
 	TimerDispatch(&Modbus.Timer);
 	TimerDispatch(&MeasurmentTimer);
 
@@ -200,6 +204,35 @@ void SysTick_Handler(void)
 	} else {
 		div = 0;
 		disk_timerproc();   //for SD card
+	}
+
+	sysTick++;
+	if (IRDA_Command_Rcvd) {
+		switch (IRDAIndicatorState) {
+			case IRDA_INDICATION_OFF:
+				LEDStatePrev = LEDState;
+				LEDState = FD2930_LED_OFF;
+				startTick = sysTick;
+				IRDAIndicatorState++;
+				break;
+			case IRDA_INDICATION_OFF_WAIT:
+				if ((sysTick - startTick) > IRDA_INDICATION_OFF_INTERVAL){
+					IRDAIndicatorState++;
+				}
+	            break;
+			case IRDA_INDICATION_BLUE:
+				LEDState = FD2930_LED_BLUE;
+				startTick = sysTick;
+				IRDAIndicatorState++;
+				break;
+			case IRDA_INDICATION_BLUE_WAIT:
+				if ((sysTick - startTick) > IRDA_INDICATION_BLUE_INTERVAL){
+					IRDAIndicatorState = IRDA_INDICATION_OFF;
+					IRDA_Command_Rcvd = 0;
+					LEDState = LEDStatePrev;
+				}
+	            break;
+		}
 	}
 	NecProtocolResetCondition(LPC_TIM0->TC);
 }
