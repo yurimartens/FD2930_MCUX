@@ -13,6 +13,7 @@ RM := rm -rf
 -include lpcdrivers/subdir.mk
 -include fat_sd/subdir.mk
 -include eeprom/subdir.mk
+-include bootloaderfw/subdir.mk
 -include Drivers/subdir.mk
 -include BSP/subdir.mk
 -include subdir.mk

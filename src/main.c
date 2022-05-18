@@ -46,6 +46,7 @@
 
 #include <nec_protocol.h>
 
+#include <bootloader.h>
 
 
 UartAl_t    Uart;

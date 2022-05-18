@@ -7,3 +7,6 @@
 [submodule "eeprom"]
 	path = eeprom
 	url = https://gitlab.pozhgazpribor.ru/firmware/submodules/eeprom.git
+[submodule "bootloaderfw"]
+	path = bootloaderfw
+	url = https://gitlab.pozhgazpribor.ru/firmware/submodules/bootloaderfw.git
