@@ -49,6 +49,8 @@ uint8_t 		BlockService = 1;
 uint8_t			Protocol;
 uint8_t 		ChangeConnectionSettings;
 
+uint8_t			LowSense;
+
 uint32_t 		ArchPageIdx, ArchLastPage;
 
 float 			HeatPowerInst = 1.0;
@@ -143,6 +145,9 @@ void DeviceInit()
 	DeviceData.ArchPageIdxLo = 0;
 	DeviceData.ArchLastPageHi = 0;
 	DeviceData.ArchLastPageLo = 0;
+
+	if (DeviceData.Config & FD2930_DEVICECONFIG_LOW_SENS) LowSense = 1;
+	else LowSense = 0;
 
 	if (write) EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 
@@ -774,14 +779,14 @@ __STATIC_INLINE void CheckFireStatus()
 	static uint32_t counter_UV_inv = 0;
 
 	if (DeviceData.Config & FD2930_DEVICECONFIG_LOW_SENS) {
-		if (DeviceData.IRGain > LOW_SENSE_FACTOR * DeviceData.IRThres) {
+		if (DeviceData.IRGain > DeviceData.IRThres) {
 			flag_IR_prefire = 1;
 			if (!(DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR)) {
 				LogAppPushData();
 				DeviceData.Status |= FD2930_DEVICE_STATUS_ALARM_IR;
 			}
 		} else {
-			if (DeviceData.IRGain > LOW_SENSE_FACTOR * 0.7 * DeviceData.IRThres) {
+			if (DeviceData.IRGain > 0.7 * DeviceData.IRThres) {
 				flag_IR_prefire = 1;
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_IR) {
 					LogAppPushData();
@@ -796,14 +801,14 @@ __STATIC_INLINE void CheckFireStatus()
 				}
 			}
 		}
-		if (DeviceData.UVGain > LOW_SENSE_FACTOR * DeviceData.UVThresF) {
+		if (DeviceData.UVGain > DeviceData.UVThresF) {
 			flag_UV_prefire = 1;
 			if (!(DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV)) {
 				DeviceData.Status |= FD2930_DEVICE_STATUS_ALARM_UV;
 				LogAppPushData();
 			}
 		} else {
-			if (DeviceData.UVGain > LOW_SENSE_FACTOR * 0.7 * DeviceData.UVThresF) {
+			if (DeviceData.UVGain > 0.7 * DeviceData.UVThresF) {
 				flag_UV_prefire = 1;
 				if (DeviceData.Status & FD2930_DEVICE_STATUS_ALARM_UV) {
 					DeviceData.Status &= ~FD2930_DEVICE_STATUS_ALARM_UV;
@@ -1776,8 +1781,25 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 			uint8_t config = (DeviceData.Baudrate >> 8) & 0xFF;
 			if (config & (1 << 2)) DeviceData.Config |= FD2930_DEVICECONFIG_FIRE_FIXATION;
 			else DeviceData.Config &= ~FD2930_DEVICECONFIG_FIRE_FIXATION;
-			if (config & (1 << 1)) DeviceData.Config &= ~FD2930_DEVICECONFIG_LOW_SENS;
-			else DeviceData.Config |= FD2930_DEVICECONFIG_LOW_SENS;
+			if (config & (1 << 1)) {
+				DeviceData.Config &= ~FD2930_DEVICECONFIG_LOW_SENS;
+				if (LowSense) {
+					LowSense = 0;
+					DeviceData.IRThres /= LOW_SENSE_FACTOR;
+					DeviceData.IRThresF /= LOW_SENSE_FACTOR;
+					DeviceData.UVThres /= LOW_SENSE_FACTOR;
+					DeviceData.UVThresF /= LOW_SENSE_FACTOR;
+				}
+			} else {
+				DeviceData.Config |= FD2930_DEVICECONFIG_LOW_SENS;
+				if (LowSense == 0) {
+					LowSense = 1;
+					DeviceData.IRThres *= LOW_SENSE_FACTOR;
+					DeviceData.IRThresF *= LOW_SENSE_FACTOR;
+					DeviceData.UVThres *= LOW_SENSE_FACTOR;
+					DeviceData.UVThresF *= LOW_SENSE_FACTOR;
+				}
+			}
 			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 		} else {
 			if (DeviceData.Baudrate == 1 || DeviceData.Baudrate == 2 || DeviceData.Baudrate == 4 || DeviceData.Baudrate == 12 || DeviceData.Baudrate == 24) {
@@ -1807,6 +1829,21 @@ uint8_t MBCallBack(uint16_t addr, uint16_t qty)
 					uint8_t baud = DeviceData.MBId & 0xFF;
 					DeviceData.MBId = mbId;
 					DeviceData.Baudrate = baud;
+				}
+			} else {
+				if ((DeviceData.Config & FD2930_DEVICECONFIG_LOW_SENS) && (LowSense == 0)) {
+					LowSense = 1;
+					DeviceData.IRThres *= LOW_SENSE_FACTOR;
+					DeviceData.IRThresF *= LOW_SENSE_FACTOR;
+					DeviceData.UVThres *= LOW_SENSE_FACTOR;
+					DeviceData.UVThresF *= LOW_SENSE_FACTOR;
+				}
+				if (((DeviceData.Config & FD2930_DEVICECONFIG_LOW_SENS) == 0) && (LowSense)) {
+					LowSense = 0;
+					DeviceData.IRThres /= LOW_SENSE_FACTOR;
+					DeviceData.IRThresF /= LOW_SENSE_FACTOR;
+					DeviceData.UVThres /= LOW_SENSE_FACTOR;
+					DeviceData.UVThresF /= LOW_SENSE_FACTOR;
 				}
 			}
 			EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
@@ -2305,6 +2342,9 @@ void SetDefaultParameters()
 #endif
 	DeviceData.FaultDelay = FD2930_DEFAULT_WAIT_FAULT;
 	DeviceData.FireDelay = FD2930_DEFAULT_WAIT_FIRE;
+
+	ChangeConnectionSettings = 1;
+	StoreParameters = 1;
 }
 
 /**
@@ -2320,7 +2360,8 @@ void SetDefaultMBParameters()
 		DeviceData.MBId = FD2930_DEF_MBS_ADDR;
 		DeviceData.Baudrate = FD2930_DEF_MBS_BAUD;
 	}
-	EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+	ChangeConnectionSettings = 1;
+	StoreParameters = 1;
 }
     
 //------------------------------------------------------------------------------

@@ -141,6 +141,7 @@ int main(void) {
 
 	DeviceInit();
 
+	Uart1AndProtocolInit();
 	SSP0AndModulesInit();
 	SSP1AndModulesInit();
 
@@ -158,7 +159,7 @@ int main(void) {
 
 	while (1) {
 		if (ChangeConnectionSettings) {
-			if (UART_STATE_TX_COMPLETE == UARTGetState(&Uart)) {
+			if (Modbus.State == mbsWAIT) {
 				ChangeConnectionSettings = 0;
 				Uart1AndProtocolInit();
 			}
@@ -545,7 +546,6 @@ __STATIC_INLINE void Uart1AndProtocolInit()
 
 	NVIC_SetPriority(UART1_IRQn, 18);
 	NVIC_EnableIRQ(UART1_IRQn);
-	//NVIC_ClearPendingIRQ(UART1_IRQn);
 }
 
 /**
