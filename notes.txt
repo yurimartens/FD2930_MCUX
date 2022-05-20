@@ -1,4 +1,0 @@
-disk_timerproc period
-В dev убрать инициализацию SPI из fat init
-
-SPI Mode0 for SD and Ad5412

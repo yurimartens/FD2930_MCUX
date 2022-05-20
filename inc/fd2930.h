@@ -23,19 +23,19 @@ extern "C" {
 #define DEVICE_TYPE         			PHOENIX_IRUV
 
 #if DEVICE_TYPE == PHOENIX_IRUV
-#define FW_VERSION                     	304
+#define FW_VERSION                     	101
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	517
+#define FW_VERSION_LO                  	520
 
 #elif DEVICE_TYPE == PHOENIX_IR4
 
-#define FW_VERSION                     	306
+#define FW_VERSION                     	101
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	517
+#define FW_VERSION_LO                  	520
 
 #define PHOENIX_IR4_CHANNELS			4
 
@@ -47,6 +47,8 @@ extern "C" {
 
 #endif
 
+#define APPLICATION_ADDRESS				(FLASH_BASE + 0x4000)
+#define APPLICATION_SPACE				0x74000
 
 #define MB_ADDR_RUN_BOOTLOADER			0xFFFC
 
@@ -96,9 +98,7 @@ extern "C" {
 #define FD2930_DEVICEFLAGS_20mA_ON                 (1 << 4)
 #define FD2930_DEVICEFLAGS_IR_ERROR                (1 << 5)
 #define FD2930_DEVICEFLAGS_UV_ERROR                (1 << 6)
-
 #define FD2930_DEVICEFLAGS_BOOTLOADER_ACTIVE       (1 << 7)
-
 #define FD2930_DEVICEFLAGS_BREAK_DUST              (1 << 11)
 #define FD2930_DEVICEFLAGS_DUST                    (1 << 12)
 #define FD2930_DEVICEFLAGS_ERROR_TEMPERATURE       (1 << 13)
@@ -152,13 +152,15 @@ typedef enum
   FD2930_LED_BLUE,
 } DeviceLEDState_t;
 
-
+typedef struct {
+	uint16_t Page[100];
+} Archive_t;
 
 #if DEVICE_TYPE == PHOENIX_IRUV
 typedef struct
 {
-    uint16_t MBId;                      //modbus address
-    uint16_t Baudrate;                           //modbus baudrate /4800
+    uint16_t MBId;
+    uint16_t Baudrate;
     uint16_t SerialNumber;
     uint16_t DeviceType;
     uint16_t HWVersion;
@@ -166,8 +168,9 @@ typedef struct
     uint16_t Status;
     uint16_t Flags;
     uint16_t Config;
-    uint16_t UVGain;   //отфильтрованное значение с учетом масштабирования
-    uint16_t IRGain;   //отфильтрованное значение с учетом масштабирования
+    uint16_t Reserve0;
+    uint16_t AppAddrHi;
+    uint16_t AppAddrLo;
     uint16_t FFTExceeded;
     uint16_t UVThresF;
     uint16_t IRThresF;

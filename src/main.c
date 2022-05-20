@@ -30,6 +30,7 @@
 
 #include <sys_utils.h>
 #include <flash_al.h>
+#include <eeprom.h>
 
 #include <bootloader.h>
 #include <boot_mb_cmd.h>
@@ -40,7 +41,9 @@
 
 Timer_t     InitTimer;
 
-UartAl_t    Uart;
+uint8_t 	Protocol;
+
+UartAl_t    UartMBS;
 uint8_t     RxBuf[UART_RX_BUF_SIZE];
 uint8_t     TxBuf[UART_TX_BUF_SIZE];
 Modbus_t    Modbus;
@@ -48,7 +51,7 @@ Modbus_t    Modbus;
 
 uint16_t	AddrOffset = 0;
 
-uint8_t		MCUPageSizes[128];
+uint8_t		MCUPageSizes[30];
 
 uint8_t		FlashError = 0;
 
@@ -59,6 +62,7 @@ __STATIC_INLINE void MCUPinsConfiguration();
 __STATIC_INLINE void MCUPeriphConfiguration();
 __STATIC_INLINE void Uart1AndProtocolInit();
 __STATIC_INLINE void MCUPageSizesInit();
+__STATIC_INLINE void DeviceInit();
 
 
 
@@ -85,12 +89,15 @@ uint8_t MBPassCallBack(uint16_t addr, uint16_t qty_data)
 					ModbusSetHoldingRegs(&Modbus, (uint16_t *)(APPLICATION_ADDRESS + AddrOffset), (((APPLICATION_SPACE - AddrOffset) / 2) > 0xFFFF) ? 0xFFFF : (APPLICATION_SPACE - AddrOffset) / 2);
 					break;
 				case BOOT_MB_CMD_RUN_APPLICATION:
-					LL_RTC_BAK_SetRegister(RTC, BUP_ADDR_BOOT_SIGN, 0);
+					{
 					uint32_t devId = 0;
 					if (0 == BootCheckAppCRC(APPLICATION_ADDRESS, APPLICATION_SPACE, &devId)) {
 						if (DEVICE_TYPE == devId) {
+							DeviceData.Flags &= ~FD2930_DEVICEFLAGS_BOOTLOADER_ACTIVE;
+							EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 							JumpToApplication(APPLICATION_ADDRESS);
 						}
+					}
 					}
 					break;
 			}
@@ -121,7 +128,7 @@ int main(void)
 
 	DeviceInit();
 
-	if (0 == LL_RTC_BAK_GetRegister(RTC, BUP_ADDR_BOOT_SIGN)) {
+	if ((DeviceData.Flags & FD2930_DEVICEFLAGS_BOOTLOADER_ACTIVE) == 0) {
 		uint32_t devId = 0;
 		if (0 == BootCheckAppCRC(APPLICATION_ADDRESS, APPLICATION_SPACE, &devId)) {
 			if (DEVICE_TYPE == devId) {
@@ -130,12 +137,20 @@ int main(void)
 		}
 	}
 
+	DeviceData.Flags |= FD2930_DEVICEFLAGS_BOOTLOADER_ACTIVE;
+	EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+
 	MCUPinsConfiguration();
 	MCUPeriphConfiguration();
 
+	Uart1AndProtocolInit();
+
+	MCUPageSizesInit();
+	BootloaderInit(MCUPageSizes, sizeof(MCUPageSizes), APPLICATION_ADDRESS, APPLICATION_SPACE);
+
 	while (1) {
-		if (FlashError) sensorData.Status |= (1 << STATUS_BITS_FLASH_ERR);
-		else sensorData.Status &= ~(1 << STATUS_BITS_FLASH_ERR);
+		if (FlashError) DeviceData.Status |= FD2930_DEVICE_STATUS_FLASH_OK;
+		else DeviceData.Status &= ~FD2930_DEVICE_STATUS_FLASH_OK;
 		ModbusIdle(&Modbus);
 	}
 	return 0;
@@ -160,7 +175,7 @@ void SetDefaultParameters()
   * @param
   * @retval
   */
-void DeviceInit()
+__STATIC_INLINE void DeviceInit()
 {
 	EEPROMInit();
 
@@ -169,18 +184,26 @@ void DeviceInit()
 	   (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 8 && DeviceData.Baudrate != 12 && DeviceData.Baudrate != 16 && DeviceData.Baudrate != 24)) {
 			SetDefaultParameters();
 	}
+	if (DeviceData.Config & FD2930_DEVICECONFIG_IPES_MB_HEADER) {
+		Protocol = PROTOCOL_IPES;
+	} else {
+		Protocol = PROTOCOL_FD2930;
+	}
 	if (Protocol == PROTOCOL_IPES) {
 		if (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 8 && DeviceData.Baudrate != 16) {
 			DeviceData.Baudrate = IPES_DEF_MBS_BAUD;
-			write = 1;
 		}
 	} else {
 		if (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 12 && DeviceData.Baudrate != 24) {
 			DeviceData.Baudrate = FD2930_DEF_MBS_BAUD;
 		}
 	}
+	DeviceData.Status = 0;
+	DeviceData.AppAddrHi = (APPLICATION_ADDRESS >> 16) & 0xFFFF;
+	DeviceData.AppAddrLo = APPLICATION_ADDRESS & 0xFFFF;
 
-	DeviceData.Status |= (FD2930_DEVICE_STATUS_CRC_OK | FD2930_DEVICE_STATUS_FLASH_OK);
+	DeviceData.HWVersion = FW_VERSION_HI;
+	DeviceData.FWVersion = FW_VERSION_LO;
 }
 
 /**
@@ -191,7 +214,8 @@ void DeviceInit()
 __STATIC_INLINE void MCUPageSizesInit()
 {
 	for (int p = 0; p < sizeof(MCUPageSizes); p++) {
-		MCUPageSizes[p] = 2;
+		if (p < 16) MCUPageSizes[p] = 4;
+		else MCUPageSizes[p] = 32;
 	}
 }
 
@@ -202,7 +226,7 @@ __STATIC_INLINE void MCUPageSizesInit()
   */
 void UART1_IRQHandler(void)
 {
-    UARTIsrHandler(&Uart);
+    UARTIsrHandler(&UartMBS);
     NVIC_ClearPendingIRQ(UART1_IRQn);
 }
 
@@ -303,16 +327,16 @@ __STATIC_INLINE void MCUPinsConfiguration(void)
 __STATIC_INLINE void Uart1AndProtocolInit()
 {
 	if (Protocol == PROTOCOL_IPES) {
-		UARTInit(&Uart, (LPC_UART_TypeDef *)LPC_UART1, (DeviceData.MBId & 0xFF) * IPES_MBS_BAUD_MULT, UART_PARITY_NONE, UART_STOPBIT_1, UART_FLAG_RS485_MODE_ENABLED);
-		ModbusInit(&Modbus, &Uart, (DeviceData.MBId >> 8) & 0xFF, (uint16_t *)&DeviceData, (uint16_t *)&DeviceData, sizeof(DeviceData_t) / 2, sizeof(DeviceData_t) / 2, MBCallBack, MBPassCallBack);
+		UARTInit(&UartMBS, (LPC_UART_TypeDef *)LPC_UART1, (DeviceData.MBId & 0xFF) * IPES_MBS_BAUD_MULT, UART_PARITY_NONE, UART_STOPBIT_1, UART_FLAG_RS485_MODE_ENABLED);
+		ModbusInit(&Modbus, &UartMBS, (DeviceData.MBId >> 8) & 0xFF, (uint16_t *)&DeviceData, (uint16_t *)&DeviceData, sizeof(DeviceData_t) / 2, sizeof(DeviceData_t) / 2, NULL, MBPassCallBack);
 	} else {
-		UARTInit(&Uart, (LPC_UART_TypeDef *)LPC_UART1, DeviceData.Baudrate * FD2930_MBS_BAUD_MULT, UART_PARITY_NONE, UART_STOPBIT_1, UART_FLAG_RS485_MODE_ENABLED);
-		ModbusInit(&Modbus, &Uart, DeviceData.MBId, (uint16_t *)&DeviceData, (uint16_t *)&DeviceData, sizeof(DeviceData_t) / 2, sizeof(DeviceData_t) / 2, MBCallBack, MBPassCallBack);
+		UARTInit(&UartMBS, (LPC_UART_TypeDef *)LPC_UART1, DeviceData.Baudrate * FD2930_MBS_BAUD_MULT, UART_PARITY_NONE, UART_STOPBIT_1, UART_FLAG_RS485_MODE_ENABLED);
+		ModbusInit(&Modbus, &UartMBS, DeviceData.MBId, (uint16_t *)&DeviceData, (uint16_t *)&DeviceData, sizeof(DeviceData_t) / 2, sizeof(DeviceData_t) / 2, NULL, MBPassCallBack);
 	}
 
-	UARTInitDMA(&Uart, LPC_GPDMA, -1, 1);
-	UARTInitTxBuf(&Uart, TxBuf, sizeof(TxBuf));
-	UARTInitRxBuf(&Uart, RxBuf, sizeof(RxBuf));
+	UARTInitDMA(&UartMBS, LPC_GPDMA, -1, 1);
+	UARTInitTxBuf(&UartMBS, TxBuf, sizeof(TxBuf));
+	UARTInitRxBuf(&UartMBS, RxBuf, sizeof(RxBuf));
 
 	NVIC_SetPriority(UART1_IRQn, 18);
 	NVIC_EnableIRQ(UART1_IRQn);
