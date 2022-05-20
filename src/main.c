@@ -133,6 +133,8 @@ void EINT3_IRQHandler(void)
   */
 int main(void) {
 
+	__enable_irq();
+
 	SystemInit();
 	NVIC_SetPriorityGrouping(0x00);
 
