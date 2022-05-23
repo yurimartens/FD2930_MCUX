@@ -182,6 +182,7 @@ extern "C" {
 #define FD2930_DEVICEFLAGS_20mA_ON                 (1 << 4)
 #define FD2930_DEVICEFLAGS_IR_ERROR                (1 << 5)
 #define FD2930_DEVICEFLAGS_UV_ERROR                (1 << 6)
+#define FD2930_DEVICEFLAGS_BOOTLOADER_ACTIVE       (1 << 7)
 #define FD2930_DEVICEFLAGS_BREAK_DUST              (1 << 11)
 #define FD2930_DEVICEFLAGS_DUST                    (1 << 12)
 #define FD2930_DEVICEFLAGS_ERROR_TEMPERATURE       (1 << 13)

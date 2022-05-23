@@ -1745,7 +1745,16 @@ uint8_t MBPassCallBack(uint16_t addr, uint16_t valQty)
 		else BlockService = 1;
 		return 0;
 	}
-
+	if (addr == MB_ADDR_RUN_BOOTLOADER) {
+		if (valQty) {
+			DeviceData.Flags |= FD2930_DEVICEFLAGS_BOOTLOADER_ACTIVE;
+		} else {
+			DeviceData.Flags &= ~FD2930_DEVICEFLAGS_BOOTLOADER_ACTIVE;
+		}
+		EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+		NVIC_SystemReset();
+		return 0;
+	}
 	storVal = *(((uint16_t *)&DeviceData) + addr);
 
 	if (setVal != storVal) MBRegModified = 1;
