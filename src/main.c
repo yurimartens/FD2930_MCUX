@@ -121,6 +121,7 @@ uint8_t MBPassCallBack(uint16_t addr, uint16_t qty_data)
 					addrTemp = addr;
 				} else {
 					memcpy(&FlashWriteBuf[start], data, qty_data * 2);
+					start = 0;
 					if (0 != BootWriteData(AddrOffset, addrTemp, FLASH_BUF_SIZE, FlashWriteBuf)) {
 						FlashError = 1;
 					}
@@ -347,12 +348,11 @@ __STATIC_INLINE void Uart1AndProtocolInit()
 {
 	if (Protocol == PROTOCOL_IPES) {
 		UARTInit(&UartMBS, (LPC_UART_TypeDef *)LPC_UART1, (DeviceData.MBId & 0xFF) * IPES_MBS_BAUD_MULT, UART_PARITY_NONE, UART_STOPBIT_1, UART_FLAG_RS485_MODE_ENABLED);
-		ModbusInit(&Modbus, &UartMBS, (DeviceData.MBId >> 8) & 0xFF, (uint16_t *)&DeviceData, (uint16_t *)&DeviceData, sizeof(DeviceData_t) / 2, sizeof(DeviceData_t) / 2, NULL, MBPassCallBack);
+		ModbusInit(&Modbus, &UartMBS, (DeviceData.MBId >> 8) & 0xFF, (uint16_t *)(APPLICATION_ADDRESS + AddrOffset), (uint16_t *)&DeviceData, (((APPLICATION_SPACE - AddrOffset) / 2) > 0xFFFF) ? 0xFFFF : (APPLICATION_SPACE - AddrOffset) / 2, sizeof(DeviceData_t) / 2, NULL, MBPassCallBack);
 	} else {
 		UARTInit(&UartMBS, (LPC_UART_TypeDef *)LPC_UART1, DeviceData.Baudrate * FD2930_MBS_BAUD_MULT, UART_PARITY_NONE, UART_STOPBIT_1, UART_FLAG_RS485_MODE_ENABLED);
-		ModbusInit(&Modbus, &UartMBS, DeviceData.MBId, (uint16_t *)&DeviceData, (uint16_t *)&DeviceData, sizeof(DeviceData_t) / 2, sizeof(DeviceData_t) / 2, NULL, MBPassCallBack);
+		ModbusInit(&Modbus, &UartMBS, DeviceData.MBId, (uint16_t *)(APPLICATION_ADDRESS + AddrOffset), (uint16_t *)&DeviceData, (((APPLICATION_SPACE - AddrOffset) / 2) > 0xFFFF) ? 0xFFFF : (APPLICATION_SPACE - AddrOffset) / 2, sizeof(DeviceData_t) / 2, NULL, MBPassCallBack);
 	}
-
 	UARTInitDMA(&UartMBS, LPC_GPDMA, -1, 1);
 	UARTInitTxBuf(&UartMBS, TxBuf, sizeof(TxBuf));
 	UARTInitRxBuf(&UartMBS, RxBuf, sizeof(RxBuf));
