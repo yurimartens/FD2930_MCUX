@@ -12,6 +12,8 @@
 #include "LPC17xx.h"
 #endif
 
+#include <string.h>
+
 #include <cr_section_macros.h>
 #include <system_LPC17xx.h>
 #include <lpc17xx_systick.h>
@@ -38,6 +40,8 @@
 #define UART_RX_BUF_SIZE		256
 #define UART_TX_BUF_SIZE		256
 
+#define FLASH_BUF_SIZE			256
+
 
 Timer_t     InitTimer;
 
@@ -52,6 +56,8 @@ Modbus_t    Modbus;
 uint16_t	AddrOffset = 0;
 
 uint8_t		MCUPageSizes[30];
+
+uint8_t     FlashWriteBuf[FLASH_BUF_SIZE];
 
 uint8_t		FlashError = 0;
 
@@ -74,6 +80,9 @@ __STATIC_INLINE void DeviceInit();
 uint8_t MBPassCallBack(uint16_t addr, uint16_t qty_data)
 {
 	uint8_t *data;
+	static uint32_t start = 0;
+	static uint16_t addrTemp;
+
 	switch (UartMBS.RxBuf[1]) {
 		case MODBUS_WRITE_REGISTER:	// used for commands
 			switch (addr) {
@@ -106,8 +115,15 @@ uint8_t MBPassCallBack(uint16_t addr, uint16_t qty_data)
 			data = UartMBS.RxBuf + 7;
 			if (qty_data < 124) {
 				SwapMBWords(data, qty_data);
-				if (0 != BootWriteData(AddrOffset, addr, qty_data * 2, data)) {
-					FlashError = 1;
+				if (start == 0) {
+					start = qty_data * 2;
+					memcpy(FlashWriteBuf, data, start);
+					addrTemp = addr;
+				} else {
+					memcpy(&FlashWriteBuf[start], data, qty_data * 2);
+					if (0 != BootWriteData(AddrOffset, addrTemp, FLASH_BUF_SIZE, FlashWriteBuf)) {
+						FlashError = 1;
+					}
 				}
 			}
 			break;
@@ -137,8 +153,11 @@ int main(void)
 		}
 	}
 
-	DeviceData.Flags |= FD2930_DEVICEFLAGS_BOOTLOADER_ACTIVE;
-	EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+	if ((DeviceData.Flags & FD2930_DEVICEFLAGS_BOOTLOADER_ACTIVE) == 0) {
+		DeviceData.Flags |= FD2930_DEVICEFLAGS_BOOTLOADER_ACTIVE;
+		EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
+	}
+
 
 	MCUPinsConfiguration();
 	MCUPeriphConfiguration();

@@ -27,7 +27,7 @@ extern "C" {
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	520
+#define FW_VERSION_LO                  	523
 
 #elif DEVICE_TYPE == PHOENIX_IR4
 
@@ -35,7 +35,7 @@ extern "C" {
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	520
+#define FW_VERSION_LO                  	523
 
 #define PHOENIX_IR4_CHANNELS			4
 
