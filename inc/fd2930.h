@@ -150,6 +150,7 @@ typedef enum
   FD2930_LED_RED_BLINKING,
   FD2930_LED_GREEN,
   FD2930_LED_BLUE,
+  FD2930_LED_BLUE_BLINKING,
 } DeviceLEDState_t;
 
 typedef struct {

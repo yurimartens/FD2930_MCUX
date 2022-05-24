@@ -63,13 +63,14 @@ uint8_t     FlashWriteBuf[FLASH_BUF_SIZE];
 uint8_t		FlashError = 0;
 
 DeviceData_t	DeviceData;
-DeviceLEDState_t LEDState;
+DeviceLEDState_t LEDState = FD2930_LED_OFF;
 
 __STATIC_INLINE void MCUPinsConfiguration();
 __STATIC_INLINE void MCUPeriphConfiguration();
 __STATIC_INLINE void Uart1AndProtocolInit();
 __STATIC_INLINE void MCUPageSizesInit();
 __STATIC_INLINE void DeviceInit();
+__STATIC_INLINE void HandleLEDs();
 
 
 
@@ -167,6 +168,8 @@ int main(void)
 	MCUPageSizesInit();
 	BootloaderInit(MCUPageSizes, sizeof(MCUPageSizes), APPLICATION_ADDRESS, APPLICATION_SPACE);
 
+	LEDState = FD2930_LED_BLUE_BLINKING;
+
 	while (1) {
 		if (FlashError) DeviceData.Status |= FD2930_DEVICE_STATUS_FLASH_OK;
 		else DeviceData.Status &= ~FD2930_DEVICE_STATUS_FLASH_OK;
@@ -259,6 +262,7 @@ void UART1_IRQHandler(void)
 void SysTick_Handler(void)
 {
 	TimerDispatch(&Modbus.Timer);
+	HandleLEDs();
 }
 
 /**
@@ -361,6 +365,114 @@ __STATIC_INLINE void Uart1AndProtocolInit()
 	NVIC_EnableIRQ(UART1_IRQn);
 }
 
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+__STATIC_INLINE void HandleLEDs()
+{
+	static uint16_t l = 0, redtime = 0, greentime = 0, blink_counter = 0;
+
+	switch (LEDState) {
+		case FD2930_LED_OFF:
+			GPIO_SET_PIN(LPC_GPIO2, LED1);
+			GPIO_SET_PIN(LPC_GPIO2, LED2);
+			GPIO_SET_PIN(LPC_GPIO2, LED3);
+		break;
+		case FD2930_LED_YELLOW:
+			GPIO_SET_PIN(LPC_GPIO2, LED2);
+			GPIO_SET_PIN(LPC_GPIO2, LED3);
+			if (l) {
+				GPIO_RESET_PIN(LPC_GPIO2, LED1);
+				GPIO_SET_PIN(LPC_GPIO2, LED3);
+				if (!redtime) {
+					l = 0;
+					redtime = 13;
+				} else {
+					redtime--;
+				}
+			} else {
+				GPIO_RESET_PIN(LPC_GPIO2, LED3);
+				GPIO_SET_PIN(LPC_GPIO2, LED1);
+				if (!greentime) {
+					l = 1;
+					greentime = 1;
+				} else {
+					greentime--;
+				}
+			}
+	    break;
+		case FD2930_LED_YELLOW_BLINKING:
+			GPIO_SET_PIN(LPC_GPIO2, LED2);
+			if (blink_counter < 500) {
+				if (l) {
+					GPIO_RESET_PIN(LPC_GPIO2, LED1);
+					GPIO_SET_PIN(LPC_GPIO2, LED3);
+					if (!redtime) {
+						l = 0;
+						redtime = 13;
+					} else {
+						redtime--;
+					}
+				} else {
+					GPIO_RESET_PIN(LPC_GPIO2, LED3);
+					GPIO_SET_PIN(LPC_GPIO2, LED1);
+					if (!greentime) {
+						l = 1;
+						greentime = 1;
+					} else {
+						greentime--;
+					}
+				}
+				blink_counter++;
+			} else
+				if (blink_counter < 1000) {
+					GPIO_SET_PIN(LPC_GPIO2, LED1);
+					GPIO_SET_PIN(LPC_GPIO2, LED3);
+					blink_counter++;
+				} else {
+					blink_counter = 0;
+				}
+		break;
+		case FD2930_LED_RED:
+			GPIO_RESET_PIN(LPC_GPIO2, LED1);
+			GPIO_SET_PIN(LPC_GPIO2, LED2);
+			GPIO_SET_PIN(LPC_GPIO2, LED3);
+	    break;
+		case FD2930_LED_RED_BLINKING:
+			GPIO_SET_PIN(LPC_GPIO2, LED2);
+			GPIO_SET_PIN(LPC_GPIO2, LED3);
+			if (redtime >= 100) {
+				GPIO_TOGGLE_PIN(LPC_GPIO2, LED1);
+				redtime = 0;
+			} else {
+				redtime++;
+			}
+	    break;
+		case FD2930_LED_GREEN:
+			GPIO_RESET_PIN(LPC_GPIO2, LED3);
+			GPIO_SET_PIN(LPC_GPIO2, LED1);
+			GPIO_SET_PIN(LPC_GPIO2, LED2);
+	    break;
+		case FD2930_LED_BLUE:
+			GPIO_RESET_PIN(LPC_GPIO2, LED2);
+			GPIO_SET_PIN(LPC_GPIO2, LED1);
+			GPIO_SET_PIN(LPC_GPIO2, LED3);
+	    break;
+		case FD2930_LED_BLUE_BLINKING:
+			GPIO_SET_PIN(LPC_GPIO2, LED1);
+			GPIO_SET_PIN(LPC_GPIO2, LED3);
+			if (redtime >= 1000) {
+				GPIO_TOGGLE_PIN(LPC_GPIO2, LED2);
+				redtime = 0;
+			} else {
+				redtime++;
+			}
+			break;
+	}
+}
 
 //------------------------------------------------------------------------------
 // end
