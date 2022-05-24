@@ -20,6 +20,7 @@
 #include <lpc17xx_uart.h>
 #include <lpc17xx_gpio.h>
 #include <lpc17xx_pinsel.h>
+#include <lpc17xx_nvic.h>
 
 #include <lpc_types.h>
 
@@ -140,6 +141,8 @@ uint8_t MBPassCallBack(uint16_t addr, uint16_t qty_data)
   */
 int main(void)
 {
+	NVIC_SetVTOR(0x00000000);
+
 	SystemInit();
 	NVIC_SetPriorityGrouping(0x00);
 
@@ -152,13 +155,9 @@ int main(void)
 				JumpToApplication(APPLICATION_ADDRESS);
 			}
 		}
-	}
-
-	if ((DeviceData.Flags & FD2930_DEVICEFLAGS_BOOTLOADER_ACTIVE) == 0) {
 		DeviceData.Flags |= FD2930_DEVICEFLAGS_BOOTLOADER_ACTIVE;
 		EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 	}
-
 
 	MCUPinsConfiguration();
 	MCUPeriphConfiguration();
@@ -219,6 +218,7 @@ __STATIC_INLINE void DeviceInit()
 		}
 	}
 	DeviceData.Status = 0;
+	DeviceData.DeviceType = DEVICE_TYPE;
 	DeviceData.AppAddrHi = (APPLICATION_ADDRESS >> 16) & 0xFFFF;
 	DeviceData.AppAddrLo = APPLICATION_ADDRESS & 0xFFFF;
 
