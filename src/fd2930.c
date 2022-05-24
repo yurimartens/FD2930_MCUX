@@ -1744,7 +1744,7 @@ uint8_t MBPassCallBack(uint16_t addr, uint16_t valQty)
 		NVIC_SystemReset();
 		return 0;
 	}
-	if ((addr == MB_ADDR_LEAVE_TRANSPARENT_MODE) || (addr == MB_ADDR_ENTER_TRANSPARENT_MODE)) {
+	if (addr & 0x8000) { // other boot service commands we dont need to proceed
 		return 0;
 	}
 
