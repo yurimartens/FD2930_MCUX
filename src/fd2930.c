@@ -1734,17 +1734,6 @@ static uint8_t MBRegModified;
 uint8_t MBPassCallBack(uint16_t addr, uint16_t valQty)
 {
 	uint16_t storVal, setVal;
-	if (Modbus.Uart->RxBuf[1] == MODBUS_WRITE_MULT_REG)	{
-		if ((addr >= Modbus.HoldRegSize) || (valQty > 1)) return 0;
-		setVal = (Modbus.Uart->RxBuf[7] << 8) | Modbus.Uart->RxBuf[8];
-	} else {
-		setVal = valQty;
-	}
-	if (addr == MB_REG_ADDR(DeviceData, BlockService)) {
-		if (setVal == FD2930_PASSWORD) BlockService = 0;
-		else BlockService = 1;
-		return 0;
-	}
 	if (addr == MB_ADDR_RUN_BOOTLOADER) {
 		if (valQty) {
 			DeviceData.Flags |= FD2930_DEVICEFLAGS_BOOTLOADER_ACTIVE;
@@ -1755,10 +1744,25 @@ uint8_t MBPassCallBack(uint16_t addr, uint16_t valQty)
 		NVIC_SystemReset();
 		return 0;
 	}
-	storVal = *(((uint16_t *)&DeviceData) + addr);
+	if ((addr == MB_ADDR_LEAVE_TRANSPARENT_MODE) || (addr == MB_ADDR_ENTER_TRANSPARENT_MODE)) {
+		return 0;
+	}
 
+	if (Modbus.Uart->RxBuf[1] == MODBUS_WRITE_MULT_REG)	{
+		if ((addr >= Modbus.HoldRegSize) || (valQty > 1)) return 0;
+		setVal = (Modbus.Uart->RxBuf[7] << 8) | Modbus.Uart->RxBuf[8];
+	} else {
+		setVal = valQty;
+	}
+	storVal = *(((uint16_t *)&DeviceData) + addr);
 	if (setVal != storVal) MBRegModified = 1;
 	else MBRegModified = 0;
+	if (addr == MB_REG_ADDR(DeviceData, BlockService)) {
+		if (setVal == FD2930_PASSWORD) BlockService = 0;
+		else BlockService = 1;
+		return 0;
+	}
+
 	return 1;
 }
 

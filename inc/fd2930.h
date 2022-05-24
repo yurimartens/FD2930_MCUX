@@ -30,7 +30,7 @@ extern "C" {
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	523
+#define FW_VERSION_LO                  	524
 
 #elif DEVICE_TYPE == PHOENIX_IR4
 
@@ -38,7 +38,7 @@ extern "C" {
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	523
+#define FW_VERSION_LO                  	524
 
 #define PHOENIX_IR4_CHANNELS			4
 
@@ -65,7 +65,11 @@ extern "C" {
 
 #define STARTUP_BLINK					500
 
+#define APPLICATION_ADDRESS				0x00004000
+
 #define MB_ADDR_RUN_BOOTLOADER			0xFFFC
+#define MB_ADDR_LEAVE_TRANSPARENT_MODE  0xFFFA
+#define MB_ADDR_ENTER_TRANSPARENT_MODE  0xFFFB
 
 #define RIT_INTERVAL_mS					1
 

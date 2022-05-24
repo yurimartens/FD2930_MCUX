@@ -136,7 +136,7 @@ int main(void) {
 
 	__enable_irq();
 
-	NVIC_SetVTOR(0x4000);
+	NVIC_SetVTOR(APPLICATION_ADDRESS);
 
 	SystemInit();
 	NVIC_SetPriorityGrouping(0x00);
