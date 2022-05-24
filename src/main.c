@@ -21,6 +21,7 @@
 #include <lpc17xx_rit.h>
 #include <lpc17xx_gpio.h>
 #include <lpc17xx_pinsel.h>
+#include <lpc17xx_nvic.h>
 
 
 
@@ -134,6 +135,8 @@ void EINT3_IRQHandler(void)
 int main(void) {
 
 	__enable_irq();
+
+	NVIC_SetVTOR(0x4000);
 
 	SystemInit();
 	NVIC_SetPriorityGrouping(0x00);
