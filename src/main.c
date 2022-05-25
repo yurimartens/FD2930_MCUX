@@ -190,6 +190,7 @@ void SetDefaultParameters()
 	DeviceData.Status = FD2930_DEVICE_STATUS_BREAK;
 	DeviceData.MBId = FD2930_DEF_MBS_ADDR;
 	DeviceData.Baudrate = FD2930_DEF_MBS_BAUD;
+	DeviceData.Flags = FD2930_DEVICEFLAGS_FIRE_RELAY_ON | FD2930_DEVICEFLAGS_WORK_RELAY_ON | FD2930_DEVICEFLAGS_DUST_RELAY_ON | FD2930_DEVICEFLAGS_BLINK_LED | FD2930_DEVICEFLAGS_20mA_ON;
 }
 
 /**
@@ -199,34 +200,41 @@ void SetDefaultParameters()
   */
 __STATIC_INLINE void DeviceInit()
 {
+	uint8_t write = 0;
+
 	EEPROMInit();
 
-	EEPROMRead((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
-	if (DeviceData.Config == 0 || (DeviceData.MBId < 1 || DeviceData.MBId > 247) || \
-	   (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 8 && DeviceData.Baudrate != 12 && DeviceData.Baudrate != 16 && DeviceData.Baudrate != 24)) {
-			SetDefaultParameters();
-	}
-	if (DeviceData.Config & FD2930_DEVICECONFIG_IPES_MB_HEADER) {
-		Protocol = PROTOCOL_IPES;
+	if (EEPROM_ERROR_EMPTY == EEPROMRead((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE)) {
+		SetDefaultParameters();
+		write = 1;
 	} else {
-		Protocol = PROTOCOL_FD2930;
-	}
-	if (Protocol == PROTOCOL_IPES) {
-		if (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 8 && DeviceData.Baudrate != 16) {
-			DeviceData.Baudrate = IPES_DEF_MBS_BAUD;
+		if (DeviceData.Config == 0 || (DeviceData.MBId < 1 || DeviceData.MBId > 247) || \
+		   (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 8 && DeviceData.Baudrate != 12 && DeviceData.Baudrate != 16 && DeviceData.Baudrate != 24)) {
+				SetDefaultParameters();
 		}
-	} else {
-		if (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 12 && DeviceData.Baudrate != 24) {
-			DeviceData.Baudrate = FD2930_DEF_MBS_BAUD;
+		if (DeviceData.Config & FD2930_DEVICECONFIG_IPES_MB_HEADER) {
+			Protocol = PROTOCOL_IPES;
+		} else {
+			Protocol = PROTOCOL_FD2930;
 		}
-	}
-	DeviceData.Status = 0;
-	DeviceData.DeviceType = DEVICE_TYPE;
-	DeviceData.AppAddrHi = (APPLICATION_ADDRESS >> 16) & 0xFFFF;
-	DeviceData.AppAddrLo = APPLICATION_ADDRESS & 0xFFFF;
+		if (Protocol == PROTOCOL_IPES) {
+			if (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 8 && DeviceData.Baudrate != 16) {
+				DeviceData.Baudrate = IPES_DEF_MBS_BAUD;
+			}
+		} else {
+			if (DeviceData.Baudrate != 1 && DeviceData.Baudrate != 2 && DeviceData.Baudrate != 4 && DeviceData.Baudrate != 12 && DeviceData.Baudrate != 24) {
+				DeviceData.Baudrate = FD2930_DEF_MBS_BAUD;
+			}
+		}
+		DeviceData.Status = 0;
+		DeviceData.DeviceType = DEVICE_TYPE;
+		DeviceData.AppAddrHi = (APPLICATION_ADDRESS >> 16) & 0xFFFF;
+		DeviceData.AppAddrLo = APPLICATION_ADDRESS & 0xFFFF;
 
-	DeviceData.HWVersion = FW_VERSION_HI;
-	DeviceData.FWVersion = FW_VERSION_LO;
+		DeviceData.HWVersion = FW_VERSION_HI;
+		DeviceData.FWVersion = FW_VERSION_LO;
+	}
+	if (write) EEPROMWrite((uint8_t *)&DeviceData, EEPROM_PAGE_SIZE);
 }
 
 /**

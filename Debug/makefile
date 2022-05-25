@@ -51,7 +51,7 @@ main-build: FD2930_MCUX.axf
 FD2930_MCUX.axf: $(OBJS) $(USER_OBJS) makefile objects.mk $(OPTIONAL_TOOL_DEPS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: MCU Linker'
-	arm-none-eabi-gcc -nostdlib -L"D:\PGP\Projects\Phoenix\FW\FD2930_MCUX\Lib" -Xlinker -Map="FD2930_MCUX.map" -Xlinker --cref -Xlinker --gc-sections -Xlinker -print-memory-usage -mcpu=cortex-m3 -mthumb -T "FD2930_MCUX_Debug.ld" -o "FD2930_MCUX.axf" $(OBJS) $(USER_OBJS) $(LIBS)
+	arm-none-eabi-gcc -nostdlib -L"E:\work\PGP\PHENIX_IRUV\fd2930_mcux\Lib" -Xlinker -Map="FD2930_MCUX.map" -Xlinker --cref -Xlinker --gc-sections -Xlinker -print-memory-usage -mcpu=cortex-m3 -mthumb -T "FD2930_MCUX_Debug.ld" -o "FD2930_MCUX.axf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
