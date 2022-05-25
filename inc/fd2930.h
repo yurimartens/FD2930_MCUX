@@ -26,19 +26,19 @@ extern "C" {
 #define DEVICE_TYPE         			PHOENIX_IRUV
 
 #if DEVICE_TYPE == PHOENIX_IRUV
-#define FW_VERSION                     	305
-#define HW_VERSION        				2
-
-#define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	524
-
-#elif DEVICE_TYPE == PHOENIX_IR4
-
 #define FW_VERSION                     	306
 #define HW_VERSION        				2
 
 #define FW_VERSION_HI                  	2022
-#define FW_VERSION_LO                  	524
+#define FW_VERSION_LO                  	525
+
+#elif DEVICE_TYPE == PHOENIX_IR4
+
+#define FW_VERSION                     	307
+#define HW_VERSION        				2
+
+#define FW_VERSION_HI                  	2022
+#define FW_VERSION_LO                  	525
 
 #define PHOENIX_IR4_CHANNELS			4
 
