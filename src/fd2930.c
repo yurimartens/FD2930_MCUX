@@ -278,10 +278,15 @@ void FunctionalTaskPeriodic()
 			} else {
 				cnt = 0;
 				if ((DeviceData.Status & FD2930_DEVICE_STATUS_IR_UV_SET) && (DeviceData.Status & FD2930_DEVICE_STATUS_TEST_CALIBR) && (DeviceData.Status & FD2930_DEVICE_STATUS_TEST_ZERO)) {
-					if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_ALLOWED) {
+					if ((DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_IR_ALLOWED) || (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_UV_ALLOWED)) {
 						DeviceState = FD2930_STATE_SELFTEST;
 						SelfTest++;
-						GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
+						if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_IR_ALLOWED) {
+							// Test signal starts in the appropriate state
+						}
+						if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_UV_ALLOWED) {
+							GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
+						}
 					} else {
 						DeviceState = FD2930_STATE_WORKING;
 						LogAppPushData();
@@ -304,41 +309,124 @@ void FunctionalTaskPeriodic()
 			        case FD2930_CONFIG_3:
 			        case FD2930_CONFIG_4:
 #if DEVICE_TYPE == PHOENIX_IRUV
-			        	if ((DeviceData.UVGain - DeviceData.UVNoiseTest) < 0.7 * DeviceData.UVTestLevel) DeviceData.UVTestFaultCnt++;
-			        	if ((DeviceData.IRGain - DeviceData.IRNoiseTest) < 0.7 * DeviceData.IRTestLevel) DeviceData.IRTestFaultCnt++;
+			        	if (DeviceData.Config & (FD2930_DEVICECONFIG_SELFTEST_UV_ALLOWED | FD2930_DEVICECONFIG_SELFTEST_IR_ALLOWED)) {
+			        		if ((DeviceData.UVGain - DeviceData.UVNoiseTest) < 0.7 * DeviceData.UVTestLevel) DeviceData.UVTestFaultCnt++;
+			        		if ((DeviceData.IRGain - DeviceData.IRNoiseTest) < 0.7 * DeviceData.IRTestLevel) DeviceData.IRTestFaultCnt++;
 
-			        	if (((DeviceData.IRGain - DeviceData.IRNoiseTest) < 0.5 * DeviceData.IRTestLevel) || ((DeviceData.UVGain - DeviceData.UVNoiseTest) < 3000)) { // если чувствительность ИК меньше 40% и УФ меньше 40% то ставим флаг аварийной запыленности запыленности
-			        		if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 70) && (HeatPowerInst < 20)) {// если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
-			        			if (SelfTest < 14) {//если не прошло 14 тестов - 2 часа с включения
-			        				DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
-			        				DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;// этот флаг тоже поставим , потому что если уж не прошли очень плохие тесты, то плохие тоже не прошли. что бы выключалось реле неисправность
-			        			} else { //прошло 14 тестов - 2 часа с включения
-			        				if (BadSelfTest >= 3) {//реагируем на три плохих теста подряд
-			        					DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
-			        					DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;// этот флаг тоже поставим , потому что если уж не прошли очень плохие тесты, то плохие тоже не прошли. что бы выключалось реле неисправность
+							if (((DeviceData.IRGain - DeviceData.IRNoiseTest) < 0.5 * DeviceData.IRTestLevel) || ((DeviceData.UVGain - DeviceData.UVNoiseTest) < 3000)) { // если чувствительность ИК меньше 40% и УФ меньше 40% то ставим флаг аварийной запыленности запыленности
+								if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 70) && (HeatPowerInst < 20)) {// если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
+									if (SelfTest < 14) {//если не прошло 14 тестов - 2 часа с включения
+										DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
+										DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;// этот флаг тоже поставим , потому что если уж не прошли очень плохие тесты, то плохие тоже не прошли. что бы выключалось реле неисправность
+									} else { //прошло 14 тестов - 2 часа с включения
+										if (BadSelfTest >= 3) {//реагируем на три плохих теста подряд
+											DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
+											DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;// этот флаг тоже поставим , потому что если уж не прошли очень плохие тесты, то плохие тоже не прошли. что бы выключалось реле неисправность
+										}
+									}
+								}
+							}
+							if (((DeviceData.IRGain - DeviceData.IRNoiseTest) < 0.7 * DeviceData.IRTestLevel) || ((DeviceData.UVGain - DeviceData.UVNoiseTest) < 3000)) { // если чувствительность ИК меньше 70% и УФ меньше 70% и  && (DeviceData.temperature < 60) то ставим флаг запыленности
+								if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 70) && (HeatPowerInst < 20)) { // если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
+									if (BadSelfTest < 10) BadSelfTest++;
+									if (SelfTest < 14) { //если не прошло 14 тестов - 2 часа с включения
+										DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
+										DeviceData.Status |= FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
+									} else { //прошло 14 тестов - 2 часа с включения
+										if (BadSelfTest >= 3) { //реагируем на три плохих теста подряд
+											DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
+											DeviceData.Status |= FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
+										}
+									}
+								}
+							}
+							if (((DeviceData.IRGain - DeviceData.IRNoiseTest) >= 0.7 * DeviceData.IRTestLevel) && ((DeviceData.UVGain - DeviceData.UVNoiseTest) >= 0.5 * DeviceData.UVTestLevel)) { // если чувствительность ИК больше 40% и УФ больше 40% в то снимаем флаги
+								BadSelfTest = 0;
+								DeviceData.Flags &= ~FD2930_DEVICEFLAGS_DUST;
+								DeviceData.Status &= ~FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
+								DeviceData.Flags &= ~FD2930_DEVICEFLAGS_BREAK_DUST;
+							}
+			        	} else {
+			        		if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_IR_ALLOWED) {
+			        			if ((DeviceData.IRGain - DeviceData.IRNoiseTest) < 0.7 * DeviceData.IRTestLevel) DeviceData.IRTestFaultCnt++;
+
+			        			if ((DeviceData.IRGain - DeviceData.IRNoiseTest) < 0.5 * DeviceData.IRTestLevel) {
+			        				if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 70) && (HeatPowerInst < 20)) {// если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
+			        					if (SelfTest < 14) {//если не прошло 14 тестов - 2 часа с включения
+			        						DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
+			        						DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;// этот флаг тоже поставим , потому что если уж не прошли очень плохие тесты, то плохие тоже не прошли. что бы выключалось реле неисправность
+			        					} else { //прошло 14 тестов - 2 часа с включения
+			        						if (BadSelfTest >= 3) {//реагируем на три плохих теста подряд
+			        							DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
+			        							DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;// этот флаг тоже поставим , потому что если уж не прошли очень плохие тесты, то плохие тоже не прошли. что бы выключалось реле неисправность
+			        						}
+			        					}
 			        				}
 			        			}
-			        		}
-			        	}
-			        	if (((DeviceData.IRGain - DeviceData.IRNoiseTest) < 0.7 * DeviceData.IRTestLevel) || ((DeviceData.UVGain - DeviceData.UVNoiseTest) < 3000)) { // если чувствительность ИК меньше 70% и УФ меньше 70% и  && (DeviceData.temperature < 60) то ставим флаг запыленности
-			        		if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 70) && (HeatPowerInst < 20)) { // если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
-			        			if (BadSelfTest < 10) BadSelfTest++;
-			        			if (SelfTest < 14) { //если не прошло 14 тестов - 2 часа с включения
-			        				DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
-			        				DeviceData.Status |= FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
-			        			} else { //прошло 14 тестов - 2 часа с включения
-			        				if (BadSelfTest >= 3) { //реагируем на три плохих теста подряд
-			        					DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
-			        					DeviceData.Status |= FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
+			        			if ((DeviceData.IRGain - DeviceData.IRNoiseTest) < 0.7 * DeviceData.IRTestLevel) {
+			        				if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 70) && (HeatPowerInst < 20)) { // если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
+			        					if (BadSelfTest < 10) BadSelfTest++;
+			        					if (SelfTest < 14) { //если не прошло 14 тестов - 2 часа с включения
+			        						DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
+			        						DeviceData.Status |= FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
+			        					} else { //прошло 14 тестов - 2 часа с включения
+			        						if (BadSelfTest >= 3) { //реагируем на три плохих теста подряд
+			        							DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
+			        							DeviceData.Status |= FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
+			        						}
+			        					}
 			        				}
 			        			}
+			        			if ((DeviceData.IRGain - DeviceData.IRNoiseTest) >= 0.7 * DeviceData.IRTestLevel) {
+			        				BadSelfTest = 0;
+			        				DeviceData.Flags &= ~FD2930_DEVICEFLAGS_DUST;
+			        				DeviceData.Status &= ~FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
+			        				DeviceData.Flags &= ~FD2930_DEVICEFLAGS_BREAK_DUST;
+			        			}
+			        		} else {
+			        			if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_UV_ALLOWED) {
+			        				if ((DeviceData.UVGain - DeviceData.UVNoiseTest) < 0.7 * DeviceData.UVTestLevel) DeviceData.UVTestFaultCnt++;
+
+			        				if ((DeviceData.UVGain - DeviceData.UVNoiseTest) < 3000) {
+			        					if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 70) && (HeatPowerInst < 20)) {// если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
+			        						if (SelfTest < 14) {//если не прошло 14 тестов - 2 часа с включения
+			        							DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
+			        							DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;// этот флаг тоже поставим , потому что если уж не прошли очень плохие тесты, то плохие тоже не прошли. что бы выключалось реле неисправность
+			        						} else { //прошло 14 тестов - 2 часа с включения
+			        							if (BadSelfTest >= 3) {//реагируем на три плохих теста подряд
+			        								DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
+			        								DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;// этот флаг тоже поставим , потому что если уж не прошли очень плохие тесты, то плохие тоже не прошли. что бы выключалось реле неисправность
+			        							}
+			        						}
+			        					}
+			        				}
+			        				if ((DeviceData.UVGain - DeviceData.UVNoiseTest) < 3000) {
+			        					if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 70) && (HeatPowerInst < 20)) { // если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
+			        						if (BadSelfTest < 10) BadSelfTest++;
+			        						if (SelfTest < 14) { //если не прошло 14 тестов - 2 часа с включения
+			        							DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
+			        							DeviceData.Status |= FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
+			        						} else { //прошло 14 тестов - 2 часа с включения
+			        							if (BadSelfTest >= 3) { //реагируем на три плохих теста подряд
+			        								DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
+			        								DeviceData.Status |= FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
+			        							}
+			        						}
+			        					}
+			        				}
+			        				if ((DeviceData.UVGain - DeviceData.UVNoiseTest) >= 0.5 * DeviceData.UVTestLevel) {
+			        					BadSelfTest = 0;
+			        					DeviceData.Flags &= ~FD2930_DEVICEFLAGS_DUST;
+			        					DeviceData.Status &= ~FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
+			        					DeviceData.Flags &= ~FD2930_DEVICEFLAGS_BREAK_DUST;
+			        				}
+			        			} else {
+			        				BadSelfTest = 0;
+			        				DeviceData.Flags &= ~FD2930_DEVICEFLAGS_DUST;
+			        				DeviceData.Status &= ~FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
+			        				DeviceData.Flags &= ~FD2930_DEVICEFLAGS_BREAK_DUST;
+			        			}
 			        		}
-			            }
-			        	if (((DeviceData.IRGain - DeviceData.IRNoiseTest) >= 0.7 * DeviceData.IRTestLevel) && ((DeviceData.UVGain - DeviceData.UVNoiseTest) >= 0.5 * DeviceData.UVTestLevel)) { // если чувствительность ИК больше 40% и УФ больше 40% в то снимаем флаги
-			        		BadSelfTest = 0;
-			        		DeviceData.Flags &= ~FD2930_DEVICEFLAGS_DUST;
-			        		DeviceData.Status &= ~FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
-			        		DeviceData.Flags &= ~FD2930_DEVICEFLAGS_BREAK_DUST;
 			        	}
 #elif DEVICE_TYPE == PHOENIX_IR4
 			        	for (int i = 0; i < PHOENIX_IR4_CHANNELS; i++) {
@@ -365,17 +453,23 @@ void FunctionalTaskPeriodic()
 			       case FD2930_CONFIG_5:// в одноканальных ИК режимах не проверяем УФ канал
 			       case FD2930_CONFIG_6:// в одноканальных ИК режимах не проверяем УФ канал
 #if DEVICE_TYPE == PHOENIX_IRUV
-			    	   if (((DeviceData.IRGain - DeviceData.IRNoiseTest) < 0.5 * DeviceData.IRTestLevel)) { // если чувствительность ИК меньше 40% то ставим флаг аварийной запыленности запыленности
-			    		   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50) && (HeatPowerInst < 20)) { // если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
-			    			   DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
-			    			   DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;// этот флаг тоже поставим , потому что если уж не прошли очень плохие тесты, то плохие тоже не прошли. что бы выключалось реле неисправность
-			    		   }
-			    	   }
-			    	   if (((DeviceData.IRGain - DeviceData.IRNoiseTest) < 0.7 * DeviceData.IRTestLevel)) { // если чувствительность ИК меньше 70% и  && (DeviceData.temperature < 60) то ставим флаг запыленности
-			    		   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50) && (HeatPowerInst < 20)) { //дублируем запыленность в регистре состояния// если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг
-			    			   DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
-			    			   DeviceData.Status |= FD2930_DEVICEFLAGS_DUST_DUBL;
-			    		   }                                  // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
+			    	   if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_IR_ALLOWED) {
+						   if (((DeviceData.IRGain - DeviceData.IRNoiseTest) < 0.5 * DeviceData.IRTestLevel)) { // если чувствительность ИК меньше 40% то ставим флаг аварийной запыленности запыленности
+							   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50) && (HeatPowerInst < 20)) { // если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
+								   DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
+								   DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;// этот флаг тоже поставим , потому что если уж не прошли очень плохие тесты, то плохие тоже не прошли. что бы выключалось реле неисправность
+							   }
+						   }
+						   if (((DeviceData.IRGain - DeviceData.IRNoiseTest) < 0.7 * DeviceData.IRTestLevel)) { // если чувствительность ИК меньше 70% и  && (DeviceData.temperature < 60) то ставим флаг запыленности
+							   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50) && (HeatPowerInst < 20)) { //дублируем запыленность в регистре состояния// если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг
+								   DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
+								   DeviceData.Status |= FD2930_DEVICEFLAGS_DUST_DUBL;
+							   }                                  // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
+						   } else {
+							   DeviceData.Flags &= ~FD2930_DEVICEFLAGS_DUST;
+							   DeviceData.Status &= ~FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
+							   DeviceData.Flags &= ~FD2930_DEVICEFLAGS_BREAK_DUST;
+						   }
 			    	   } else {
 			    		   DeviceData.Flags &= ~FD2930_DEVICEFLAGS_DUST;
 			    		   DeviceData.Status &= ~FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
@@ -383,19 +477,25 @@ void FunctionalTaskPeriodic()
 			    	   }
 			       break;
 			       case FD2930_CONFIG_7:// в одноканальном УФ режиме не проверяем ИК канал
-			    	   if ((DeviceData.UVGain - DeviceData.UVNoiseTest) < 3000) { // если чувствительность УФ меньше 40% то ставим флаг аварийной запыленности запыленности
-			    		   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50) && (HeatPowerInst < 20)) { // если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
-			    			   DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
-			    			   DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;// этот флаг тоже поставим , потому что если уж не прошли очень плохие тесты, то плохие тоже не прошли. что бы выключалось реле неисправность
-			    		   }
-			    	   }
-			    	   if ((DeviceData.UVGain - DeviceData.UVNoiseTest) < 0.7 * DeviceData.UVTestLevel) { // если чувствительность УФ меньше 70% и  && (DeviceData.temperature < 60) то ставим флаг запыленности
-			    		   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50) && (HeatPowerInst < 20)) {
-			    			   DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
-			    			   DeviceData.Status |= FD2930_DEVICEFLAGS_DUST_DUBL;
-			    		   }//дублируем запыленность в регистре состояния// если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг
-			    		   // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
-			    	   } else { // если чувствительность УФ больше 40% в то снимаем флаги
+			    	   if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_UV_ALLOWED) {
+						   if ((DeviceData.UVGain - DeviceData.UVNoiseTest) < 3000) { // если чувствительность УФ меньше 40% то ставим флаг аварийной запыленности запыленности
+							   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50) && (HeatPowerInst < 20)) { // если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
+								   DeviceData.Flags |= FD2930_DEVICEFLAGS_BREAK_DUST;
+								   DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;// этот флаг тоже поставим , потому что если уж не прошли очень плохие тесты, то плохие тоже не прошли. что бы выключалось реле неисправность
+							   }
+						   }
+						   if ((DeviceData.UVGain - DeviceData.UVNoiseTest) < 0.7 * DeviceData.UVTestLevel) { // если чувствительность УФ меньше 70% и  && (DeviceData.temperature < 60) то ставим флаг запыленности
+							   if ((DeviceData.Temperature > 0) && (DeviceData.Temperature < 50) && (HeatPowerInst < 20)) {
+								   DeviceData.Flags |= FD2930_DEVICEFLAGS_DUST;
+								   DeviceData.Status |= FD2930_DEVICEFLAGS_DUST_DUBL;
+							   }//дублируем запыленность в регистре состояния// если температура не выходит за рамки и подогрев не в разогреве то  ставим флаг
+							   // просто если идет резкий разогрев, то ИК сенсор тупит и теряет чувствительность из за чего тест не проходит
+						   } else { // если чувствительность УФ больше 40% в то снимаем флаги
+							   DeviceData.Flags &= ~FD2930_DEVICEFLAGS_DUST;
+							   DeviceData.Status &= ~FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
+							   DeviceData.Flags &= ~FD2930_DEVICEFLAGS_BREAK_DUST;
+						   }
+			    	   } else {
 			    		   DeviceData.Flags &= ~FD2930_DEVICEFLAGS_DUST;
 			    		   DeviceData.Status &= ~FD2930_DEVICEFLAGS_DUST_DUBL;//дублируем запыленность в регистре состояния
 			    		   DeviceData.Flags &= ~FD2930_DEVICEFLAGS_BREAK_DUST;
@@ -584,9 +684,15 @@ void FunctionalTaskPeriodic()
 						cnt24 = 0;
 						StoreParameters = 1;
 		    		}
-		    		if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_ALLOWED) {
-		    			GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
-		    			DeviceState = FD2930_STATE_SELFTEST; //начинаем самотестирование
+
+		    		if ((DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_IR_ALLOWED) || (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_UV_ALLOWED)) {
+		    			DeviceState = FD2930_STATE_SELFTEST;
+		    			if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_IR_ALLOWED) {
+		    				// Test signal starts in the appropriate state
+		    			}
+		    			if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_UV_ALLOWED) {
+		    				GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
+		    			}
 		    			DeviceData.Status |= FD2930_DEVICE_STATUS_SELF_TEST;
 		    		}
 		    	}
@@ -601,9 +707,15 @@ void FunctionalTaskPeriodic()
 		    			cnt24 = 0;
 		    			StoreParameters = 1;
 		    		}
-		    		if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_ALLOWED) {
-		    			GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
-		    			DeviceState = FD2930_STATE_SELFTEST; //начинаем самотестирование
+
+		    		if ((DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_IR_ALLOWED) || (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_UV_ALLOWED)) {
+		    			DeviceState = FD2930_STATE_SELFTEST;
+		    			if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_IR_ALLOWED) {
+		    				// Test signal starts in the appropriate state
+		    			}
+		    			if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_UV_ALLOWED) {
+		    				GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
+		    			}
 		    			if (SelfTest < 14) SelfTest++;
 		    			DeviceData.Status |= FD2930_DEVICE_STATUS_SELF_TEST;
 		    		}
@@ -722,9 +834,15 @@ void FunctionalTaskPeriodic()
 		    	selfTestCnt++;
 		    } else {
 		    	selfTestCnt = 0;
-		    	if ((DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_ALLOWED) && (DeviceData.Status & FD2930_DEVICE_STATUS_TEST_CALIBR)) {
-		    		GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
+
+		    	if (((DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_IR_ALLOWED) || (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_UV_ALLOWED)) && (DeviceData.Status & FD2930_DEVICE_STATUS_TEST_CALIBR)) {
 		    		DeviceState = FD2930_STATE_SELFTEST;
+		    		if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_IR_ALLOWED) {
+		    			// Test signal starts in the appropriate state
+		    		}
+		    		if (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_UV_ALLOWED) {
+		    			GPIO_RESET_PIN(LPC_GPIO2, (UV_TEST));
+		    		}
 		    		DeviceData.Status |= FD2930_DEVICE_STATUS_SELF_TEST;
 		    	}
 		    }
@@ -1623,7 +1741,7 @@ __STATIC_INLINE void HandleIRTestChannel()
 			GPIO_TOGGLE_PIN(LPC_GPIO2, IR_TEST);
 		}
 	} else {
-		if ((DeviceState == FD2930_STATE_TEST_CALIBR) || (DeviceState == FD2930_STATE_SELFTEST) || (DeviceState == FD2930_STATE_TEST_ZERO)) {
+		if ((DeviceState == FD2930_STATE_TEST_CALIBR) || ((DeviceState == FD2930_STATE_SELFTEST) && (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_IR_ALLOWED)) || (DeviceState == FD2930_STATE_TEST_ZERO)) {
 			if (cnt < TIME_mS_TO_TICK(IR_CHANNEL_TIMING2)) {
 				cnt++;
 			} else {
