@@ -50,8 +50,6 @@ extern "C" {
 
 #endif
 
-#define MB_REG_ADDR(_STR_, _REG_)      	((uint16_t *)&_STR_._REG_ - (uint16_t *)&_STR_)
-
 #define MAX_REFERENCE_mV				2200
 
 #define ADC_REFERENCE_mV				3300
@@ -204,7 +202,6 @@ extern "C" {
 #define FD2930_DEVICECONFIG_RELAY_FIRE_ALLOWED          (1 << 7)
 #define FD2930_DEVICECONFIG_RELAY_FAULT_ALLOWED         (1 << 8)
 #define FD2930_DEVICECONFIG_RELAY_DUST_ALLOWED          (1 << 9)
-//#define FD2930_DEVICECONFIG_ARCHIVE_ALLOWED             (1 << 10)
 #define FD2930_DEVICECONFIG_IPES_MB_HEADER              (1 << 10)
 #define FD2930_DEVICECONFIG_SELFTEST_IR_ALLOWED         (1 << 11)
 #define FD2930_DEVICECONFIG_DUST_TO_RELAY               (1 << 12)
