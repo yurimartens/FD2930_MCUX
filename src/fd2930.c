@@ -309,7 +309,7 @@ void FunctionalTaskPeriodic()
 			        case FD2930_CONFIG_3:
 			        case FD2930_CONFIG_4:
 #if DEVICE_TYPE == PHOENIX_IRUV
-			        	if (DeviceData.Config & (FD2930_DEVICECONFIG_SELFTEST_UV_ALLOWED | FD2930_DEVICECONFIG_SELFTEST_IR_ALLOWED)) {
+			        	if ((DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_UV_ALLOWED) && (DeviceData.Config & FD2930_DEVICECONFIG_SELFTEST_IR_ALLOWED)) {
 			        		if ((DeviceData.UVGain - DeviceData.UVNoiseTest) < 0.7 * DeviceData.UVTestLevel) DeviceData.UVTestFaultCnt++;
 			        		if ((DeviceData.IRGain - DeviceData.IRNoiseTest) < 0.7 * DeviceData.IRTestLevel) DeviceData.IRTestFaultCnt++;
 
