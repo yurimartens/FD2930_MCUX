@@ -7,3 +7,6 @@
 [submodule "eeprom"]
 	path = eeprom
 	url = https://gitlab.pozhgazpribor.ru/firmware/submodules/eeprom.git
+[submodule "utils"]
+	path = utils
+	url = https://gitlab.pozhgazpribor.ru/firmware/submodules/utils.git
